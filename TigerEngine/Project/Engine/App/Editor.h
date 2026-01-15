@@ -1,0 +1,61 @@
+﻿#pragma once
+#include "pch.h"
+#include "System/InputSystem.h"
+#include "Entity/GameObject.h"
+
+/// @brief imgui를 사용하고 렌더링 하는 객체
+/// @date 26 01 07
+/// @details
+class Editor : public InputProcesser
+{
+public:
+    void GetScreenSize(int width, int height) { screenWidth = width; screenHeight = height; }
+    void Initialize(const ComPtr<ID3D11Device>& device, const ComPtr<ID3D11DeviceContext>& context);
+    void GetDSV(const ComPtr<ID3D11DepthStencilView>& dsv) { depthStencliView = dsv; };
+    void GetRTV(const ComPtr <ID3D11RenderTargetView>& rtv) { renderTargetView = rtv; };
+
+    void Update();
+    void Render(HWND& hwnd);
+    void RenderEnd(const ComPtr<ID3D11DeviceContext>& context);
+
+    void SelectObject(GameObject* obj);
+
+private:
+    void RenderMenuBar(HWND& hwnd);
+    void RenderHierarchy();
+    void RenderInspector();
+
+    template<typename T>
+    void RenderComponentInfo(std::string name, T* comp);
+
+    void RenderDebugAABBDraw();
+
+    void SaveCurrentScene(HWND& hwnd);
+    void LoadScene(HWND& hwnd);
+    
+    GameObject* selectedObject; // 현재 inspector 정보를 보고 있는 게임 오브젝트
+
+    // 카메라 정보
+    Matrix cameraView{};
+    Matrix cameraProjection{};
+
+    // 화면 정보
+    int screenWidth = 0;
+    int screenHeight = 0;
+
+    // 디버그 바인드 
+    ComPtr<ID3D11Device>                device{};
+    ComPtr<ID3D11DeviceContext>         context{};
+    ComPtr<ID3D11InputLayout> 			inputLayout{};
+    ComPtr<ID3D11RenderTargetView> 		renderTargetView{};
+    ComPtr<ID3D11DepthStencilView>		depthStencliView{};
+    ComPtr<ID3D11RasterizerState>       rasterizerState{};
+
+    // flags
+    bool isDiretionalLightDebugOpen = false;
+    void DirectionalLightDebug();
+
+public:
+	void OnInputProcess(const Keyboard::State& KeyState, const Keyboard::KeyboardStateTracker& KeyTracker,
+		const Mouse::State& MouseState, const Mouse::ButtonStateTracker& MouseTracker) override;
+};
