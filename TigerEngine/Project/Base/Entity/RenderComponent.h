@@ -7,9 +7,6 @@
 class RenderComponent : public Component
 {
 public:
-    std::weak_ptr<IRenderCommand> GetCommand() { return command; }
-    void SetCommand(std::shared_ptr<IRenderCommand> rc) { command = rc; }
-    void ClearCommand() { command.reset(); }
+    virtual void OnRender(ComPtr<ID3D11DeviceContext>& context) = 0; // 임시
 protected:
-    std::shared_ptr<IRenderCommand> command;
 };

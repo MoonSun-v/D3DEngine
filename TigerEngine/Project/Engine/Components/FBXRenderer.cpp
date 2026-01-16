@@ -3,6 +3,7 @@
 #include "Scene/Scene.h"
 #include "../Components/FBXData.h"
 #include "../Manager/ShaderManager.h"
+#include "Datas/TransformData.h"
 
 RTTR_REGISTRATION
 {
@@ -31,6 +32,11 @@ void FBXRenderer::OnInitialize()
     fbxData = owner->GetComponent<FBXData>();
 	bones.clear();
 	if(fbxData != nullptr) CreateBoneInfo(); // 임시
+
+    bonePoseCB      = ShaderManager::Instance().GetBonePoseCB();
+    boneOffsetCB    = ShaderManager::Instance().GetBoneOffsetCB();
+    materialCB      = ShaderManager::Instance().GetMaterialCB();
+    transformCB     = ShaderManager::Instance().GetTransformCB();
 }
 
 void FBXRenderer::OnStart()
@@ -78,13 +84,44 @@ void FBXRenderer::OnUpdate(float delta)
 
 		bonePoses.modelMatricies[bone.m_index] = bone.m_worldTransform;
 	}	
-
-	CreateCommand();
 }
 
 void FBXRenderer::OnDestory()
 {
-    ClearCommand();
+}
+
+void FBXRenderer::OnRender(ComPtr<ID3D11DeviceContext>& context)
+{
+    if (fbxData == nullptr) return; // 그릴 메쉬가 없음 -> data 없음
+
+    context->UpdateSubresource(bonePoseCB.Get(), 0, nullptr, &bonePoses, 0, 0);
+    context->UpdateSubresource(boneOffsetCB.Get(), 0, nullptr, &fbxData->GetFBXInfo()->m_BoneOffsets, 0, 0);
+    context->VSSetConstantBuffers(3, 1, bonePoseCB.GetAddressOf());
+    context->VSSetConstantBuffers(4, 1, boneOffsetCB.GetAddressOf());
+
+    TransformData tb = {};
+    tb.isRigid = fbxData->GetFBXInfo()->skeletalInfo.IsRigid();
+    tb.world = XMMatrixTranspose(owner->GetTransform()->GetWorldTransform());
+
+    auto meshData = fbxData->GetMesh();
+    int size = meshData.size();
+    for (size_t i = 0; i < size; i++)
+    {
+        MaterialData meshMaterial = meshData[i].GetMaterial();
+
+        // NOTE : 260104 FBXRenderer의 매개변수인 roughness와 matalic을 반영한다 -> 모든 메쉬가 다 변함
+        meshMaterial.Roughness = roughness;
+        meshMaterial.Matalness = metalic;
+        meshMaterial.ambient = color;
+
+        context->UpdateSubresource(materialCB.Get(), 0, nullptr, &meshMaterial, 0, 0);
+        tb.refBoneIndex = meshData[i].refBoneIndex;
+
+        context->UpdateSubresource(transformCB.Get(), 0, nullptr, &tb, 0, 0);
+        context->VSSetConstantBuffers(2, 1, transformCB.GetAddressOf());
+        context->PSSetConstantBuffers(1, 1, materialCB.GetAddressOf());
+        meshData[i].Draw(context);
+    }
 }
 
 nlohmann::json FBXRenderer::Serialize()
@@ -184,15 +221,4 @@ void FBXRenderer::CreateBoneInfo()
 
 		bones.push_back(bone);
 	}
-}
-
-void FBXRenderer::CreateCommand()
-{	
-	auto command = std::make_shared<DrawFBXCommand>();
-	command->CreateCommand(fbxData->GetFBXInfo(), bonePoses, owner->GetTransform());
-	command->SetColor(color);
-	command->SetMetalic(metalic);
-	command->SetRoughness(roughness);
-
-	SetCommand(command); //
 }

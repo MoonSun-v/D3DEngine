@@ -17,11 +17,10 @@ void RenderSystem::UnRegister(RenderComponent* comp)
     }
 }
 
-void RenderSystem::Render(RenderQueue& queue)
+void RenderSystem::Render(ComPtr<ID3D11DeviceContext>& context)
 {
     for (auto& e : comps)
     {
-        auto comm = e->GetCommand();
-        queue.AddCommand(comm.lock());
+        e->OnRender(context);
     }
 }

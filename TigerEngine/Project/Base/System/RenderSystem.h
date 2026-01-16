@@ -1,7 +1,6 @@
 #pragma once
 #include "Singleton.h"
 #include "../Entity/RenderComponent.h"
-#include "../Renderer/RenderQueue.h"
 
 /// <summary>
 /// 렌더 컴포넌트(RenderComponent)를 상속받은 컴포넌트들을 관리합니다.
@@ -26,7 +25,7 @@ public:
     /// <summary>
     /// 등록된 렌더 컴포넌트의 커맨드를 Queue에 추가한다.
     /// </summary>
-    void Render(RenderQueue& queue); 
+    void Render(ComPtr<ID3D11DeviceContext>& context); 
 
 private:
     /// <summary>

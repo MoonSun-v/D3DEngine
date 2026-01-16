@@ -16,3 +16,7 @@ void MeshRenderer::OnStart()
 void MeshRenderer::OnUpdate(float delta)
 {
 }
+
+void MeshRenderer::OnRender(ComPtr<ID3D11DeviceContext>& context)
+{
+}

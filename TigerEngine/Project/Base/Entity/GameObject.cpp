@@ -214,7 +214,6 @@ void GameObject::ClearAll()
         }
 
         it = handles.erase(it);
-        break;
     }
 
     components.clear();

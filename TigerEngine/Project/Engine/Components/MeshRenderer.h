@@ -12,4 +12,5 @@ public:
 	void OnInitialize() override;
 	void OnStart() override;
 	void OnUpdate(float delta) override;
+    void OnRender(ComPtr<ID3D11DeviceContext>& context) override;
 };

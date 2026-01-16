@@ -163,17 +163,15 @@ void DirectX11Renderer::EndRender()
 void DirectX11Renderer::ProcessScene
 	(std::shared_ptr<Scene> scene, std::shared_ptr<IRenderPass> renderPass, Camera* cam)
 {
-	renderQueue.Clear();
-	renderPass->Execute(deviceContext, scene, cam);	
-	
-	// getrenderable from scene
+	renderQueue.Clear();	
+    renderPass->Execute(deviceContext, scene, cam);
+
 	if(scene)
 	{		
+        // render pass 스테이지 설정
+	    renderPass->Execute(deviceContext, scene, cam);	
         // add command from render system
-        RenderSystem::Instance().Render(renderQueue);		
-
-		// execute pass, queue
-		renderQueue.Execute(deviceContext);
+        RenderSystem::Instance().Render(deviceContext);		
 	}
 
 	renderPass->End(deviceContext);
