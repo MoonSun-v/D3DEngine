@@ -3,15 +3,6 @@
 #include "../System/ObjectSystem.h"
 #include "../System/ScriptSystem.h"
 
-void Scene::OnRender(std::unique_ptr<RenderQueue>& renderQueue)
-{
-	for(auto it = gameObjects.begin(); it != gameObjects.end(); it++)
-	{
-		auto gameObject = it->second;
-		// .. rendering
-	}
-}
-
 void Scene::OnUpdate(float deltaTime)
 {
     ScriptSystem::Instance().Update(deltaTime);
@@ -21,11 +12,26 @@ void Scene::CheckDestroy()
 {
 	for(auto it = gameObjects.begin(); it != gameObjects.end();)
 	{
-		auto gameObject = it->second;
-		if(gameObject.objPtr->IsDestory())
-		{				
-			gameObject.objPtr->ClearAll();
-			ObjectSystem::Instance().Destory(gameObject.handle);
+		auto entity = *it;
+		if(entity.objPtr->IsDestory())
+		{	
+            // 맵 요소 제거
+            auto container = mappedGameObjects[entity.objPtr->GetName()];
+            for (auto mapContainerIt = container.begin(); mapContainerIt != container.end();)
+            {
+                auto& [handle, index] = *mapContainerIt;
+                if (entity.handle.generation == handle.generation &&
+                    entity.handle.index == handle.index) // 같은 핸들 찾기
+                {
+                    container.erase(mapContainerIt);
+                    break;
+                }
+            }
+
+            // 벡터 요소 제거
+			entity.objPtr->ClearAll();
+			ObjectSystem::Instance().Destory(entity.handle);
+
 			it = gameObjects.erase(it);
 		}
 		else
@@ -39,7 +45,7 @@ void Scene::ForEachGameObject(std::function<void(GameObject*)> fn)
 {
 	for(auto& obj : gameObjects)
 	{
-		fn(obj.second.objPtr);
+		fn(obj.objPtr);
 	}
 }
 
@@ -50,20 +56,50 @@ GameObject* Scene::AddGameObjectByName(std::string name)
 	obj->SetScene(this);
 	obj->SetName(name);
 
-	gameObjects.insert({ name, {obj, handle} });
+    int index = static_cast<int>(gameObjects.size());
+    gameObjects.push_back({ obj, handle });
+    mappedGameObjects[name].push_back({ handle, index });
     return obj;
 }
 
 GameObject* Scene::GetGameObjectByName(std::string name)
 {
-    return gameObjects.find(name)->second.objPtr;
+    if (auto it = mappedGameObjects.find(name); it != mappedGameObjects.end())
+    {
+        auto container = it->second;
+        return gameObjects[container.front().second].objPtr; // 무조건 첫번째 반환
+    }
+    else
+    {
+        return nullptr; // 없음
+    }
+}
+
+GameObject* Scene::GetGameObject(GameObject* obj)
+{
+    std::string name = obj->GetName();
+    if (auto it = mappedGameObjects.find(name); it != mappedGameObjects.end())
+    {
+        auto container = it->second;
+        for (auto& [handle, index] : container)
+        {
+            if (gameObjects[index].objPtr->GetName() == name)
+            {
+                return gameObjects[index].objPtr;
+            }
+        }
+    }
+    else
+    {
+        return nullptr; // 없음
+    }
 }
 
 void Scene::ClearScene()
 {
 	for(auto it = gameObjects.begin(); it != gameObjects.end();)
 	{
-		auto [ptr, handle] = it->second;
+		auto [ptr, handle] = *it;
 
         ptr->ClearAll();
         ObjectSystem::Instance().Destory(handle);
@@ -71,6 +107,7 @@ void Scene::ClearScene()
 	}
 	
 	gameObjects.clear();
+    mappedGameObjects.clear();
 }
 
 bool Scene::SaveToJson(const std::string &filename) const
@@ -78,12 +115,12 @@ bool Scene::SaveToJson(const std::string &filename) const
 	nlohmann::json root;
 
 	root["objects"] = nlohmann::json::array();
-	for(auto& obj : gameObjects)
+	for(auto& entity : gameObjects)
 	{
-		if(!obj.second.objPtr) continue;
+		if(!entity.objPtr) continue;
 		
-		nlohmann::json objData = obj.second.objPtr->Serialize();
-		root["objects"].push_back(objData);
+		nlohmann::json entityData = entity.objPtr->Serialize();
+		root["objects"].push_back(entityData);
 	}
 
 	std::ofstream file(filename);
@@ -138,34 +175,22 @@ bool Scene::LoadToJson(const std::string &filename)
     return true;
 }
 
-GameObject* Scene::GetGameobjectFromScene(std::string name)
-{
-	if(auto it = gameObjects.find(name); it != gameObjects.end())
-	{
-		return it->second.objPtr;
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
 GameObject* Scene::RayCastGameObject(const Ray &ray, float *outDistance)
 {
 	GameObject* hitObject = nullptr;
 	float minDistant = FLT_MAX;
 
-	for(auto& [name, obj]: gameObjects)
+	for(auto& [ptr, handle]: gameObjects)
 	{
-		if(!obj.objPtr) continue;
+		if(!ptr) continue;
 
 		float outDist = 0.0f;
-		if(ray.Intersects(obj.objPtr->GetAABB(), outDist))
+		if(ray.Intersects(ptr->GetAABB(), outDist))
 		{
 			if(outDist < minDistant)
 			{
 				minDistant = outDist;
-				hitObject = obj.objPtr;
+				hitObject = ptr;
 			}
 		}
 	}

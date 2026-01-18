@@ -17,8 +17,6 @@ void SceneSystem::UpdateScene(float deltaTime)
 void SceneSystem::RenderScene(std::unique_ptr<RenderQueue>& renderQueue)
 {
 	if(scenes.empty()) return;
-
-	currentScene->OnRender(renderQueue);
 }
 
 std::shared_ptr<Scene> SceneSystem::GetSceneByIndex(int index)
