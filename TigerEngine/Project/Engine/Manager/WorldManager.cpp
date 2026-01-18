@@ -8,7 +8,11 @@ void WorldManager::CreateDirectionalLightFrustum()
 {
 	// TODO main 캠 설정으로 바꿔야함.
 
+#if _DEBUG
 	auto camera = CameraSystem::Instance().GetFreeCamera();
+#else
+	auto camera = CameraSystem::Instance().GetCurrCamera();
+#endif
 
 	auto camTran = camera->GetOwner()->GetTransform();
 	directionalLightProj = XMMatrixPerspectiveFovLH(directionalLightFrustumAngle, directionalLightViewport.width / (FLOAT)directionalLightViewport.height, directionalLightNear, directionalLightFar); // 그림자 절두체
@@ -19,7 +23,12 @@ void WorldManager::CreateDirectionalLightFrustum()
 
 void WorldManager::Update()
 {
-	auto camera = CameraSystem::Instance().GetFreeCamera();
+
+#if _DEBUG
+    auto camera = CameraSystem::Instance().GetFreeCamera();
+#else
+    auto camera = CameraSystem::Instance().GetCurrCamera();
+#endif
 
 	auto camTran = camera->GetOwner()->GetTransform();
 	directionalLightProj = XMMatrixPerspectiveFovLH(directionalLightFrustumAngle, directionalLightViewport.width / (FLOAT)directionalLightViewport.height, directionalLightNear, directionalLightFar); // 그림자 절두체

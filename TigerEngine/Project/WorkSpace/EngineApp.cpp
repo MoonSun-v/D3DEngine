@@ -66,13 +66,17 @@ bool EngineApp::OnInitialize()
 #if _DEBUG
 	CameraSystem::Instance().CreateFreeCamera(clientWidth, clientHeight, SceneSystem::Instance().GetCurrentScene().get());
 #endif
+
+    // == find scene ==
+    LoadSavedFirstScene();
+
 	WorldManager::Instance().CreateDirectionalLightFrustum(); // create directional light 
 
 
 	// == init renderpass ==
 	// NOTE : 랜더링하는 순서대로 추가 할 것
 	auto shadowPass = std::make_shared<ShadowRenderPass>();
-	shadowPass->Init(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext(), CameraSystem::Instance().GetFreeCamera());
+	shadowPass->Init(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext(), CameraSystem::Instance().GetCurrCamera());
 	renderPasses.push_back(shadowPass);
 
 	WorldManager::Instance().shaderResourceView = shadowPass->GetShadowSRV();
@@ -95,10 +99,6 @@ bool EngineApp::OnInitialize()
 	sbpass->SetDepthStencilView(dxRenderer->GetDepthStencilView());
 	sbpass->SetRenderTargetView(dxRenderer->GetBackBufferRTV());
 	renderPasses.push_back(sbpass);
-
-    // == find scene ==
-
-    LoadSavedFirstScene();
 
 #if _DEBUG
 #else
