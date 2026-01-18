@@ -285,13 +285,8 @@ void Editor::RenderComponentInfo(std::string compName, T* comp)
         {
             rttr::variant value = prop.get_value(*comp);   // 프로퍼티 값
             std::string name = prop.get_name().to_string();         // 프로퍼티 이름
-            if(value.is_type<DirectX::SimpleMath::Vector3>() && name == "Position")
-            {
-                DirectX::SimpleMath::Vector3 pos = value.get_value<DirectX::SimpleMath::Vector3>();
-                ImGui::DragFloat3("Position", &pos.x, 0.1f);
-                prop.set_value(*comp, pos);
-            }
-            else if(value.is_type<DirectX::SimpleMath::Vector3>() && name == "Rotation")
+
+            if(value.is_type<DirectX::SimpleMath::Vector3>() && name == "Rotation")
             {
                 DirectX::SimpleMath::Vector3 rot = value.get_value<DirectX::SimpleMath::Vector3>();
                 DirectX::SimpleMath::Vector3 rotEuler = { XMConvertToDegrees(rot.x), XMConvertToDegrees(rot.y),  XMConvertToDegrees(rot.z) };
@@ -299,12 +294,7 @@ void Editor::RenderComponentInfo(std::string compName, T* comp)
                 rot = { XMConvertToRadians(rotEuler.x), XMConvertToRadians(rotEuler.y),  XMConvertToRadians(rotEuler.z) };
                 prop.set_value(*comp, rot);
             }
-            else if(value.is_type<DirectX::SimpleMath::Vector3>() && name == "Scale")
-            {
-                DirectX::SimpleMath::Vector3 scl = value.get_value<DirectX::SimpleMath::Vector3>();
-                ImGui::DragFloat3("Scale", &scl.x, 0.1f);
-                prop.set_value(*comp, scl);
-            }
+
         } 
     }
     else if(compName == "FBXData")
@@ -350,53 +340,6 @@ void Editor::RenderComponentInfo(std::string compName, T* comp)
             }
         }        
     }
-    else if(compName == "FBXRenderer")
-    {
-        rttr::type t = rttr::type::get(*comp);
-        ImGui::Text(t.get_name().to_string().c_str());
-
-        for(auto& prop : t.get_properties())
-        {
-            rttr::variant value = prop.get_value(*comp);            // 프로퍼티 값
-            std::string name = prop.get_name().to_string();         // 프로퍼티 이름
-            if (value.is_type<Color>() && name == "Color")
-            {
-                Color v = value.get_value<Color>();
-                ImGui::ColorEdit3("Color", &v.x);
-                prop.set_value(*comp, v);
-            }
-            else if (value.is_type<float>() && name == "Roughness")
-            {
-                float v = value.get_value<float>();
-                ImGui::DragFloat("Roughness", &v, 0.1f, 0.0f, 1.0f);
-                prop.set_value(*comp, v);
-            }
-            else if (value.is_type<float>() && name == "Metalic")
-            {
-                float v = value.get_value<float>();
-                ImGui::DragFloat("Metalic", &v, 0.1f, 0.0f, 1.0f);
-                prop.set_value(*comp, v);
-            }
-            else if(value.is_type<int>() && name == "AnimationIndex")
-            {
-                int v = value.get_value<int>();
-                ImGui::InputInt("Play Animation Index", &v);
-                // prop.set_value(*comp, v);
-            }
-            else if(value.is_type<float>() && name == "AnimationPlayTime")
-            {
-                float v = value.get_value<float>();
-                ImGui::DragFloat("Time", &v, 0.1f);
-                prop.set_value(*comp, v);
-            }
-            else if(value.is_type<bool>() && name == "IsAnimationPlay")
-            {
-                bool v = value.get_value<bool>();
-                ImGui::Checkbox("isPlay", &v);
-                prop.set_value(*comp, v);
-            }
-        } 
-    }
     else // TODO : Value 테스트
     {
         rttr::type t = rttr::type::get(*comp); // 역참조로 실제 인스턴스 정보 가져오기
@@ -411,6 +354,24 @@ void Editor::RenderComponentInfo(std::string compName, T* comp)
                 float v = value.get_value<float>();
                 ImGui::DragFloat(name.c_str(), &v, 0.1f);
                 prop.set_value(*comp, v);
+            }
+            else if (value.is_type<int>())
+            {
+                int v = value.get_value<int>();
+                ImGui::DragInt(name.c_str(), &v, 0.1f);
+                prop.set_value(*comp, v);
+            }
+            else if (value.is_type<bool>())
+            {
+                bool v = value.get_value<bool>();
+                ImGui::Checkbox(name.c_str(), &v);
+                prop.set_value(*comp, v);
+            }
+            else if (value.is_type<DirectX::SimpleMath::Vector3>())
+            {
+                DirectX::SimpleMath::Vector3 vec = value.get_value<DirectX::SimpleMath::Vector3>();
+                ImGui::DragFloat3(name.c_str(), &vec.x, 0.1f);
+                prop.set_value(*comp, vec);
             }
         }
     }
