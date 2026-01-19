@@ -3,6 +3,10 @@
 #include <Datas/FBXResourceData.h>
 #include "../Base/Datas/ConstantBuffer.hpp"
 
+void ShaderManager::Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx)
+{
+    CreateCB(dev);
+}
 
 void ShaderManager::CreateCB(const ComPtr<ID3D11Device>& dev)
 {

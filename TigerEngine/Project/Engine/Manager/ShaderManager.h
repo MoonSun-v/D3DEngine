@@ -10,9 +10,14 @@ public:
     ShaderManager(token) {};
     ~ShaderManager() = default;
 
+    void Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx);
+
+private:
     void CreateCB(const ComPtr<ID3D11Device>& dev);
 
-    // CB Getter
+
+public:
+    // Constant Bufer
     ComPtr<ID3D11Buffer>& GetFrameCB();
     ComPtr<ID3D11Buffer>& GetTransformCB();
     ComPtr<ID3D11Buffer>& GetLightingCB();

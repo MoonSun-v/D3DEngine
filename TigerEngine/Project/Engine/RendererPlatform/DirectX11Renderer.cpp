@@ -6,131 +6,111 @@
 // datas
 #include "Datas/Mesh.h"
 #include "Datas/Vertex.h"
-#include "Datas/MaterialData.h"
-#include "Datas/TransformData.h"
 
-struct ConstantBuffer
-{
-	Matrix cameraView;
-	Matrix cameraProjection;
-
-	Vector4 lightDirection;
-	Matrix shadowView;
-	Matrix shadowProjection;
-
-	Color lightColor;
-
-	Vector4 ambient;	// 환경광
-	Vector4 diffuse;	// 난반사
-	Vector4 specular;	// 정반사
-	FLOAT shininess;	// 광택지수
-	Vector3 CameraPos;	// 카메라 위치
-};
 
 
 #define USE_FLIPMODE 1
 
 void DirectX11Renderer::Initialize(HWND hwnd, int width, int height)
 {
-	UINT creationFlag = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+    // swap chain setup struct
+    DXGI_SWAP_CHAIN_DESC swapDesc = {};
+    swapDesc.BufferCount = 1;
+    swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapDesc.OutputWindow = hwnd;
+    swapDesc.Windowed = true;
+    swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;    // UNORM : PS에서 감마 인코딩 필요, UNORM_SRGB : PS 자동 감마 적용
+    swapDesc.BufferDesc.Width = width;
+    swapDesc.BufferDesc.Height = height;
+    swapDesc.BufferDesc.RefreshRate.Numerator = 60;
+    swapDesc.BufferDesc.RefreshRate.Denominator = 1;
+    swapDesc.SampleDesc.Count = 1;
+    swapDesc.SampleDesc.Quality = 0;
 
+    // deviec create debug flag
+    UINT creationFlags = 0;
 #ifdef _DEBUG
-	creationFlag |= D3D11_CREATE_DEVICE_DEBUG;
-#endif //  _DEBUG
-
-	D3D_FEATURE_LEVEL featureLevels[] =
-	{	
-		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0,D3D_FEATURE_LEVEL_11_1,D3D_FEATURE_LEVEL_11_0
-	};
-	D3D_FEATURE_LEVEL actualFeatureLevel;
-
-	HR_T(D3D11CreateDevice
-	(
-		nullptr,
-		D3D_DRIVER_TYPE_HARDWARE,
-		0,
-		creationFlag,
-		featureLevels,
-		ARRAYSIZE(featureLevels),
-		D3D11_SDK_VERSION,
-		&device,
-		&actualFeatureLevel,
-		&deviceContext
-	));
-
-	UINT dxgiFactoryFlags = 0;
-
-#ifdef _DEBUG
-	dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-#endif // _DEBUG
-
-	ComPtr<IDXGIFactory2> pFactory;
-	HR_T(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&pFactory)));
-
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-#if USE_FLIPMODE == 1
-	swapChainDesc.BufferCount = 2;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-#else
-	swapChainDesc.BufferCount = 1;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	swapChainDesc.Width = width;
-	swapChainDesc.Height = height;
 
-	swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; 
-	swapChainDesc.SampleDesc.Count = 1;
-	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-	swapChainDesc.Stereo = FALSE;
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-	swapChainDesc.Scaling = DXGI_SCALING_NONE; // 
+    // create device, device context, swap chain
+    HR_T(D3D11CreateDeviceAndSwapChain(
+        NULL,
+        D3D_DRIVER_TYPE_HARDWARE,
+        NULL,
+        creationFlags,
+        NULL,
+        NULL,
+        D3D11_SDK_VERSION,
+        &swapDesc,
+        &swapChain,
+        &device,
+        NULL,
+        &deviceContext));
 
-	HR_T(pFactory->CreateSwapChainForHwnd
-	(
-		device.Get(),
-		hwnd,
-		&swapChainDesc,
-		nullptr,
-		nullptr,
-		swapChain.GetAddressOf()
-	));
+    // create RTV					
+    HR_T(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backbufferTex.GetAddressOf()));			// backbuffer get
+    HR_T(device->CreateRenderTargetView(backbufferTex.Get(), NULL, backBufferRTV.GetAddressOf()));	    // RTV create														            // RTV에서 backbuffer texture 참조중 (메모리 관리)
 
-	ComPtr<ID3D11Texture2D> pBackBufferTexture;
-	HR_T(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBufferTexture));
-	HR_T(device->CreateRenderTargetView(pBackBufferTexture.Get(), nullptr, backBufferRTV.GetAddressOf()));
+    ID3D11RenderTargetView* rtv = backBufferRTV.Get();
+    deviceContext->OMSetRenderTargets(1, &rtv, nullptr);	// render targetview  binding
 
-	renderViewport = {};
-	renderViewport.TopLeftX = 0;
-	renderViewport.TopLeftY = 0;
-	renderViewport.Width = (float)width;
-	renderViewport.Height = (float)height;
-	renderViewport.MinDepth = 0.0f;
-	renderViewport.MaxDepth = 1.0f;
-	deviceContext->RSSetViewports(1, &renderViewport);
+    // create depth stencil view 
+    {
+        // texture
+        D3D11_TEXTURE2D_DESC descDepth = {};
+        descDepth.Width = width;
+        descDepth.Height = height;
+        descDepth.MipLevels = 1;
+        descDepth.ArraySize = 1;
+        descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS;
+        descDepth.SampleDesc.Count = 1;
+        descDepth.SampleDesc.Quality = 0;
+        descDepth.Usage = D3D11_USAGE_DEFAULT;
+        descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+        descDepth.CPUAccessFlags = 0;
+        descDepth.MiscFlags = 0;
 
-	D3D11_TEXTURE2D_DESC descDepth = {};
-	descDepth.Width = width;
-	descDepth.Height = height;
-	descDepth.MipLevels = 1;
-	descDepth.ArraySize = 1;
-	descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // https://learn.microsoft.com/ko-kr/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
-	descDepth.SampleDesc.Count = 1;
-	descDepth.SampleDesc.Quality = 0;
-	descDepth.Usage = D3D11_USAGE_DEFAULT;
-	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	descDepth.CPUAccessFlags = 0;
-	descDepth.MiscFlags = 0;
+        HR_T(device->CreateTexture2D(&descDepth, nullptr, depthStencilTexture.GetAddressOf()));
 
-	// create depthStencil texture
-	ComPtr<ID3D11Texture2D> pTextureDepthStencil;
-	HR_T(device->CreateTexture2D(&descDepth, nullptr, pTextureDepthStencil.GetAddressOf()));
+        // write DSV
+        D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
+        descDSV.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // D24 : Depth, S8 : Stencil
+        descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+        descDSV.Texture2D.MipSlice = 0;
+        descDSV.Flags = 0;
+        HR_T(device->CreateDepthStencilView(depthStencilTexture.Get(), &descDSV, depthStencilView.GetAddressOf()));
 
-	// create the depth stencil view
-	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
-	descDSV.Format = descDepth.Format;
-	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	HR_T(device->CreateDepthStencilView(pTextureDepthStencil.Get(), &descDSV, depthStencilView.GetAddressOf()));
+        // read only DSV
+        D3D11_DEPTH_STENCIL_VIEW_DESC dsvRODesc = descDSV;
+        dsvRODesc.Flags = D3D11_DSV_READ_ONLY_DEPTH | D3D11_DSV_READ_ONLY_STENCIL;
+        HR_T(device->CreateDepthStencilView(depthStencilTexture.Get(), &dsvRODesc, depthStencilReadOnlyView.GetAddressOf()));
+    }
+
+    // depth stencil SRV
+    {
+        D3D11_SHADER_RESOURCE_VIEW_DESC descSRV = {};
+        descSRV.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+        descSRV.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        descSRV.Texture2D.MostDetailedMip = 0;
+        descSRV.Texture2D.MipLevels = 1;
+
+        HR_T(device->CreateShaderResourceView(depthStencilTexture.Get(), &descSRV, depthSRV.GetAddressOf()));
+    }
+
+
+    // viewport
+    {
+        renderViewport = {};
+        renderViewport.TopLeftX = 0;
+        renderViewport.TopLeftY = 0;
+        renderViewport.Width = (float)width;
+        renderViewport.Height = (float)height;
+        renderViewport.MinDepth = 0.0f;
+        renderViewport.MaxDepth = 1.0f;
+        deviceContext->RSSetViewports(1, &renderViewport);	// viewport binding
+    }
+
 }
 
 void DirectX11Renderer::OnResize(int width, int height)

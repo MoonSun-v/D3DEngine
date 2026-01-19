@@ -34,12 +34,17 @@ public:
 	ComPtr<ID3D11DepthStencilView> GetDepthStencilView() const;
 	
 private:
-	ComPtr<ID3D11Device>			device{};			// 디바이스
-	ComPtr<ID3D11DeviceContext>		deviceContext{};	// 디바이스 컨텍스트
-	ComPtr<IDXGISwapChain1>			swapChain{};		// 스왑체인 
-	ComPtr<ID3D11RenderTargetView>	backBufferRTV{};	// 랜더 타겟	
+	ComPtr<ID3D11Device>			device{};			
+	ComPtr<ID3D11DeviceContext>		deviceContext{};	
+	ComPtr<IDXGISwapChain>			swapChain{};
+    ComPtr<ID3D11Texture2D>         backbufferTex;
+	ComPtr<ID3D11RenderTargetView>	backBufferRTV{};	
 
-	D3D11_VIEWPORT					renderViewport{};
-	ComPtr<ID3D11DepthStencilView>	depthStencilView{};	// 뎊스 스텐실 뷰
+    ComPtr<ID3D11Texture2D>           depthStencilTexture;
+	ComPtr<ID3D11DepthStencilView>	  depthStencilView{};	
+    ComPtr<ID3D11DepthStencilView>    depthStencilReadOnlyView;
+    ComPtr<ID3D11ShaderResourceView>  depthSRV;
+
+    D3D11_VIEWPORT					renderViewport{};
 };
 
