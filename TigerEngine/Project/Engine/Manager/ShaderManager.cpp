@@ -13,6 +13,7 @@ void ShaderManager::Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11Dev
     CreateBS(dev);
     CreateShadowResource(dev);
     CreateHDRResource(dev, width, height);
+    CreateGbufferResource(dev, width, height);
     CreateInputLayoutShader(dev, ctx);
     CreateCB(dev);
 }
@@ -279,6 +280,72 @@ void ShaderManager::CreateHDRResource(const ComPtr<ID3D11Device>& dev, int width
     srvDesc.Texture2D.MostDetailedMip = 0;
     hr = dev->CreateShaderResourceView(sceneHDRTex.Get(), &srvDesc, sceneHDRSRV.GetAddressOf());
     if (FAILED(hr)) { OutputDebugStringA("FAILED Create HDR SRV"); }
+}
+
+
+// G-buffer util funcs
+bool CreateRTTex_RTV_SRV(const ComPtr<ID3D11Device>& device, int w, int h, DXGI_FORMAT fomat,
+    ID3D11Texture2D** outTex, ID3D11RenderTargetView** outRTV, ID3D11ShaderResourceView** outSRV)
+{
+    D3D11_TEXTURE2D_DESC td = {};
+    td.Width = w;
+    td.Height = h;
+    td.MipLevels = 1;
+    td.ArraySize = 1;
+    td.Format = fomat;
+    td.SampleDesc.Count = 1;
+    td.SampleDesc.Quality = 0;
+    td.Usage = D3D11_USAGE_DEFAULT;
+    td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+    td.CPUAccessFlags = 0;
+    td.MiscFlags = 0;
+
+    HRESULT hr = device->CreateTexture2D(&td, nullptr, outTex);
+    if (FAILED(hr)) return false;
+
+    hr = device->CreateRenderTargetView(*outTex, nullptr, outRTV);
+    if (FAILED(hr)) return false;
+
+    hr = device->CreateShaderResourceView(*outTex, nullptr, outSRV);
+    if (FAILED(hr)) return false;
+
+    return true;
+}
+
+void ShaderManager::CreateGbufferResource(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight)
+{
+    const DXGI_FORMAT ALBEDO_FMT = DXGI_FORMAT_R8G8B8A8_UNORM;
+    const DXGI_FORMAT NORMAL_FMT = DXGI_FORMAT_R16G16B16A16_FLOAT;
+    const DXGI_FORMAT METALROUGH_FMT = DXGI_FORMAT_R8G8B8A8_UNORM;
+    const DXGI_FORMAT EMISSIVE_FMT = DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+    // Albedo
+    if (!CreateRTTex_RTV_SRV(dev, screenWidth, screenHeight,
+        ALBEDO_FMT,
+        albedoTex.GetAddressOf(),
+        albedoRTV.GetAddressOf(),
+        albedoSRV.GetAddressOf()));
+
+    // Normal
+    if (!CreateRTTex_RTV_SRV(dev, screenWidth, screenHeight,
+        NORMAL_FMT,
+        normalTex.GetAddressOf(),
+        normalRTV.GetAddressOf(),
+        normalSRV.GetAddressOf()));
+
+    // Metal/Rough
+    if (!CreateRTTex_RTV_SRV(dev, screenWidth, screenHeight,
+        METALROUGH_FMT,
+        metalRoughTex.GetAddressOf(),
+        metalRoughRTV.GetAddressOf(),
+        metalRoughSRV.GetAddressOf()));
+
+    // Emissive
+    if (!CreateRTTex_RTV_SRV(dev, screenWidth, screenHeight,
+        EMISSIVE_FMT,
+        emissiveTex.GetAddressOf(),
+        emissiveRTV.GetAddressOf(),
+        emissiveSRV.GetAddressOf()));
 }
 
 void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx)

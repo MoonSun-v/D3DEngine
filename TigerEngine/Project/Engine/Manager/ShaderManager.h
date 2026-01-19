@@ -20,6 +20,7 @@ private:
     void CreateBS(const ComPtr<ID3D11Device>& dev);
     void CreateShadowResource(const ComPtr<ID3D11Device>& dev);
     void CreateHDRResource(const ComPtr<ID3D11Device>& dev, int width, int height);
+    void CreateGbufferResource(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight);
     void CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx);
     void CreateCB(const ComPtr<ID3D11Device>& dev);
 
@@ -55,6 +56,22 @@ public:
     ComPtr<ID3D11Texture2D>           sceneHDRTex;
     ComPtr<ID3D11RenderTargetView>    sceneHDRRTV;          // HDR RTV
     ComPtr<ID3D11ShaderResourceView>  sceneHDRSRV;          // HDR SRV
+
+    // G-buffer
+    ComPtr<ID3D11Texture2D>           albedoTex;
+    ComPtr<ID3D11Texture2D>           normalTex;
+    ComPtr<ID3D11Texture2D>           metalRoughTex;
+    ComPtr<ID3D11Texture2D>           emissiveTex;
+
+    ComPtr<ID3D11RenderTargetView>    albedoRTV;
+    ComPtr<ID3D11RenderTargetView>    normalRTV;
+    ComPtr<ID3D11RenderTargetView>    metalRoughRTV;
+    ComPtr<ID3D11RenderTargetView>    emissiveRTV;
+
+    ComPtr<ID3D11ShaderResourceView>  albedoSRV;
+    ComPtr<ID3D11ShaderResourceView>  normalSRV;
+    ComPtr<ID3D11ShaderResourceView>  metalRoughSRV;
+    ComPtr<ID3D11ShaderResourceView>  emissiveSRV;
 
     // IA
     ComPtr<ID3D11InputLayout> inputLayout_Vertex;
