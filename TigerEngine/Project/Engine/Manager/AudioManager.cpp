@@ -235,6 +235,18 @@ FMOD_MODE AudioManager::ParseMode(const std::string& text)
     {
         return FMOD_3D | FMOD_3D_INVERSEROLLOFF;
     }
+    if (upper == "3D_LINEAR" || upper == "LINEAR")
+    {
+        return FMOD_3D | FMOD_3D_LINEARROLLOFF;
+    }
+    if (upper == "3D_LINEAR_SQUARE" || upper == "LINEAR_SQUARE")
+    {
+        return FMOD_3D | FMOD_3D_LINEARSQUAREROLLOFF;
+    }
+    if (upper == "3D_CUSTOM" || upper == "CUSTOM")
+    {
+        return FMOD_3D | FMOD_3D_CUSTOMROLLOFF;
+    }
     if (upper == "2D")
     {
         return FMOD_2D;
