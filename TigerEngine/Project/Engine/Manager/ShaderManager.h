@@ -13,11 +13,19 @@ public:
     void Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx);
 
 private:
+    void CreateDSS(const ComPtr<ID3D11Device>& dev);
     void CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx);
     void CreateCB(const ComPtr<ID3D11Device>& dev);
 
 
 public:
+    // DSS
+    ComPtr<ID3D11DepthStencilState>   defualtDSS;                 // depth test on + write on
+    ComPtr<ID3D11DepthStencilState>   depthTestOnlyDSS;           // depth test only
+    ComPtr<ID3D11DepthStencilState>   depthTestStencilWriteDSS;   // depth test only / stencil write on (stencil test ALWAYS)
+    ComPtr<ID3D11DepthStencilState>   stencilTestOnlyDSS;         // stencil test only
+    ComPtr<ID3D11DepthStencilState>   disableDSS;                 // all disable
+
     // IA
     ComPtr<ID3D11InputLayout> inputLayout_Vertex;
     ComPtr<ID3D11InputLayout> inputLayout_Position;
