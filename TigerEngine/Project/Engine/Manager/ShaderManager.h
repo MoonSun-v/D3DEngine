@@ -17,6 +17,7 @@ private:
     void CreateRS(const ComPtr<ID3D11Device>& dev);
     void CreateSampler(const ComPtr<ID3D11Device>& dev);
     void CreateBS(const ComPtr<ID3D11Device>& dev);
+    void CreateShadowResource(const ComPtr<ID3D11Device>& dev);
     void CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx);
     void CreateCB(const ComPtr<ID3D11Device>& dev);
 
@@ -42,6 +43,12 @@ public:
     ComPtr<ID3D11BlendState>  alphaBlendState;          // alpha
     ComPtr<ID3D11BlendState>  additiveBlendState;       // additive (multiple light)
     
+    // Shadow Resource
+    ComPtr<ID3D11Texture2D>           shadowMap;
+    ComPtr<ID3D11DepthStencilView>    shadowDSV;
+    ComPtr<ID3D11ShaderResourceView>  shadowSRV;            // ShadowMap Texture
+    D3D11_VIEWPORT viewport_shadowMap;
+
     // IA
     ComPtr<ID3D11InputLayout> inputLayout_Vertex;
     ComPtr<ID3D11InputLayout> inputLayout_Position;

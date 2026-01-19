@@ -199,6 +199,50 @@ void ShaderManager::CreateBS(const ComPtr<ID3D11Device>& dev)
     }
 }
 
+void ShaderManager::CreateShadowResource(const ComPtr<ID3D11Device>& dev)
+{
+    // create shadowDSV, shadowSRV
+    // viewport
+    viewport_shadowMap = {};
+    viewport_shadowMap.TopLeftX = 0;
+    viewport_shadowMap.TopLeftY = 0;
+    viewport_shadowMap.Width = (float)8192;
+    viewport_shadowMap.Height = (float)8192;
+    viewport_shadowMap.MinDepth = 0.0f;
+    viewport_shadowMap.MaxDepth = 1.0f;
+
+    // texture2D
+    D3D11_TEXTURE2D_DESC texDesc = {};
+    texDesc.Width = 8192;
+    texDesc.Height = 8192;
+    texDesc.MipLevels = 1;
+    texDesc.ArraySize = 1;
+    texDesc.Format = DXGI_FORMAT_R32_TYPELESS;        // DSV와 SRV가 TYPELESS 텍스처 공유
+    texDesc.Usage = D3D11_USAGE_DEFAULT;
+    texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL |    // 깊이값 기록 용도
+        D3D11_BIND_SHADER_RESOURCE;   // 셰이더에서 텍스처 슬롯에 설정할 용도
+    texDesc.SampleDesc.Count = 1;
+    texDesc.SampleDesc.Quality = 0;
+
+    HRESULT hr = dev->CreateTexture2D(&texDesc, nullptr, shadowMap.GetAddressOf());
+    if (FAILED(hr)) { OutputDebugStringA("FAILED Create ShadowMapTexture"); }
+
+    // DSV
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+    dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    hr = dev->CreateDepthStencilView(shadowMap.Get(), &dsvDesc, shadowDSV.GetAddressOf());
+    if (FAILED(hr)) { OutputDebugStringA("FAILED Create Shadow Depth Stencil View"); }
+
+    // SRV
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    hr = dev->CreateShaderResourceView(shadowMap.Get(), &srvDesc, shadowSRV.GetAddressOf());
+    if (FAILED(hr)) { OutputDebugStringA("FAILED Create Shadow Shader Resource View"); }
+}
+
 void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx)
 {
     //---------------------------
