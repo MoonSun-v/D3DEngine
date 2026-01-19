@@ -9,6 +9,13 @@
 
 namespace
 {
+    std::string ToUpper(std::string value)
+    {
+        std::transform(value.begin(), value.end(), value.begin(),
+            [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+        return value;
+    }
+
     bool IsTruthy(const std::string& value)
     {
         if (value.empty())
@@ -17,9 +24,67 @@ namespace
         }
 
         std::string upper = value;
-        std::transform(upper.begin(), upper.end(), upper.begin(),
-            [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+        upper = ToUpper(upper);
         return upper == "1" || upper == "TRUE" || upper == "YES";
+    }
+
+    std::filesystem::path ResolveAudioPath(const std::string& rawPath)
+    {
+        std::filesystem::path input(rawPath);
+        if (input.is_absolute())
+        {
+            return input;
+        }
+
+        static std::optional<std::filesystem::path> audioDir =
+            PathHelper::FindDirectory("Assets\\Audio");
+        if (!audioDir)
+        {
+            return input;
+        }
+
+        std::filesystem::path tail;
+        bool seenAssets = false;
+        bool seenAudio = false;
+        for (const auto& part : input)
+        {
+            std::string partUpper = ToUpper(part.string());
+            if (!seenAssets)
+            {
+                if (partUpper == "ASSETS")
+                {
+                    seenAssets = true;
+                }
+                continue;
+            }
+            if (seenAssets && !seenAudio)
+            {
+                if (partUpper == "AUDIO")
+                {
+                    seenAudio = true;
+                }
+                else
+                {
+                    seenAssets = false;
+                }
+                continue;
+            }
+            if (seenAudio)
+            {
+                tail /= part;
+            }
+        }
+
+        if (seenAudio)
+        {
+            if (tail.empty())
+            {
+                return *audioDir;
+            }
+            return (*audioDir / tail).lexically_normal();
+        }
+
+        return (*audioDir / input).lexically_normal();
     }
 }
 
@@ -103,9 +168,7 @@ bool AudioManager::LoadManifest(const std::string& manifestPath)
 
         if (cols.size() >= 1)
         {
-            std::string header = cols[0];
-            std::transform(header.begin(), header.end(), header.begin(),
-                [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+            std::string header = ToUpper(cols[0]);
             if (header == "ID")
             {
                 continue;
@@ -159,7 +222,7 @@ std::shared_ptr<AudioClip> AudioManager::GetOrCreateClip(const std::string& id)
         return {};
     }
 
-    auto clip = m_system.CreateClip(entry->path, entry->mode);
+    auto clip = m_system.CreateClip(ResolveAudioPath(entry->path).string(), entry->mode);
     if (clip)
     {
         m_clips.emplace(id, clip);
@@ -175,7 +238,7 @@ void AudioManager::PreloadAll()
         {
             continue;
         }
-        auto clip = m_system.CreateClip(pair.second.path, pair.second.mode);
+        auto clip = m_system.CreateClip(ResolveAudioPath(pair.second.path).string(), pair.second.mode);
         if (clip)
         {
             m_clips.emplace(pair.first, clip);
@@ -227,9 +290,7 @@ std::vector<std::string> AudioManager::SplitCsvLine(const std::string& line)
 
 FMOD_MODE AudioManager::ParseMode(const std::string& text)
 {
-    std::string upper = text;
-    std::transform(upper.begin(), upper.end(), upper.begin(),
-        [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    std::string upper = ToUpper(text);
 
     if (upper == "3D" || upper == "3D_INVERSE" || upper == "INVERSE")
     {
