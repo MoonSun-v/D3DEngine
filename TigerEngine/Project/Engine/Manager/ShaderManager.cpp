@@ -14,6 +14,7 @@ void ShaderManager::Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11Dev
     CreateShadowResource(dev);
     CreateHDRResource(dev, width, height);
     CreateGbufferResource(dev, width, height);
+    CreateBloomResource(dev, width, height);
     CreateInputLayoutShader(dev, ctx);
     CreateCB(dev);
 }
@@ -348,6 +349,78 @@ void ShaderManager::CreateGbufferResource(const ComPtr<ID3D11Device>& dev, int s
         emissiveSRV.GetAddressOf()));
 }
 
+void ShaderManager::CreateBloomResource(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight)
+{
+    // create Bloom SRV, RTVs
+   // half-res
+    bloomW = std::max<UINT>(1, screenWidth / 2);
+    bloomH = std::max<UINT>(1, screenHeight / 2);
+
+    // Mip Count
+    UINT w = bloomW;
+    UINT h = bloomH;
+    bloomMipCount = 1;
+    while (w > 1 && h > 1)
+    {
+        w = std::max<UINT>(1, w >> 1);
+        h = std::max<UINT>(1, h >> 1);
+        ++bloomMipCount;
+        if (bloomMipCount >= 6) break;
+    }
+
+    // Texture
+    D3D11_TEXTURE2D_DESC td{};
+    td.Width = bloomW;
+    td.Height = bloomH;
+    td.MipLevels = bloomMipCount;
+    td.ArraySize = 1;
+    td.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+    td.SampleDesc.Count = 1;
+    td.SampleDesc.Quality = 0;
+    td.Usage = D3D11_USAGE_DEFAULT;
+    td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+    td.CPUAccessFlags = 0;
+    td.MiscFlags = 0;
+
+    HRESULT hr = S_OK;
+    hr = dev->CreateTexture2D(&td, nullptr, bloomATex.GetAddressOf());
+    hr = dev->CreateTexture2D(&td, nullptr, bloomBTex.GetAddressOf());
+    hr = dev->CreateTexture2D(&td, nullptr, accumATex.GetAddressOf());
+    hr = dev->CreateTexture2D(&td, nullptr, accumBTex.GetAddressOf());
+
+    // SRV
+    D3D11_SHADER_RESOURCE_VIEW_DESC sd{};
+    sd.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+    sd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    sd.Texture2D.MostDetailedMip = 0;
+    sd.Texture2D.MipLevels = bloomMipCount;
+
+    hr = dev->CreateShaderResourceView(bloomATex.Get(), &sd, bloomASRV.GetAddressOf());
+    hr = dev->CreateShaderResourceView(bloomBTex.Get(), &sd, bloomBSRV.GetAddressOf());
+    hr = dev->CreateShaderResourceView(accumATex.Get(), &sd, accumASRV.GetAddressOf());
+    hr = dev->CreateShaderResourceView(accumBTex.Get(), &sd, accumBSRV.GetAddressOf());
+
+    // RTV
+    bloomARTVs.clear(); bloomBRTVs.clear();
+    accumARTVs.clear(); accumBRTVs.clear();
+
+    bloomARTVs.resize(bloomMipCount);  bloomBRTVs.resize(bloomMipCount);
+    accumARTVs.resize(bloomMipCount);  accumBRTVs.resize(bloomMipCount);
+
+    for (UINT mip = 0; mip < bloomMipCount; ++mip)
+    {
+        D3D11_RENDER_TARGET_VIEW_DESC rd{};
+        rd.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+        rd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+        rd.Texture2D.MipSlice = mip;
+
+        hr = dev->CreateRenderTargetView(bloomATex.Get(), &rd, bloomARTVs[mip].GetAddressOf());
+        hr = dev->CreateRenderTargetView(bloomBTex.Get(), &rd, bloomBRTVs[mip].GetAddressOf());
+        hr = dev->CreateRenderTargetView(accumATex.Get(), &rd, accumARTVs[mip].GetAddressOf());
+        hr = dev->CreateRenderTargetView(accumBTex.Get(), &rd, accumBRTVs[mip].GetAddressOf());
+    }
+}
+
 void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx)
 {
     //---------------------------
@@ -625,6 +698,7 @@ void ShaderManager::CreateCB(const ComPtr<ID3D11Device>& dev)
         HR_T(dev->CreateBuffer(&constBuffer_Desc, nullptr, &effectCB));
     }
 }
+
 
 
 // --------------------------------------------------------------

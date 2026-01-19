@@ -21,6 +21,7 @@ private:
     void CreateShadowResource(const ComPtr<ID3D11Device>& dev);
     void CreateHDRResource(const ComPtr<ID3D11Device>& dev, int width, int height);
     void CreateGbufferResource(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight);
+    void CreateBloomResource(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight);
     void CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx);
     void CreateCB(const ComPtr<ID3D11Device>& dev);
 
@@ -72,6 +73,26 @@ public:
     ComPtr<ID3D11ShaderResourceView>  normalSRV;
     ComPtr<ID3D11ShaderResourceView>  metalRoughSRV;
     ComPtr<ID3D11ShaderResourceView>  emissiveSRV;
+
+    // Bloom
+    ComPtr<ID3D11ShaderResourceView>  finalBloomSRV;     // 최종 Bloom SRV
+    UINT bloomW;
+    UINT bloomH;
+    UINT bloomMipCount;
+    ComPtr<ID3D11Texture2D>           bloomATex;
+    ComPtr<ID3D11Texture2D>           bloomBTex;
+    ComPtr<ID3D11ShaderResourceView>  bloomASRV;
+    ComPtr<ID3D11ShaderResourceView>  bloomBSRV;
+    std::vector<ComPtr<ID3D11RenderTargetView>> bloomARTVs;
+    std::vector<ComPtr<ID3D11RenderTargetView>> bloomBRTVs;
+
+    ComPtr<ID3D11Texture2D>           accumATex;
+    ComPtr<ID3D11Texture2D>           accumBTex;
+    ComPtr<ID3D11ShaderResourceView>  accumASRV;
+    ComPtr<ID3D11ShaderResourceView>  accumBSRV;
+    std::vector<ComPtr<ID3D11RenderTargetView>> accumARTVs;
+    std::vector<ComPtr<ID3D11RenderTargetView>> accumBRTVs;
+
 
     // IA
     ComPtr<ID3D11InputLayout> inputLayout_Vertex;
