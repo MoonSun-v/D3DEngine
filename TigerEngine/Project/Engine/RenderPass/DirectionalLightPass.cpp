@@ -191,7 +191,7 @@ void DirectionalLightPass::End(ComPtr<ID3D11DeviceContext> &context)
     context->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 	
 	// srv unbind
-	vector<ID3D11ShaderResourceView*> nullSRVs(gbufferSRVs->size(), nullptr);
+	std::vector<ID3D11ShaderResourceView*> nullSRVs(gbufferSRVs->size(), nullptr);
 	context->PSSetShaderResources(11, gbufferSRVs->size(), nullSRVs.data());	// gbuffer tex
 	
 	context->PSSetShaderResources(4, 1, &nullSRVs[0]);

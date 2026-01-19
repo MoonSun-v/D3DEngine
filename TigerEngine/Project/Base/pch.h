@@ -25,6 +25,7 @@
 #include <utility>
 #include <algorithm>
 #include <functional>
+#include <fstream>
 
 #if _DEBUG
 #include <imgui.h>
@@ -53,5 +54,7 @@ using namespace DirectX::SimpleMath;
 
 #define RTTR_DLL
 #include "rttr/registration.h"
+
+#include "Helper.h"
 
 #endif //PCH_H

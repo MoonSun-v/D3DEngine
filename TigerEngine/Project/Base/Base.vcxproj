@@ -181,10 +181,8 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Renderer\DirectX11Renderer.h" />
     <ClInclude Include="Renderer\ImguiRenderer.h" />
-    <ClInclude Include="Renderer\IRenderCommand.h" />
     <ClInclude Include="Renderer\IRenderer.h" />
     <ClInclude Include="Renderer\IRenderPass.h" />
-    <ClInclude Include="Renderer\RenderQueue.h" />
     <ClInclude Include="Scene\Scene.h" />
     <ClInclude Include="System\CameraSystem.h" />
     <ClInclude Include="System\ComponentFactory.h" />

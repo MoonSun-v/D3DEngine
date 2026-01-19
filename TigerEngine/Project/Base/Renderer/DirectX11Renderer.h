@@ -10,7 +10,6 @@
 #include "../Renderer/IRenderer.h"
 #include "../Scene/Scene.h"
 #include "../Renderer/IRenderPass.h"
-#include "../Renderer/RenderQueue.h"
 #include "../Entity/Camera.h"
 
 /// <summary>
@@ -42,9 +41,5 @@ private:
 
 	D3D11_VIEWPORT					renderViewport{};
 	ComPtr<ID3D11DepthStencilView>	depthStencilView{};	// 뎊스 스텐실 뷰
-
-	
-
-	RenderQueue renderQueue{};
 };
 

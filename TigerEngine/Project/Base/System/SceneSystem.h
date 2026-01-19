@@ -1,7 +1,6 @@
 #pragma once
 #include "../pch.h"
 #include "../Scene/Scene.h"
-#include "../Renderer/RenderQueue.h"
 #include <map>
 #include <vector>
 #include "../System/Singleton.h"
@@ -14,7 +13,6 @@ public:
 
 	void BeforUpdate();
 	void UpdateScene(float deltaTime);
-	void RenderScene(std::unique_ptr<RenderQueue>& renderQueue);
 
 	std::shared_ptr<Scene> GetSceneByIndex(int index);
 	void AddScene();

@@ -4,7 +4,6 @@
 #include "../Components/FBXData.h"
 #include "Datas/FBXResourceData.h"
 #include "Datas/Bone.h"
-#include "../Commands/DrawFBXCommand.h"
 
 class FBXRenderer : public RenderComponent
 {

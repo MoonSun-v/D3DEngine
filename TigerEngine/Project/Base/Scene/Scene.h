@@ -1,6 +1,5 @@
 #pragma once
 #include "../pch.h"
-#include "../Renderer/RenderQueue.h"
 #include "../Entity/RenderComponent.h"
 #include <map>
 
@@ -77,10 +76,10 @@ protected:
     /// <summary>
     /// 씬에서 사용하는 오브젝트 모음 
     /// </summary>
-    vector<GameObjectEntity> gameObjects;
+    std::vector<GameObjectEntity> gameObjects;
 
     /// <summary>
     /// 오브젝트를 찾을 때 사용하는 매핑 자료구조
     /// </summary>
-    std::unordered_map<std::string, vector<pair<Handle, int>>> mappedGameObjects;
+    std::unordered_map<std::string, std::vector<std::pair<Handle, int>>> mappedGameObjects;
 };

@@ -163,7 +163,6 @@ void DirectX11Renderer::EndRender()
 void DirectX11Renderer::ProcessScene
 	(std::shared_ptr<Scene> scene, std::shared_ptr<IRenderPass> renderPass, Camera* cam)
 {
-	renderQueue.Clear();	
 	renderPass->Execute(deviceContext, scene, cam);	
 
 	if(scene)

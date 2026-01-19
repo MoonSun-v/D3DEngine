@@ -133,9 +133,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App\Editor.cpp" />
-    <ClCompile Include="Commands\DrawAABBBox.cpp" />
-    <ClCompile Include="Commands\DrawFBXCommand.cpp" />
-    <ClCompile Include="Commands\DrawMeshCommand.cpp" />
     <ClCompile Include="Components\FBXData.cpp" />
     <ClCompile Include="Components\FBXRenderer.cpp" />
     <ClCompile Include="Components\MeshRenderer.cpp" />
@@ -154,9 +151,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App\Editor.h" />
-    <ClInclude Include="Commands\DrawAABBBox.h" />
-    <ClInclude Include="Commands\DrawFBXCommand.h" />
-    <ClInclude Include="Commands\DrawMeshCommand.h" />
     <ClInclude Include="Components\FBXData.h" />
     <ClInclude Include="Components\FBXRenderer.h" />
     <ClInclude Include="Components\MeshRenderer.h" />

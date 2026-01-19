@@ -150,7 +150,7 @@ void GBufferRenderPass::Execute(ComPtr<ID3D11DeviceContext> &context, std::share
 void GBufferRenderPass::End(ComPtr<ID3D11DeviceContext> &context)
 {
     // RTV Unbind 	
-	vector<ID3D11RenderTargetView*> nullRTVs(gbufferRTVs.size(), {});
+	std::vector<ID3D11RenderTargetView*> nullRTVs(gbufferRTVs.size(), {});
 	context->OMSetRenderTargets(bufferCount, nullRTVs.data(), nullptr);
 }
 
@@ -174,7 +174,7 @@ void GBufferRenderPass::CreateGBuffers(const ComPtr<ID3D11Device> &device)
 		DXGI_FORMAT format;
 	};
 
-	vector<RTDesc> formats
+	std::vector<RTDesc> formats
 	{
 		{ DXGI_FORMAT_R8G8B8A8_UNORM_SRGB },	// BaseColor
 		{ DXGI_FORMAT_R8G8B8A8_UNORM },			// Normal
