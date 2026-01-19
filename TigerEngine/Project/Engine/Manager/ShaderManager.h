@@ -13,10 +13,36 @@ public:
     void Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx);
 
 private:
+    void CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx);
     void CreateCB(const ComPtr<ID3D11Device>& dev);
 
 
 public:
+    // IA
+    ComPtr<ID3D11InputLayout> inputLayout_Vertex;
+    ComPtr<ID3D11InputLayout> inputLayout_Position;
+    ComPtr<ID3D11InputLayout> inputLayout_Particle;
+
+    // Vertex Shader
+    ComPtr<ID3D11VertexShader> VS_ShadowDepth_Model;
+    ComPtr<ID3D11VertexShader> VS_BaseLit_Model;
+    ComPtr<ID3D11VertexShader> VS_Skybox;
+    ComPtr<ID3D11VertexShader> VS_FullScreen;
+    ComPtr<ID3D11VertexShader> VS_LightVolume;
+    ComPtr<ID3D11VertexShader> VS_Effect;
+
+    // Pixel Shader
+    ComPtr<ID3D11PixelShader> PS_ShadowDepth;
+    ComPtr<ID3D11PixelShader> PS_Gbuffer;
+    ComPtr<ID3D11PixelShader> PS_DeferredLighting;
+    ComPtr<ID3D11PixelShader> PS_Effect;
+    ComPtr<ID3D11PixelShader> PS_Skybox;
+    ComPtr<ID3D11PixelShader> PS_BloomPrefilter;
+    ComPtr<ID3D11PixelShader> PS_BloomDownsampleBlur;
+    ComPtr<ID3D11PixelShader> PS_BloomUpsampleCombine;
+    ComPtr<ID3D11PixelShader> PS_PostProcess;
+
+
     // Constant Bufer
     ComPtr<ID3D11Buffer>& GetFrameCB();
     ComPtr<ID3D11Buffer>& GetTransformCB();

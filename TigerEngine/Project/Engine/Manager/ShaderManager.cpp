@@ -2,10 +2,197 @@
 #include <Datas/Vertex.h>
 #include <Datas/FBXResourceData.h>
 #include "../Base/Datas/ConstantBuffer.hpp"
+#include "../Base/Datas/Vertex.h"
 
 void ShaderManager::Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx)
 {
     CreateCB(dev);
+    CreateInputLayoutShader(dev, ctx);
+}
+
+void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx)
+{
+    //---------------------------
+    // 1. Skybox
+    {
+        // InputLayout
+        D3D11_INPUT_ELEMENT_DESC layout[] =
+        {
+            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        };
+
+        ID3D10Blob* vertexShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_Skybox.hlsl", "main", "vs_5_0", &vertexShaderBuffer));
+        HR_T(dev->CreateInputLayout(layout, ARRAYSIZE(layout),
+            vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &inputLayout_Position));
+
+        // VS
+        dev->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), nullptr, &VS_Skybox);
+        vertexShaderBuffer->Release();
+
+        // PS
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_Skybox.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &PS_Skybox));
+    }
+
+    //---------------------------
+    // 2. Mesh
+    {
+        // Input Layout
+        D3D11_INPUT_ELEMENT_DESC layout[] =
+        {   // SemanticName , SemanticIndex , Format , InputSlot , AlignedByteOffset , InputSlotClass , InstanceDataStepRate	
+            { "POSITION"    , 0, DXGI_FORMAT_R32G32B32_FLOAT  , 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "NORMAL"      , 0, DXGI_FORMAT_R32G32B32_FLOAT  , 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "TANGENT"     , 0, DXGI_FORMAT_R32G32B32_FLOAT  , 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "BITANGENT"   , 0, DXGI_FORMAT_R32G32B32_FLOAT  , 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD"    , 0, DXGI_FORMAT_R32G32_FLOAT     , 0, 48, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "BONE_INDICES", 0, DXGI_FORMAT_R32G32B32A32_UINT, 0, 56, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "BONE_WEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT , 0, 72, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+        };
+
+        ID3D10Blob* vertexShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_BaseLit_Skinned.hlsl", "main", "vs_5_0", &vertexShaderBuffer));
+        HR_T(dev->CreateInputLayout(layout, ARRAYSIZE(layout),
+            vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &inputLayout_Vertex));
+
+        // VS
+        HR_T(dev->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
+            vertexShaderBuffer->GetBufferSize(), NULL, &VS_BaseLit_Model));
+        SAFE_RELEASE(vertexShaderBuffer);
+
+        // ShadowDepth_VS
+        ID3D10Blob* vertexShaderBuffer3 = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_ShadowDepth_Skinned.hlsl", "main", "vs_5_0", &vertexShaderBuffer3));
+        HR_T(dev->CreateVertexShader(vertexShaderBuffer3->GetBufferPointer(),
+            vertexShaderBuffer3->GetBufferSize(), NULL, &VS_ShadowDepth_Model));
+        SAFE_RELEASE(vertexShaderBuffer3);
+    }
+
+    //---------------------------
+    // 3. Particle
+    {
+        // Input Layout
+        D3D11_INPUT_ELEMENT_DESC layout[] =
+        {
+            // --- slot 0 (PER_VERTEX) : ParticleQuadVertex
+            { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,        0, 0,  D3D11_INPUT_PER_VERTEX_DATA,   0 }, // corner
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,        0, 8,  D3D11_INPUT_PER_VERTEX_DATA,   0 }, // uv
+
+            // --- slot 1 (PER_INSTANCE) : ParticleInstance
+            { "TEXCOORD", 1, DXGI_FORMAT_R32G32B32_FLOAT,     1, 0,  D3D11_INPUT_PER_INSTANCE_DATA, 1 }, // iPos
+            { "TEXCOORD", 2, DXGI_FORMAT_R32_FLOAT,           1, 12, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, // iRot
+            { "TEXCOORD", 3, DXGI_FORMAT_R32G32_FLOAT,        1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, // iSize
+            { "TEXCOORD", 4, DXGI_FORMAT_R32_FLOAT,           1, 24, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, // iFrame
+            { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT,  1, 28, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, // iColor
+        };
+
+        ID3D10Blob* vertexShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_Effect.hlsl", "main", "vs_5_0", &vertexShaderBuffer));
+        HR_T(dev->CreateInputLayout(layout, ARRAYSIZE(layout),
+            vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &inputLayout_Particle));
+
+        // VS
+        HR_T(dev->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
+            vertexShaderBuffer->GetBufferSize(), NULL, &VS_Effect));
+        SAFE_RELEASE(vertexShaderBuffer);
+
+        // PS
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_Effect.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &PS_Effect));
+    }
+
+    //---------------------------
+    // Full Screen VS
+    {
+        ID3D10Blob* vertexShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_Fullscreen.hlsl", "main", "vs_5_0", &vertexShaderBuffer));
+        HR_T(dev->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
+            vertexShaderBuffer->GetBufferSize(), NULL, &VS_FullScreen));
+        SAFE_RELEASE(vertexShaderBuffer);
+    }
+
+    //---------------------------
+    // LightVolume_VS
+    {
+        ID3D10Blob* vertexShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_LightVolume.hlsl", "main", "vs_5_0", &vertexShaderBuffer));
+        HR_T(dev->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
+            vertexShaderBuffer->GetBufferSize(), NULL, &VS_LightVolume));
+        SAFE_RELEASE(vertexShaderBuffer);
+    }
+
+    //---------------------------
+    // PostProcess PS
+    {
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_PostProcess.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+            pixelShaderBuffer->GetBufferSize(), NULL, &PS_PostProcess));
+        SAFE_RELEASE(pixelShaderBuffer);
+    }
+
+    //---------------------------
+    // ShadowDepth PS
+    {
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_ShadowDepth.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+            pixelShaderBuffer->GetBufferSize(), NULL, &PS_ShadowDepth));
+        SAFE_RELEASE(pixelShaderBuffer);
+    }
+
+    //---------------------------
+    // BloomPrefilter PS
+    {
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_BloomPrefilter.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+            pixelShaderBuffer->GetBufferSize(), NULL, &PS_BloomPrefilter));
+        SAFE_RELEASE(pixelShaderBuffer);
+    }
+
+    //---------------------------
+    // BloomDownsampleBlur PS
+    {
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_BloomDownsampleBlur.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+            pixelShaderBuffer->GetBufferSize(), NULL, &PS_BloomDownsampleBlur));
+        SAFE_RELEASE(pixelShaderBuffer);
+    }
+
+    //---------------------------
+    // BloomUpsampleCombine PS
+    {
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_BloomUpsampleCombine.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+            pixelShaderBuffer->GetBufferSize(), NULL, &PS_BloomUpsampleCombine));
+        SAFE_RELEASE(pixelShaderBuffer);
+    }
+
+    //---------------------------
+    // Gbuffer PS
+    {
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_Gbuffer.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+            pixelShaderBuffer->GetBufferSize(), NULL, &PS_Gbuffer));
+        SAFE_RELEASE(pixelShaderBuffer);
+    }
+
+    //---------------------------
+    // DeferredLighting PS
+    {
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_DeferredLighting.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+            pixelShaderBuffer->GetBufferSize(), NULL, &PS_DeferredLighting));
+        SAFE_RELEASE(pixelShaderBuffer);
+    }
+
 }
 
 void ShaderManager::CreateCB(const ComPtr<ID3D11Device>& dev)
