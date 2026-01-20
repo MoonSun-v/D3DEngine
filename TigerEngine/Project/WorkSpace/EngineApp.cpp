@@ -117,6 +117,7 @@ void EngineApp::OnUpdate()
 {
 	SceneSystem::Instance().BeforUpdate();	
 	CameraSystem::Instance().FreeCameraUpdate(GameTimer::Instance().DeltaTime());
+	CameraSystem::Instance().LightCameraUpdate(GameTimer::Instance().DeltaTime());
 	WorldManager::Instance().Update();
 	SceneSystem::Instance().UpdateScene(GameTimer::Instance().DeltaTime());
 

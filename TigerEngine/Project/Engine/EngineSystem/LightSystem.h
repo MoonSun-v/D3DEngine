@@ -21,6 +21,8 @@ public:
     ~LightSystem() = default;
 
     void Register(Light* comp);
-    void Update();
     void UnRegister(Light* comp);
+
+    // SunLight Direction Getter
+    Vector3 GetSunDirection();
 };
