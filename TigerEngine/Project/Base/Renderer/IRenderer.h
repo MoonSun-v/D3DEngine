@@ -1,6 +1,5 @@
-﻿#pragma once
+#pragma once
 #include "../pch.h"
-#include "../Datas/MaterialData.h"
 #include "../Datas/Mesh.h"
 
 /// @brief 그래픽 api를 사용하는 클래스가 상속받는 클래스

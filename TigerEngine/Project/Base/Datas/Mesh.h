@@ -6,7 +6,6 @@
 #include "../Helper.h"
 #include "assimp/material.h"
 #include "Vertex.h"
-#include "MaterialData.h"
 
 using namespace std;
 using namespace DirectX::SimpleMath;
@@ -50,7 +49,7 @@ public:
 		this->setupMesh();
 	}
 
-    void Draw(ComPtr<ID3D11DeviceContext>& pDeviceContext);
+    void Draw(ComPtr<ID3D11DeviceContext>& pDeviceContext) const;
 	void SetMaterial(aiMaterial* pAiMaterial);
 	MaterialData& GetMaterial();
 	void CreateVertexBuffer(ComPtr<ID3D11Device>& dev);
@@ -68,5 +67,5 @@ private:
     // Initializes all the buffer objects/arrays
     void setupMesh();
 
-	void ProcessTextureByType(ComPtr<ID3D11DeviceContext>& pDeviceContext, int index);
+	void ProcessTextureByType(ComPtr<ID3D11DeviceContext>& pDeviceContext, int index) const;
 };
