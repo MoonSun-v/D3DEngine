@@ -79,8 +79,6 @@ bool EngineApp::OnInitialize()
     // == find scene ==
     LoadSavedFirstScene();
 
-	WorldManager::Instance().CreateDirectionalLightFrustum(); // create directional light 
-
 
 	// == init renderpass ==
 	// NOTE : 랜더링하는 순서대로 추가 할 것
@@ -114,10 +112,13 @@ bool EngineApp::OnInitialize()
 
 void EngineApp::OnUpdate()
 {
+    auto freeCam = CameraSystem::Instance().GetFreeCamera();
+    auto currCam = CameraSystem::Instance().GetCurrCamera();
+
 	SceneSystem::Instance().BeforUpdate();	
 	CameraSystem::Instance().FreeCameraUpdate(GameTimer::Instance().DeltaTime());
 	CameraSystem::Instance().LightCameraUpdate(GameTimer::Instance().DeltaTime());
-	WorldManager::Instance().Update();
+	WorldManager::Instance().Update(dxRenderer->GetDeviceContext(), currCam, clientWidth, clientHeight);
 	SceneSystem::Instance().UpdateScene(GameTimer::Instance().DeltaTime());
 
 #if _DEBUG
@@ -159,14 +160,6 @@ void EngineApp::OnRender()
         context->PSSetConstantBuffers(6, 1, sm.postProcessCB.GetAddressOf());
         context->PSSetConstantBuffers(7, 1, sm.bloomCB.GetAddressOf());
         context->PSSetConstantBuffers(8, 1, sm.effectCB.GetAddressOf());
-
-        // FrameCB Update
-        auto cam = CameraSystem::Instance().GetFreeCamera();        // TODO :: Current Camera
-        sm.frameCBData.time = GameTimer::Instance().TotalTime();
-        sm.frameCBData.deltaTime = GameTimer::Instance().DeltaTime();
-        sm.frameCBData.screenSize = { (float)clientWidth,(float)clientHeight };
-        sm.frameCBData.cameraPos = cam->GetOwner()->GetTransform()->GetPosition();
-        context->UpdateSubresource(sm.frameCB.Get(), 0, nullptr, &sm.frameCBData, 0, 0); 
     }
 
     if (PlayModeSystem::Instance().IsPlaying())
