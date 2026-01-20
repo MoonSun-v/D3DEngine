@@ -3,18 +3,20 @@
 #include "Datas/Mesh.h"
 #include "Datas/Bone.h"
 #include "Datas/FBXResourceData.h"
+#include "Datas/ConstantBuffer.hpp"
 
 struct SkeletalRenderItem
 {
     const Mesh* mesh;
     Matrix world;
-    MaterialData material;
+    Material material;
 
     int refBoneIndex;
     int isRigid;
+    int boneCount;  // skeletal bone 개수
 
-    const BonePoseBuffer* poses;
-    const BoneOffsetBuffer* offsets;
+    const PoseMatrixCB* poses;
+    const OffsetMatrixCB* offsets;
 };
 
 /// <summary>

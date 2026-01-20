@@ -6,6 +6,7 @@
 #include "../Helper.h"
 #include "assimp/material.h"
 #include "Vertex.h"
+#include "Material.h"
 
 using namespace std;
 using namespace DirectX::SimpleMath;
@@ -51,14 +52,14 @@ public:
 
     void Draw(ComPtr<ID3D11DeviceContext>& pDeviceContext) const;
 	void SetMaterial(aiMaterial* pAiMaterial);
-	MaterialData& GetMaterial();
+    Material& GetMaterial();
 	void CreateVertexBuffer(ComPtr<ID3D11Device>& dev);
 	void CreateIndexBuffer(ComPtr<ID3D11Device>& dev);
 	
 	//void CreateMaterialBuffer(ComPtr<ID3D11Device>& dev);
 
 private:
-	MaterialData material{};
+    Material material{};
 
 	ComPtr<ID3D11Buffer> m_pVertexBuffer{};
 	ComPtr<ID3D11Buffer> m_pIndexBuffer{};

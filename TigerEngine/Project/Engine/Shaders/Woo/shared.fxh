@@ -103,13 +103,12 @@ cbuffer MaterialCB : register(b3)
     // use texture
     bool useDiffuse;
     bool useNormal;
-    bool useSpecular;
     bool useEmissive;
     bool useMetallic;
     bool useRoughness;
     
     bool roughnessFromShininess;
-    float padding3;
+    float2 padding3;
 
     // PBR Factor
     float emissiveFactor;

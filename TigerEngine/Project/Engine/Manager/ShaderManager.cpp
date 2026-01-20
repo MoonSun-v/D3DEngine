@@ -1,8 +1,7 @@
 #include "ShaderManager.h"
-#include <Datas/Vertex.h>
 #include <Datas/FBXResourceData.h>
-#include "../Base/Datas/ConstantBuffer.hpp"
 #include "../Base/Datas/Vertex.h"
+#include "../Util/PathHelper.h"
 
 void ShaderManager::Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx
                                 , float width, float height)
@@ -11,10 +10,12 @@ void ShaderManager::Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11Dev
     CreateRS(dev);
     CreateSampler(dev);
     CreateBS(dev);
+
     CreateShadowResource(dev);
     CreateHDRResource(dev, width, height);
     CreateGbufferResource(dev, width, height);
     CreateBloomResource(dev, width, height);
+
     CreateInputLayoutShader(dev, ctx);
     CreateCB(dev);
 }
@@ -424,9 +425,10 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
         {
             {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
         };
-
+        
         ID3D10Blob* vertexShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_Skybox.hlsl", "main", "vs_5_0", &vertexShaderBuffer));
+        std::wstring path1 = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\VS_Skybox.hlsl";
+        HR_T(CompileShaderFromFile(path1.c_str(), "main", "vs_5_0", &vertexShaderBuffer));
         HR_T(dev->CreateInputLayout(layout, ARRAYSIZE(layout),
             vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &inputLayout_Position));
 
@@ -436,7 +438,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
 
         // PS
         ID3D10Blob* pixelShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_Skybox.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        std::wstring path2 = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\PS_Skybox.hlsl";
+        HR_T(CompileShaderFromFile(path2.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
         HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &PS_Skybox));
     }
 
@@ -456,7 +459,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
         };
 
         ID3D10Blob* vertexShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_BaseLit_Skinned.hlsl", "main", "vs_5_0", &vertexShaderBuffer));
+        std::wstring path1 = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\VS_BaseLit_Model.hlsl";
+        HR_T(CompileShaderFromFile(path1.c_str(), "main", "vs_5_0", &vertexShaderBuffer));
         HR_T(dev->CreateInputLayout(layout, ARRAYSIZE(layout),
             vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &inputLayout_Vertex));
 
@@ -467,7 +471,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
 
         // ShadowDepth_VS
         ID3D10Blob* vertexShaderBuffer3 = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_ShadowDepth_Skinned.hlsl", "main", "vs_5_0", &vertexShaderBuffer3));
+        std::wstring path2 = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\VS_BaseLit_Model.hlsl";
+        HR_T(CompileShaderFromFile(path2.c_str(), "main", "vs_5_0", &vertexShaderBuffer3));
         HR_T(dev->CreateVertexShader(vertexShaderBuffer3->GetBufferPointer(),
             vertexShaderBuffer3->GetBufferSize(), NULL, &VS_ShadowDepth_Model));
         SAFE_RELEASE(vertexShaderBuffer3);
@@ -492,7 +497,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
         };
 
         ID3D10Blob* vertexShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_Effect.hlsl", "main", "vs_5_0", &vertexShaderBuffer));
+        std::wstring path1 = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\VS_Effect.hlsl";
+        HR_T(CompileShaderFromFile(path1.c_str(), "main", "vs_5_0", &vertexShaderBuffer));
         HR_T(dev->CreateInputLayout(layout, ARRAYSIZE(layout),
             vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &inputLayout_Particle));
 
@@ -503,7 +509,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
 
         // PS
         ID3D10Blob* pixelShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_Effect.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        std::wstring path2 = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\PS_Effect.hlsl";
+        HR_T(CompileShaderFromFile(path2.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
         HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &PS_Effect));
     }
 
@@ -511,7 +518,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
     // Full Screen VS
     {
         ID3D10Blob* vertexShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_Fullscreen.hlsl", "main", "vs_5_0", &vertexShaderBuffer));
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\VS_Fullscreen.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "vs_5_0", &vertexShaderBuffer));
         HR_T(dev->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
             vertexShaderBuffer->GetBufferSize(), NULL, &VS_FullScreen));
         SAFE_RELEASE(vertexShaderBuffer);
@@ -521,7 +529,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
     // LightVolume_VS
     {
         ID3D10Blob* vertexShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/VS_LightVolume.hlsl", "main", "vs_5_0", &vertexShaderBuffer));
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\VS_LightVolume.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "vs_5_0", &vertexShaderBuffer));
         HR_T(dev->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
             vertexShaderBuffer->GetBufferSize(), NULL, &VS_LightVolume));
         SAFE_RELEASE(vertexShaderBuffer);
@@ -531,7 +540,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
     // PostProcess PS
     {
         ID3D10Blob* pixelShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_PostProcess.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\PS_PostProcess.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
         HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
             pixelShaderBuffer->GetBufferSize(), NULL, &PS_PostProcess));
         SAFE_RELEASE(pixelShaderBuffer);
@@ -541,7 +551,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
     // ShadowDepth PS
     {
         ID3D10Blob* pixelShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_ShadowDepth.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\PS_ShadowDepth.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
         HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
             pixelShaderBuffer->GetBufferSize(), NULL, &PS_ShadowDepth));
         SAFE_RELEASE(pixelShaderBuffer);
@@ -551,7 +562,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
     // BloomPrefilter PS
     {
         ID3D10Blob* pixelShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_BloomPrefilter.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\PS_BloomPrefilter.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
         HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
             pixelShaderBuffer->GetBufferSize(), NULL, &PS_BloomPrefilter));
         SAFE_RELEASE(pixelShaderBuffer);
@@ -561,7 +573,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
     // BloomDownsampleBlur PS
     {
         ID3D10Blob* pixelShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_BloomDownsampleBlur.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\PS_BloomDownsampleBlur.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
         HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
             pixelShaderBuffer->GetBufferSize(), NULL, &PS_BloomDownsampleBlur));
         SAFE_RELEASE(pixelShaderBuffer);
@@ -571,7 +584,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
     // BloomUpsampleCombine PS
     {
         ID3D10Blob* pixelShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_BloomUpsampleCombine.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\PS_BloomUpsampleCombine.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
         HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
             pixelShaderBuffer->GetBufferSize(), NULL, &PS_BloomUpsampleCombine));
         SAFE_RELEASE(pixelShaderBuffer);
@@ -581,7 +595,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
     // Gbuffer PS
     {
         ID3D10Blob* pixelShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_Gbuffer.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\PS_Gbuffer.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
         HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
             pixelShaderBuffer->GetBufferSize(), NULL, &PS_Gbuffer));
         SAFE_RELEASE(pixelShaderBuffer);
@@ -591,7 +606,8 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
     // DeferredLighting PS
     {
         ID3D10Blob* pixelShaderBuffer = nullptr;
-        HR_T(CompileShaderFromFile(L"../Shaders/Woo/PS_DeferredLighting.hlsl", "main", "ps_5_0", &pixelShaderBuffer));
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\Shaders\\PS_DeferredLighting.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
         HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
             pixelShaderBuffer->GetBufferSize(), NULL, &PS_DeferredLighting));
         SAFE_RELEASE(pixelShaderBuffer);
@@ -747,52 +763,4 @@ void ShaderManager::SetViewportForMip(const ComPtr<ID3D11DeviceContext>& ctx, UI
     UINT w, h;
     GetMipSize(baseW, baseH, mip, w, h);
     SetViewport(ctx, w, h);
-}
-
-
-
-// [ CB Getter ] --------------------------------------------------------------
-ComPtr<ID3D11Buffer>& ShaderManager::GetFrameCB()
-{
-    return frameCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetTransformCB()
-{
-    return transformCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetLightingCB()
-{
-    return lightingCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetMaterialCB()
-{
-    return materialCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetOffsetMatrixCB()
-{
-    return offsetMatrixCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetPoseMatrixCB()
-{
-    return poseMatrixCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetPostProcessCB()
-{
-    return postProcessCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetBloomCB()
-{
-    return bloomCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetEffectCB()
-{
-    return effectCB;
 }
