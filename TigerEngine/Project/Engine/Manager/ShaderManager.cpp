@@ -1,7 +1,7 @@
 #include "ShaderManager.h"
 #include <Datas/FBXResourceData.h>
 #include "../Base/Datas/Vertex.h"
-#include "../Base/Datas/ConstantBuffer.hpp"
+
 
 void ShaderManager::Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11DeviceContext>& ctx
                                 , float width, float height)

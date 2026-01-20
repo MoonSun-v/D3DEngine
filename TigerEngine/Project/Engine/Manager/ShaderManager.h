@@ -1,17 +1,7 @@
 #pragma once
-#include <pch.h>
-#include <System/Singleton.h>
-
-// CB 전방선언
-struct FrameCB;
-struct TransformCB;
-struct LightingCB;
-struct MaterialCB;
-struct OffsetMatrixCB;
-struct PoseMatrixCB;
-struct PostProcessCB;
-struct BloomCB;
-struct EffectCB;
+#include "pch.h"
+#include "System/Singleton.h"
+#include "../Base/Datas/ConstantBuffer.hpp"
 
 /// @brief 셰이더에 사용하는 데이터를 가지고 있는 클래스
 /// @date 26.01.20
