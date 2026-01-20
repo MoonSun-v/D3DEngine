@@ -1,10 +1,30 @@
-#include "..\\include\\AudioSourceComponent.h"
-#include "..\\include\\AudioSystem.h"
+#include "AudioSourceComponent.h"
+
+#include "..\\Manager\\AudioManager.h"
+#include "..\\..\\Externals\\AudioModule_FMOD\\include\\AudioClip.h"
+
+void AudioSourceComponent::OnInitialize()
+{
+    Init(&AudioManager::Instance().GetSystem());
+}
+
+void AudioSourceComponent::OnUpdate(float delta)
+{
+    (void)delta;
+    Update3D();
+}
+
+void AudioSourceComponent::OnDestory()
+{
+    Stop();
+    m_System = nullptr;
+}
 
 void AudioSourceComponent::Init(AudioSystem* system)
 {
     m_System = system;
-    if (m_System && m_System->GetSystem()) {
+    if (m_System && m_System->GetSystem())
+    {
         m_Source.Init(m_System->GetSystem());
     }
 }

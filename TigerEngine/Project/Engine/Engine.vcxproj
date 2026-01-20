@@ -135,6 +135,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App\Editor.cpp" />
+    <ClCompile Include="Components\AudioListenerComponent.cpp" />
+    <ClCompile Include="Components\AudioSourceComponent.cpp" />
     <ClCompile Include="Components\Camera.cpp" />
     <ClCompile Include="Components\FBXData.cpp" />
     <ClCompile Include="Components\FBXRenderer.cpp" />
@@ -184,6 +186,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App\Editor.h" />
+    <ClInclude Include="Components\AudioListenerComponent.h" />
+    <ClInclude Include="Components\AudioSourceComponent.h" />
     <ClInclude Include="Components\Camera.h" />
     <ClInclude Include="Components\FBXData.h" />
     <ClInclude Include="Components\FBXRenderer.h" />

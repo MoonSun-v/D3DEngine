@@ -1,5 +1,22 @@
-#include "..\\include\\AudioListenerComponent.h"
-#include "..\\include\\AudioSystem.h"
+#include "AudioListenerComponent.h"
+
+#include "..\\Manager\\AudioManager.h"
+
+void AudioListenerComponent::OnInitialize()
+{
+    Init(&AudioManager::Instance().GetSystem());
+}
+
+void AudioListenerComponent::OnUpdate(float delta)
+{
+    (void)delta;
+    Update();
+}
+
+void AudioListenerComponent::OnDestory()
+{
+    m_System = nullptr;
+}
 
 void AudioListenerComponent::Init(AudioSystem* system)
 {
@@ -18,7 +35,8 @@ void AudioListenerComponent::SetFallback(const AudioTransform& transform)
 
 void AudioListenerComponent::Update()
 {
-    if (!m_System || !m_System->GetSystem()) {
+    if (!m_System || !m_System->GetSystem())
+    {
         return;
     }
 
