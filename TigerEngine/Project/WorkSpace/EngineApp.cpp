@@ -134,6 +134,41 @@ void EngineApp::OnRender()
 	auto freeCam = CameraSystem::Instance().GetFreeCamera();	
     auto currCam = CameraSystem::Instance().GetCurrCamera();
 
+    // Default CB Setting (TODO :: 이거 어디로 뺄까?)
+    {
+        auto& sm = ShaderManager::Instance();
+        const auto& context = dxRenderer->GetDeviceContext();
+
+        // CB Slot Binding
+        context->VSSetConstantBuffers(0, 1, sm.frameCB.GetAddressOf());
+        context->VSSetConstantBuffers(1, 1, sm.transformCB.GetAddressOf());
+        context->VSSetConstantBuffers(2, 1, sm.lightingCB.GetAddressOf());
+        context->VSSetConstantBuffers(3, 1, sm.materialCB.GetAddressOf());
+        context->VSSetConstantBuffers(4, 1, sm.offsetMatrixCB.GetAddressOf());
+        context->VSSetConstantBuffers(5, 1, sm.poseMatrixCB.GetAddressOf());
+        context->VSSetConstantBuffers(6, 1, sm.postProcessCB.GetAddressOf());
+        context->VSSetConstantBuffers(7, 1, sm.bloomCB.GetAddressOf());
+        context->VSSetConstantBuffers(8, 1, sm.effectCB.GetAddressOf());
+
+        context->PSSetConstantBuffers(0, 1, sm.frameCB.GetAddressOf());
+        context->PSSetConstantBuffers(1, 1, sm.transformCB.GetAddressOf());
+        context->PSSetConstantBuffers(2, 1, sm.lightingCB.GetAddressOf());
+        context->PSSetConstantBuffers(3, 1, sm.materialCB.GetAddressOf());
+        context->PSSetConstantBuffers(4, 1, sm.offsetMatrixCB.GetAddressOf());
+        context->PSSetConstantBuffers(5, 1, sm.poseMatrixCB.GetAddressOf());
+        context->PSSetConstantBuffers(6, 1, sm.postProcessCB.GetAddressOf());
+        context->PSSetConstantBuffers(7, 1, sm.bloomCB.GetAddressOf());
+        context->PSSetConstantBuffers(8, 1, sm.effectCB.GetAddressOf());
+
+        // FrameCB Update
+        auto cam = CameraSystem::Instance().GetFreeCamera();        // TODO :: Current Camera
+        sm.frameCBData.time = GameTimer::Instance().TotalTime();
+        sm.frameCBData.deltaTime = GameTimer::Instance().DeltaTime();
+        sm.frameCBData.screenSize = { (float)clientWidth,(float)clientHeight };
+        sm.frameCBData.cameraPos = cam->GetOwner()->GetTransform()->GetPosition();
+        context->UpdateSubresource(sm.frameCB.Get(), 0, nullptr, &sm.frameCBData, 0, 0); 
+    }
+
     if (PlayModeSystem::Instance().IsPlaying())
     {
         dxRenderer->ProcessScene(*renderQueue, *shadowPass, currCam);
