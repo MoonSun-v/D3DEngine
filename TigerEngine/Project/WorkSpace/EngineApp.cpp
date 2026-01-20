@@ -20,7 +20,7 @@
 
 #include "Components/FreeCamera.h"
 #include "Components/FBXData.h"
-#include "AudioSceneController.h"
+#include "..\\Externals\\AudioModule_FMOD\\include\\AudioSceneController.h"
 #include <limits>
 
 namespace fs = std::filesystem;
