@@ -1,5 +1,6 @@
 #include "ShadowPass.h"
 #include "../../Manager/ShaderManager.h"
+#include "../../EngineSystem/CameraSystem.h"
 
 void ShadowPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queue, Camera* cam)
 {
@@ -23,8 +24,9 @@ void ShadowPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queu
     context->PSSetSamplers(0, 1, sm.linearSamplerState.GetAddressOf());
 
     // CB
-    sm.transformCBData.shadowView = XMMatrixTranspose(cam->GetView());
-    sm.transformCBData.shadowProjection = XMMatrixTranspose(cam->GetProjection());
+    auto lightCamera = CameraSystem::Instance().lightCamera;
+    sm.transformCBData.shadowView = XMMatrixTranspose(lightCamera->GetView());
+    sm.transformCBData.shadowProjection = XMMatrixTranspose(lightCamera->GetProjection());
     context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
     // Render
