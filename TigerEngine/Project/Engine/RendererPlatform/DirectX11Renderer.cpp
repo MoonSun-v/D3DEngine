@@ -166,3 +166,18 @@ ComPtr<ID3D11DepthStencilView> DirectX11Renderer::GetDepthStencilView() const
 {
     return depthStencilView;
 }
+
+ComPtr<ID3D11DepthStencilView> DirectX11Renderer::GetDepthStencilReadOnlyView() const
+{
+    return depthStencilReadOnlyView;
+}
+
+ComPtr<ID3D11ShaderResourceView> DirectX11Renderer::GetDepthSRV() const
+{
+    return depthSRV;
+}
+
+D3D11_VIEWPORT DirectX11Renderer::GetRenderViewPort() const
+{
+    return renderViewport;
+}
