@@ -20,9 +20,9 @@
 
 #include "Components/FreeCamera.h"
 #include "Components/FBXData.h"
-#include "AudioListenerComponent.h"
-#include "AudioSourceComponent.h"
-#include "AudioClip.h"
+#include "..\\Externals\\AudioModule_FMOD\\include\\AudioListenerComponent.h"
+#include "..\\Externals\\AudioModule_FMOD\\include\\AudioSourceComponent.h"
+#include "..\\Externals\\AudioModule_FMOD\\include\\AudioClip.h"
 #include <limits>
 
 namespace fs = std::filesystem;
