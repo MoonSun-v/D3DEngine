@@ -75,13 +75,12 @@ struct alignas(16) MaterialCB
     // use texture
     UINT useDiffuse;
     UINT useNormal;
-    UINT useSpecular;
     UINT useEmissive;
     UINT useMetallic;
     UINT useRoughness;
 
     UINT roughnessFromShininess; // roughness가 aiTextureType_SHININESS로 들어오는 경우
-    int  padding1;
+    Vector2  padding1;
 
     // PBR Factor
     float emissiveFactor = 1.0f;
