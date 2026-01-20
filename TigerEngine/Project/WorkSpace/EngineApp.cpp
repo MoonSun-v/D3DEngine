@@ -265,6 +265,8 @@ void EngineApp::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::
 #include "Components/FBXRenderer.h"
 #include "Components/Transform.h"
 #include "Components/Camera.h"
+#include "Components/AudioListenerComponent.h"
+#include "Components/AudioSourceComponent.h"
 #include "Manager/ComponentFactory.h"
 
 #include "Player/Player1.h"
@@ -274,8 +276,10 @@ void EngineApp::RegisterAllComponents()
 {
 	ComponentFactory::Instance().Register<FBXData>("FBXData");
 	ComponentFactory::Instance().Register<FBXRenderer>("FBXRenderer");
-	ComponentFactory::Instance().Register<Transform>("Transform");
-	ComponentFactory::Instance().Register<Camera>("Camera");
+    ComponentFactory::Instance().Register<Transform>("Transform");
+    ComponentFactory::Instance().Register<Camera>("Camera");
+    ComponentFactory::Instance().Register<AudioListenerComponent>("AudioListenerComponent");
+    ComponentFactory::Instance().Register<AudioSourceComponent>("AudioSourceComponent");
 
 	ComponentFactory::Instance().Register<Player1>("Player1");
 	ComponentFactory::Instance().Register<Weapon>("Weapon");

@@ -1,12 +1,24 @@
 #pragma once
 
-#include "AudioSource.h"
-#include "AudioTransform.h"
+#include "pch.h"
+#include "../Object/Component.h"
+#include "..\\..\\Externals\\AudioModule_FMOD\\include\\AudioSource.h"
+#include "..\\..\\Externals\\AudioModule_FMOD\\include\\AudioTransform.h"
 
 class AudioSystem;
+class AudioClip;
 
-class AudioSourceComponent {
+class AudioSourceComponent : public Component
+{
+    RTTR_ENABLE(Component)
 public:
+    AudioSourceComponent() { SetName("AudioSource"); }
+    ~AudioSourceComponent() override = default;
+
+    void OnInitialize() override;
+    void OnUpdate(float delta) override;
+    void OnDestory() override;
+
     void Init(AudioSystem* system);
     void BindTransform(const AudioTransformRef& ref);
     void SetFallback(const AudioTransform& transform);
@@ -25,7 +37,7 @@ public:
 
 private:
     AudioSystem* m_System = nullptr;
-    AudioSource m_Source;
+    AudioSource m_Source{};
     AudioTransform m_Fallback{};
     AudioTransformRef m_Bind{};
 };
