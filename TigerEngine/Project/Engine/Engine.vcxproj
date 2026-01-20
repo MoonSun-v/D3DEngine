@@ -160,7 +160,6 @@
     <ClCompile Include="RenderPass\Renderer\BloomPass.cpp" />
     <ClCompile Include="RenderPass\Renderer\GeometryPass.cpp" />
     <ClCompile Include="RenderPass\Renderer\LightPass.cpp" />
-    <ClCompile Include="RenderPass\Renderer\ParticlePass.cpp" />
     <ClCompile Include="RenderPass\Renderer\PostProcessPass.cpp" />
     <ClCompile Include="RenderPass\Renderer\ShadowPass.cpp" />
     <ClCompile Include="RenderPass\Renderer\SkyboxPass.cpp" />
@@ -202,7 +201,6 @@
     <ClInclude Include="RenderPass\Renderer\BloomPass.h" />
     <ClInclude Include="RenderPass\Renderer\GeometryPass.h" />
     <ClInclude Include="RenderPass\Renderer\LightPass.h" />
-    <ClInclude Include="RenderPass\Renderer\ParticlePass.h" />
     <ClInclude Include="RenderPass\Renderer\PostProcessPass.h" />
     <ClInclude Include="RenderPass\Renderer\ShadowPass.h" />
     <ClInclude Include="RenderPass\Renderer\SkyboxPass.h" />
