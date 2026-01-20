@@ -20,18 +20,14 @@
 
 #include "Components/FreeCamera.h"
 #include "Components/FBXData.h"
-#include "..\\Externals\\AudioModule_FMOD\\include\\AudioListenerComponent.h"
-#include "..\\Externals\\AudioModule_FMOD\\include\\AudioSourceComponent.h"
-#include "..\\Externals\\AudioModule_FMOD\\include\\AudioClip.h"
+#include "..\\Externals\\AudioModule_FMOD\\include\\AudioController.h"
 #include <limits>
 
 namespace fs = std::filesystem;
 
 namespace
 {
-    AudioListenerComponent g_audioListener;
-    AudioSourceComponent g_audioSource;
-    std::shared_ptr<AudioClip> g_audioClip;
+    AudioController g_audioController;
 
     DirectX::XMFLOAT3 g_listenerPos{ 0.0f, 0.0f, 0.0f };
     DirectX::XMFLOAT3 g_listenerVel{ 0.0f, 0.0f, 0.0f };
@@ -106,32 +102,31 @@ namespace
 
         audioMgr.GetSystem().Set3DSettings(1.0f, 1.0f, 1.0f);
 
-        g_audioClip = audioMgr.GetOrCreateClip(entry->id);
-        if (!g_audioClip)
+        auto clip = audioMgr.GetOrCreateClip(entry->id);
+        if (!clip)
         {
             OutputDebugStringA("[AudioTest] Failed to create clip for SFX_TestLoop1\n");
             return;
         }
 
-        g_audioListener.Init(&audioMgr.GetSystem());
-        g_audioSource.Init(&audioMgr.GetSystem());
+        g_audioController.Init(&audioMgr.GetSystem());
 
         AudioTransformRef listenerRef{};
         listenerRef.position = &g_listenerPos;
         listenerRef.velocity = &g_listenerVel;
         listenerRef.forward = &g_listenerFwd;
         listenerRef.up = &g_listenerUp;
-        g_audioListener.BindTransform(listenerRef);
+        g_audioController.BindListener(listenerRef);
 
         AudioTransformRef sourceRef{};
         sourceRef.position = &g_sourcePos;
         sourceRef.velocity = &g_sourceVel;
-        g_audioSource.BindTransform(sourceRef);
+        g_audioController.BindSource(sourceRef);
 
-        g_audioSource.SetClip(g_audioClip);
-        g_audioSource.SetLoop(entry->loop);
-        g_audioSource.SetVolume(entry->defaultVolume);
-        g_audioSource.Set3DMinMaxDistance(8.0f, 1200.0f);
+        g_audioController.SetClip(clip);
+        g_audioController.SetLoop(entry->loop);
+        g_audioController.SetVolume(entry->defaultVolume);
+        g_audioController.Set3DMinMaxDistance(8.0f, 1200.0f);
 
         g_audioReady = true;
     }
@@ -146,9 +141,8 @@ EngineApp::~EngineApp()
 {
     if (g_audioReady)
     {
-        g_audioSource.Stop();
-        g_audioSource.SetClip({});
-        g_audioClip.reset();
+        g_audioController.Stop();
+        g_audioController.SetClip({});
         g_audioReady = false;
         g_audioStarted = false;
     }
@@ -273,12 +267,11 @@ void EngineApp::OnUpdate()
             g_sourceLocked = true;
         }
 
-        g_audioListener.Update();
-        g_audioSource.Update3D();
+        g_audioController.Update();
 
         if (!g_audioStarted)
         {
-            g_audioSource.Play();
+            g_audioController.Play();
             g_audioStarted = true;
         }
     }
