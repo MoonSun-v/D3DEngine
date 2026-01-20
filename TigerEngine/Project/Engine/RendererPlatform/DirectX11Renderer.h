@@ -34,7 +34,7 @@ public:
 	ComPtr<ID3D11DepthStencilView> GetDepthStencilView() const;
 	ComPtr<ID3D11DepthStencilView> GetDepthStencilReadOnlyView() const;
 	ComPtr<ID3D11ShaderResourceView> GetDepthSRV() const;
-	ComPtr<D3D11_VIEWPORT> GetRenderViewPort() const;
+	D3D11_VIEWPORT GetRenderViewPort() const;
 	
 private:
 	ComPtr<ID3D11Device>			device{};			
