@@ -1,10 +1,10 @@
 #pragma once
 
-#include "..\\..\\..\\Base\\pch.h"
+#include "pch.h"
 
 #include <string>
 
-#include "AudioController.h"
+#include "..\\Externals\\AudioModule_FMOD\\include\\AudioController.h"
 
 class Camera;
 class Transform;
