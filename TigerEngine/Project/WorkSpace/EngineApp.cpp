@@ -21,15 +21,8 @@
 
 #include "Components/FreeCamera.h"
 #include "Components/FBXData.h"
-#include "AudioSceneController.h"
-#include <limits>
 
 namespace fs = std::filesystem;
-
-namespace
-{
-    AudioSceneController g_audioScene;
-}
 
 EngineApp::EngineApp(HINSTANCE hInstance)
 	: GameApp(hInstance)
@@ -38,7 +31,6 @@ EngineApp::EngineApp(HINSTANCE hInstance)
 
 EngineApp::~EngineApp()
 {
-    g_audioScene.Shutdown();
     AudioManager::Instance().Shutdown();
 }
 
@@ -55,7 +47,7 @@ bool EngineApp::OnInitialize()
 
 	// == init system ==
 	FBXResourceManager::Instance().GetDevice(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext());
-	ShaderManager::Instance().CreateCB(dxRenderer->GetDevice());
+    ShaderManager::Instance().Init(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext(), clientWidth, clientHeight);
     AudioManager::Instance().Initialize();
 
     auto& sm = ShaderManager::Instance();
@@ -90,7 +82,6 @@ bool EngineApp::OnInitialize()
 
     // == find scene ==
     LoadSavedFirstScene();
-    g_audioScene.Init("SFX_TestLoop1");
 
 	WorldManager::Instance().CreateDirectionalLightFrustum(); // create directional light 
 
@@ -133,8 +124,6 @@ void EngineApp::OnUpdate()
 	WorldManager::Instance().Update();
 	SceneSystem::Instance().UpdateScene(GameTimer::Instance().DeltaTime());
     AudioManager::Instance().Update();
-
-    g_audioScene.UpdateFromCamera(CameraSystem::Instance().GetCurrCamera());
 
 #if _DEBUG
 	editor->Update();
