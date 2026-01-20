@@ -47,7 +47,7 @@ private:
 	std::vector<Bone> bones{};			// 로드된 모델의 본 모음 -> 계층 구조에 있는 오브젝트들
 
 	// 해당 모델의 상수 버퍼 내용
-	BonePoseBuffer bonePoses{};
+    PoseMatrixCB bonePoses{};
 
     // animation info
     int animationIndex = 0;             // 현재 실행 중인 애니메이션 인덱스

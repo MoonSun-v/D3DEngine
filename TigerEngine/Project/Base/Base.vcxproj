@@ -135,6 +135,7 @@
     <ClCompile Include="Datas\SkeletonInfo.cpp" />
     <ClCompile Include="Helper.cpp" />
     <ClCompile Include="Entity\Object.cpp" />
+    <ClCompile Include="Datas\Material.cpp" />
     <ClCompile Include="System\ObjectSystem.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Renderer\ImguiRenderer.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Helper.h" />
     <ClInclude Include="Entity\Object.h" />
+    <ClInclude Include="Datas\Material.h" />
     <ClInclude Include="System\ObjectSystem.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Renderer\ImguiRenderer.h" />

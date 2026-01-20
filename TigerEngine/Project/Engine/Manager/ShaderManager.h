@@ -13,7 +13,6 @@ struct PostProcessCB;
 struct BloomCB;
 struct EffectCB;
 
-
 /// @brief 셰이더에 사용하는 데이터를 가지고 있는 클래스
 /// @date 26.01.20
 class ShaderManager : public Singleton<ShaderManager>

@@ -1,37 +1,46 @@
 #include "Mesh.h"
 #include "../Helper.h"
+#include "../../Engine/Manager/ShaderManager.h"
 
 void Mesh::Draw(ComPtr<ID3D11DeviceContext>& pDeviceContext) const
 {
-    ID3D11ShaderResourceView* nullSRV[4] = { nullptr };
-    pDeviceContext->PSSetShaderResources(0, 4, nullSRV);
+    auto& sm = ShaderManager::Instance();
 
-    ID3D11ShaderResourceView* nullSRV2[2] = { nullptr };
-    pDeviceContext->PSSetShaderResources(6, 2, nullSRV);
-    
-    UINT stride = sizeof(BoneWeightVertexData);
-    UINT offset = 0;
-    
+    // VB, IB
+    UINT stride = sizeof(BoneWeightVertexData); UINT offset = 0;
     pDeviceContext->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetAddressOf(), &stride, &offset);
     pDeviceContext->IASetIndexBuffer(m_pIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);        
     
+    // SRV
+    ID3D11ShaderResourceView* nullSRVs[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
+    pDeviceContext->PSSetShaderResources(0, 5, nullSRVs);
+
     int textureCount = textures.size();
     for (int i = 0; i < textureCount; i++)
     {
         ProcessTextureByType(pDeviceContext, i);
     }
+    pDeviceContext->UpdateSubresource(sm.materialCB.Get(), 0, nullptr, &sm.materialCBData, 0, 0);
+
+    // CB - Material
+    sm.materialCBData.useDiffuse = material.hasDiffuse;
+    sm.materialCBData.useNormal  = material.hasNormal;
+    sm.materialCBData.useEmissive = material.hasRoughness;
+    sm.materialCBData.useMetallic = material.hasMetallic;
+    sm.materialCBData.useRoughness = material.hasEmissive;
+    sm.materialCBData.roughnessFromShininess = material.roughnessFromShininess;
     
+    // Draw Call
     pDeviceContext->DrawIndexed(static_cast<UINT>(indices.size()), 0, 0);
-    
 }
 
 void Mesh::SetMaterial(aiMaterial* pAiMaterial)
 {
-    aiColor4D color(0, 0, 0, 0);
-    if (AI_SUCCESS == pAiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, color)) //
-    {
-        material.diffuse = { color.r, color.g, color.b, color.a };
-    }
+    //aiColor4D color(0, 0, 0, 0);
+    //if (AI_SUCCESS == pAiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, color)) //
+    //{
+    //    material.diffuseOverride = { color.r, color.g, color.b, color.a };
+    //}
 }
 
 void Mesh::setupMesh()
@@ -54,11 +63,11 @@ void Mesh::setupMesh()
         }
         else if (typeName == TEXTURE_SPECULAR)
         {
-            material.hasSpecular = true;
+           // PBR Has None Specular
         }
         else if (typeName == TEXTURE_METALNESS)
         {
-            material.hasMatalness = true;
+            material.hasMetallic = true;
         }
         else if (typeName == TEXTURE_ROUGHNESS)
         {
@@ -66,7 +75,7 @@ void Mesh::setupMesh()
         }
         else if (typeName == TEXTURE_SHININESS)
         {
-            material.hasShininess = true;
+            material.roughnessFromShininess = true;
         }
     }
 }
@@ -79,33 +88,35 @@ void Mesh::ProcessTextureByType(ComPtr<ID3D11DeviceContext>& pDeviceContext, int
     {
         pDeviceContext->PSSetShaderResources(0, 1, textures[index].pTexture.GetAddressOf());
     }
-    else if (typeName == TEXTURE_EMISSIVE)
+    else if (typeName == TEXTURE_NORMAL)
     {
         pDeviceContext->PSSetShaderResources(1, 1, textures[index].pTexture.GetAddressOf());
     }
-    else if (typeName == TEXTURE_NORMAL)
+    else if (typeName == TEXTURE_METALNESS)
     {
         pDeviceContext->PSSetShaderResources(2, 1, textures[index].pTexture.GetAddressOf());
     }
-    else if (typeName == TEXTURE_SPECULAR)
+    else if (typeName == TEXTURE_ROUGHNESS)
     {
         pDeviceContext->PSSetShaderResources(3, 1, textures[index].pTexture.GetAddressOf());
     }
-    else if (typeName == TEXTURE_METALNESS)
-    {
-        pDeviceContext->PSSetShaderResources(6, 1, textures[index].pTexture.GetAddressOf());
-    }
-    else if (typeName == TEXTURE_ROUGHNESS)
-    {
-        pDeviceContext->PSSetShaderResources(7, 1, textures[index].pTexture.GetAddressOf());
-    }
     else if (typeName == TEXTURE_SHININESS)
     {
-        pDeviceContext->PSSetShaderResources(7, 1, textures[index].pTexture.GetAddressOf());
+        pDeviceContext->PSSetShaderResources(3, 1, textures[index].pTexture.GetAddressOf());
     }
+    else if (typeName == TEXTURE_EMISSIVE)
+    {
+        pDeviceContext->PSSetShaderResources(4, 1, textures[index].pTexture.GetAddressOf());
+    }
+    
+    //else if (typeName == TEXTURE_SPECULAR)
+    //{
+    //    PBR Has None Specular
+    //    pDeviceContext->PSSetShaderResources(3, 1, textures[index].pTexture.GetAddressOf());
+    //}
 }
 
-MaterialData& Mesh::GetMaterial()
+Material& Mesh::GetMaterial()
 {
     return material;
 }
