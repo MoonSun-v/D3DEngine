@@ -14,8 +14,6 @@ RTTR_REGISTRATION
         .property("intensity", &Light::intensity)
 
         .property("direction", &Light::direction)
-        .property("position", &Light::position)
-
         .property("range", &Light::range)
         .property("innerAngle", &Light::innerAngle)
         .property("outerAngle", &Light::outerAngle);
@@ -30,7 +28,6 @@ Light::Light()
     color = { 1.0f, 1.0f, 1.0f };
     intensity = 1.0f;
     direction = { 0.0f, -1.0f, 0.0f };
-    position = { 0.0f, 0.0f, 0.0f };
     range = 15.0f;
     innerAngle = 15.0f;
     outerAngle = 30.0f;
@@ -139,10 +136,6 @@ void Light::Deserialize(nlohmann::json data)
         else if (propName == "direction")
         {
             direction = JsonToVec3(propData[propName], direction);
-        }
-        else if (propName == "position")
-        {
-            position = JsonToVec3(propData[propName], position);
         }
     }
 }

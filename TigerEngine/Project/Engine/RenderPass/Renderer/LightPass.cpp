@@ -127,12 +127,14 @@ void LightPass::LightingPass(ComPtr<ID3D11DeviceContext>& context, Camera* camer
     // Render
     for (Light*& light : lights)
     {
+        auto lightPos = light->GetOwner()->GetTransform()->GetPosition();
+
        sm.lightingCBData.lightType = static_cast<int>(light->type);
        sm.lightingCBData.isSunLight = light->isSunLight;
        sm.lightingCBData.lightColor = light->color;
        sm.lightingCBData.directIntensity = light->intensity;
        sm.lightingCBData.lightDirection = light->direction;
-       sm.lightingCBData.lightPos = light->position;
+       sm.lightingCBData.lightPos = lightPos;
        sm.lightingCBData.lightRange = light->range;
        sm.lightingCBData.innerAngle = light->innerAngle;
        sm.lightingCBData.outerAngle = light->outerAngle;
@@ -157,7 +159,7 @@ void LightPass::LightingPass(ComPtr<ID3D11DeviceContext>& context, Camera* camer
             // Light Volume
             if (light->type == LightType::Point)
             {
-                if (sphereVolume->IsInsidePointLight(camPos, light->position, light->range))
+                if (sphereVolume->IsInsidePointLight(camPos, lightPos, light->range))
                 {
                     // Stencil Test off
                     context->OMSetDepthStencilState(sm.disableDSS.Get(), 0);
@@ -187,7 +189,7 @@ void LightPass::LightingPass(ComPtr<ID3D11DeviceContext>& context, Camera* camer
             }
             else if (light->type == LightType::Spot)
             {
-                if (sphereVolume->IsInsideSpotLight(camPos, light->position,
+                if (sphereVolume->IsInsideSpotLight(camPos, lightPos,
                     light->direction, light->range, light->outerAngle))
                 {
                     // Stencil Test off

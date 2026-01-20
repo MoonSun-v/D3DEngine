@@ -28,8 +28,6 @@ public:
     float     intensity;
 
     Vector3   direction;        // directional, spot
-    Vector3   position;         // point, spot   // TODO :: gameobject transform
-
     float     range;            // point, spot
     float     innerAngle;       // spot
     float     outerAngle;       // spot
