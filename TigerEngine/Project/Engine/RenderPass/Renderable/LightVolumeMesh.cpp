@@ -4,7 +4,7 @@
 #include "../../../Base/Datas/Vertex.h"
 #include "../../../Base/Datas/ConstantBuffer.hpp"
 #include "../../Manager/ShaderManager.h"
-
+#include "../../Object/GameObject.h"
 
 LightVolumeMesh::LightVolumeMesh()
     : indexCount(0), stride(sizeof(Position_Vertex)),
@@ -12,12 +12,14 @@ LightVolumeMesh::LightVolumeMesh()
 {
 }
 
-void LightVolumeMesh::UpdateWolrd(const Light& light)
+void LightVolumeMesh::UpdateWolrd(Light& light)
 {
+    Vector3 lightPos = light.GetOwner()->GetTransform()->GetPosition();
+
     if (volumeType == LightVolumeType::Sphere)
     {
         Matrix S = Matrix::CreateScale(light.range);
-        Matrix T = Matrix::CreateTranslation(light.position);
+        Matrix T = Matrix::CreateTranslation(lightPos);
         world = S * T;
     }
     else if (volumeType == LightVolumeType::Cone)
@@ -36,7 +38,7 @@ void LightVolumeMesh::UpdateWolrd(const Light& light)
         Matrix R = axis.LengthSquared() < 0.0001f
             ? Matrix::Identity
             : Matrix::CreateFromAxisAngle(axis, angle);
-        Matrix T = Matrix::CreateTranslation(light.position);
+        Matrix T = Matrix::CreateTranslation(lightPos);
 
         world = S * R * T;
     }

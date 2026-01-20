@@ -44,7 +44,7 @@ private:
 
 public:
     LightVolumeMesh();
-    void UpdateWolrd(const Light& light);
+    void UpdateWolrd(Light& light);
     void Draw(ComPtr<ID3D11DeviceContext>& context, const Camera& camera) const;
 
     bool IsInsidePointLight(const Vector3& camPos, const Vector3& lightPos, float radius) const;
