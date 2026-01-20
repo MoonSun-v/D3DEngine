@@ -130,22 +130,7 @@ nlohmann::json Camera::Serialize()
     {
         std::string propName = prop.get_name().to_string();
         rttr::variant value = prop.get_value(*this);
-	    if(value.is_type<float>() && propName == "moveSpeed")
-        {
-            auto v = value.get_value<float>();
-            datas["properties"][propName] = v;
-        }
-        else if(value.is_type<float>() && propName == "rotSpeed")
-        {
-            auto v = value.get_value<float>();
-            datas["properties"][propName] = v;
-        }
-        else if(value.is_type<float>() && propName == "nearDist")
-        {
-            auto v = value.get_value<float>();
-            datas["properties"][propName] = v;
-        }
-		else if(value.is_type<float>() && propName == "farDist")
+	    if(value.is_type<float>())
         {
             auto v = value.get_value<float>();
             datas["properties"][propName] = v;

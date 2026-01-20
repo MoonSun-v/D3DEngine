@@ -17,6 +17,7 @@
 #include "System/ObjectSystem.h"
 #include "EngineSystem/CameraSystem.h"
 #include "EngineSystem/PlayModeSystem.h"
+#include "EngineSystem/LightSystem.h"
 
 #include "Components/FreeCamera.h"
 #include "Components/FBXData.h"
@@ -57,6 +58,14 @@ bool EngineApp::OnInitialize()
 	ShaderManager::Instance().CreateCB(dxRenderer->GetDevice());
     AudioManager::Instance().Initialize();
 
+    auto& sm = ShaderManager::Instance();
+    sm.viewport_screen = dxRenderer->GetRenderViewPort();
+    sm.backBufferRTV = dxRenderer->GetBackBufferRTV();
+    sm.depthStencilView = dxRenderer->GetDepthStencilView();
+    sm.depthStencilReadOnlyView = dxRenderer->GetDepthStencilReadOnlyView();
+    sm.depthSRV = dxRenderer->GetDepthSRV();
+
+
     renderQueue = std::make_unique<RenderQueue>();
 
 #if _DEBUG
@@ -67,10 +76,10 @@ bool EngineApp::OnInitialize()
 	editor->GetRTV(dxRenderer->GetBackBufferRTV());
 #endif
 
-	SceneSystem::Instance().AddScene();				// create first scene
+	SceneSystem::Instance().AddScene();			    	// create first scene
 	SceneSystem::Instance().SetCurrentSceneByIndex(); 	// render first scene
 
-	// == create free camera ==
+	// create free camera
 	CameraSystem::Instance().SetScreenSize(clientWidth, clientHeight);
 
 #if _DEBUG
@@ -88,26 +97,25 @@ bool EngineApp::OnInitialize()
 
 	// == init renderpass ==
 	// NOTE : 랜더링하는 순서대로 추가 할 것
-    shadowPass = std::make_unique<ShadowRenderPass>();
-	shadowPass->Init(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext(), CameraSystem::Instance().GetCurrCamera());
+    shadowPass = std::make_unique<ShadowPass>();
+    geometryPass = std::make_unique<GeometryPass>();
+    lightPass = std::make_unique<LightPass>();
+    skyboxPass = std::make_unique<SkyboxPass>();
+    bloomPass = std::make_unique<BloomPass>();
+    postProcessPass = std::make_unique<PostProcessPass>();
 
-	WorldManager::Instance().shaderResourceView = shadowPass->GetShadowSRV();
+    shadowPass->Init();
+    geometryPass->Init();
+    lightPass->Init(dxRenderer->GetDevice());
+    skyboxPass->Init(dxRenderer->GetDevice());
+    bloomPass->Init();
+    postProcessPass->Init();
 
-    gbufferPass = std::make_unique<GBufferRenderPass>();
-    gbufferPass->Init(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext(), clientWidth, clientHeight);
-    gbufferPass->SetDepthStencilView(dxRenderer->GetDepthStencilView());
 
-    directionalLightPass = std::make_unique<DirectionalLightPass>();
-    directionalLightPass->Init(dxRenderer->GetDevice());
-    directionalLightPass->SetGBufferSRV(gbufferPass->GetShaderResourceViews());
-    directionalLightPass->SetDepthStencilView(dxRenderer->GetDepthStencilView());
-    directionalLightPass->SetRenderTargetView(dxRenderer->GetBackBufferRTV());
-    directionalLightPass->SetShadowSRV(shadowPass->GetShadowSRV());
+    // == init world data ==
+	//WorldManager::Instance().shaderResourceView = shadowPass->GetShadowSRV();
 
-    skyboxPass = std::make_unique<SkyboxRenderPass>();
-    skyboxPass->Init(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext(), clientWidth, clientHeight);
-    skyboxPass->SetDepthStencilView(dxRenderer->GetDepthStencilView());
-    skyboxPass->SetRenderTargetView(dxRenderer->GetBackBufferRTV());
+ 
 
 #if _DEBUG
 #else
@@ -121,6 +129,7 @@ void EngineApp::OnUpdate()
 {
 	SceneSystem::Instance().BeforUpdate();	
 	CameraSystem::Instance().FreeCameraUpdate(GameTimer::Instance().DeltaTime());
+	CameraSystem::Instance().LightCameraUpdate(GameTimer::Instance().DeltaTime());
 	WorldManager::Instance().Update();
 	SceneSystem::Instance().UpdateScene(GameTimer::Instance().DeltaTime());
     AudioManager::Instance().Update();
@@ -144,16 +153,20 @@ void EngineApp::OnRender()
     if (PlayModeSystem::Instance().IsPlaying())
     {
         dxRenderer->ProcessScene(*renderQueue, *shadowPass, currCam);
-        dxRenderer->ProcessScene(*renderQueue, *gbufferPass, currCam);
-        dxRenderer->ProcessScene(*renderQueue, *directionalLightPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *geometryPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *lightPass, currCam);
         dxRenderer->ProcessScene(*renderQueue, *skyboxPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *bloomPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *postProcessPass, currCam);
     }
     else
     {
-        dxRenderer->ProcessScene(*renderQueue, *shadowPass, freeCam);
-        dxRenderer->ProcessScene(*renderQueue, *gbufferPass, freeCam);
-        dxRenderer->ProcessScene(*renderQueue, *directionalLightPass, freeCam);
-        dxRenderer->ProcessScene(*renderQueue, *skyboxPass, freeCam);
+        dxRenderer->ProcessScene(*renderQueue, *shadowPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *geometryPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *lightPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *skyboxPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *bloomPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *postProcessPass, currCam);
     }
 
 #if _DEBUG
@@ -283,4 +296,5 @@ void EngineApp::RegisterAllComponents()
 
 	ComponentFactory::Instance().Register<Player1>("Player1");
 	ComponentFactory::Instance().Register<Weapon>("Weapon");
+	ComponentFactory::Instance().Register<Light>("Light");
 }

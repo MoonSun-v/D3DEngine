@@ -3,6 +3,7 @@
 #include "SkeletonInfo.h"
 #include "Animation.h"
 #include "Mesh.h"
+#include "ConstantBuffer.hpp"
 
 ///// @brief Bone offset 정보 버퍼
 ///// skeletalInfo 본 위치 정보
@@ -29,5 +30,5 @@ struct FBXResourceAsset
 	Vector3 boxCenter{};
 
 	std::string directory = "";
-	BoneOffsetBuffer m_BoneOffsets{};
+    OffsetMatrixCB m_BoneOffsets{};
 };

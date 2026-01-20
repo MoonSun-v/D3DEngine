@@ -2,18 +2,20 @@
 #include "pch.h"
 #include "System/Singleton.h"
 #include "../EngineSystem/SceneSystem.h"
+#include "../Components/ShadowCamera/DirectionalShadowCamera.h"
 
 class Camera;
 class GameObject;
 
 /// @brief 카메라 컴포넌트를 관리하는 시스템 클래스
-/// @date 26.01.09
+/// @date 26.01.20
 /// @details 씬의 카메라는 해당 클래스에 의해 관리됩니다.
+/// ++ CameraSystem은 lightCamera를 소유합니다.
 class CameraSystem : public Singleton<CameraSystem>
 {
 public:
-    CameraSystem(token) {};
-    ~CameraSystem() = default;
+    CameraSystem(token);
+    ~CameraSystem();
 
     void SetScreenSize(int width, int height);
     Vector2 GetScreenSize() { return Vector2(screenWidth, screenHeight); }
@@ -56,6 +58,13 @@ public:
     }
 
     void Clear();
+
+
+public:
+    // Light Camera
+    DirectionalShadowCamera* lightCamera;
+    void LightCameraUpdate(float delta);
+
 
 private:
     GameObject* freeCamObj{};

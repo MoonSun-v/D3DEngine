@@ -3,7 +3,6 @@
 #include "../Scene/Scene.h"
 #include "../Components/FBXData.h"
 #include "../Manager/ShaderManager.h"
-#include "Datas/TransformData.h"
 #include "../Object/GameObject.h"
 
 RTTR_REGISTRATION
@@ -76,7 +75,7 @@ void FBXRenderer::OnUpdate(float delta)
 			bone.m_worldTransform = bone.m_localTransform;
 		}
 
-		bonePoses.modelMatricies[bone.m_index] = bone.m_worldTransform;
+		bonePoses.bonePose[bone.m_index] = bone.m_worldTransform;
 	}	
 }
 
@@ -100,14 +99,15 @@ void FBXRenderer::OnRender(RenderQueue& queue)
         item.offsets = &fbxData->GetFBXInfo()->m_BoneOffsets;
         item.refBoneIndex = mesh.refBoneIndex;
         item.isRigid = fbxData->GetFBXInfo()->skeletalInfo.IsRigid();
+        item.boneCount = fbxData->GetFBXInfo()->skeletalInfo.m_bones.size();
 
         // Mesh 기본 Material 복사
         item.material = mesh.GetMaterial();
 
         // 인스턴스별 override
-        item.material.Roughness = roughness;
-        item.material.Matalness = metalic;
-        item.material.ambient = color;
+        item.material.roughnessOverride = roughness;
+        item.material.metallicOverride = metalic;
+        item.material.diffuseOverride = { color.x, color.y, color.z };
 
         queue.AddSkeletal(item);
     }

@@ -2,6 +2,17 @@
 #include "../Object/GameObject.h"
 #include "../Components/Camera.h"
 
+
+CameraSystem::CameraSystem(token)
+{
+    lightCamera = new DirectionalShadowCamera();
+}
+
+CameraSystem::~CameraSystem()
+{
+    delete lightCamera;
+}
+
 Camera *CameraSystem::GetFreeCamera()
 {
     return freeCamera;
@@ -72,6 +83,11 @@ void CameraSystem::Clear()
     mappedRegistered.clear();
 }
 
+void CameraSystem::LightCameraUpdate(float delta)
+{
+    lightCamera->Update(GetCurrCamera());
+}
+
 void CameraSystem::SetScreenSize(int width, int height)
 {
     screenWidth = width;
@@ -87,6 +103,7 @@ void CameraSystem::FreeCameraUpdate(float delta)
         comp->OnUpdate(delta);
     }
 }
+
 
 Handle CameraSystem::CreateFreeCamera(int clientWidth, int clientHeight, Scene *currScene)
 {
