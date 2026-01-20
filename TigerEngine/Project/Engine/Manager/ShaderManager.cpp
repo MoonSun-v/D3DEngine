@@ -1,5 +1,4 @@
 #include "ShaderManager.h"
-#include <Datas/Vertex.h>
 #include <Datas/FBXResourceData.h>
 #include "../Base/Datas/ConstantBuffer.hpp"
 #include "../Base/Datas/Vertex.h"
@@ -11,10 +10,12 @@ void ShaderManager::Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11Dev
     CreateRS(dev);
     CreateSampler(dev);
     CreateBS(dev);
+
     CreateShadowResource(dev);
     CreateHDRResource(dev, width, height);
     CreateGbufferResource(dev, width, height);
     CreateBloomResource(dev, width, height);
+
     CreateInputLayoutShader(dev, ctx);
     CreateCB(dev);
 }
@@ -747,52 +748,4 @@ void ShaderManager::SetViewportForMip(const ComPtr<ID3D11DeviceContext>& ctx, UI
     UINT w, h;
     GetMipSize(baseW, baseH, mip, w, h);
     SetViewport(ctx, w, h);
-}
-
-
-
-// [ CB Getter ] --------------------------------------------------------------
-ComPtr<ID3D11Buffer>& ShaderManager::GetFrameCB()
-{
-    return frameCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetTransformCB()
-{
-    return transformCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetLightingCB()
-{
-    return lightingCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetMaterialCB()
-{
-    return materialCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetOffsetMatrixCB()
-{
-    return offsetMatrixCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetPoseMatrixCB()
-{
-    return poseMatrixCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetPostProcessCB()
-{
-    return postProcessCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetBloomCB()
-{
-    return bloomCB;
-}
-
-ComPtr<ID3D11Buffer>& ShaderManager::GetEffectCB()
-{
-    return effectCB;
 }

@@ -2,8 +2,20 @@
 #include <pch.h>
 #include <System/Singleton.h>
 
+// CB 전방선언
+struct FrameCB;
+struct TransformCB;
+struct LightingCB;
+struct MaterialCB;
+struct OffsetMatrixCB;
+struct PoseMatrixCB;
+struct PostProcessCB;
+struct BloomCB;
+struct EffectCB;
+
+
 /// @brief 셰이더에 사용하는 데이터를 가지고 있는 클래스
-/// @date 26.01.03
+/// @date 26.01.20
 class ShaderManager : public Singleton<ShaderManager>
 {
 public:
@@ -93,7 +105,6 @@ public:
     std::vector<ComPtr<ID3D11RenderTargetView>> accumARTVs;
     std::vector<ComPtr<ID3D11RenderTargetView>> accumBRTVs;
 
-
     // IA
     ComPtr<ID3D11InputLayout> inputLayout_Vertex;
     ComPtr<ID3D11InputLayout> inputLayout_Position;
@@ -118,17 +129,27 @@ public:
     ComPtr<ID3D11PixelShader> PS_BloomUpsampleCombine;
     ComPtr<ID3D11PixelShader> PS_PostProcess;
 
+    // CB buffer
+    ComPtr<ID3D11Buffer> frameCB;
+    ComPtr<ID3D11Buffer> transformCB;
+    ComPtr<ID3D11Buffer> lightingCB;
+    ComPtr<ID3D11Buffer> materialCB;
+    ComPtr<ID3D11Buffer> offsetMatrixCB;
+    ComPtr<ID3D11Buffer> poseMatrixCB;
+    ComPtr<ID3D11Buffer> postProcessCB;
+    ComPtr<ID3D11Buffer> bloomCB;
+    ComPtr<ID3D11Buffer> effectCB;
 
-    // Constant Bufer
-    ComPtr<ID3D11Buffer>& GetFrameCB();
-    ComPtr<ID3D11Buffer>& GetTransformCB();
-    ComPtr<ID3D11Buffer>& GetLightingCB();
-    ComPtr<ID3D11Buffer>& GetMaterialCB();
-    ComPtr<ID3D11Buffer>& GetOffsetMatrixCB();
-    ComPtr<ID3D11Buffer>& GetPoseMatrixCB();
-    ComPtr<ID3D11Buffer>& GetPostProcessCB();
-    ComPtr<ID3D11Buffer>& GetBloomCB();
-    ComPtr<ID3D11Buffer>& GetEffectCB();
+    // CB Data
+    FrameCB         frameCBData;
+    TransformCB     transformCBData;
+    LightingCB      lightingCBData;
+    MaterialCB      materialCBData;
+    OffsetMatrixCB  offsetMatrixCBData;
+    PoseMatrixCB    poseMatrixCBData;
+    PostProcessCB   postProcessCBData;
+    BloomCB         bloomCBData;
+    EffectCB        effectCBData;
 
 
 public:
@@ -148,18 +169,4 @@ public:
 
     // bloom mip용 viewport 설정
     void SetViewportForMip(const ComPtr<ID3D11DeviceContext>& ctx, UINT baseW, UINT baseH, UINT mip);
-
-
-
-private:
-    /* ---------------------------- constant Buffers ---------------------------- */
-    ComPtr<ID3D11Buffer> frameCB;
-    ComPtr<ID3D11Buffer> transformCB;
-    ComPtr<ID3D11Buffer> lightingCB;
-    ComPtr<ID3D11Buffer> materialCB;
-    ComPtr<ID3D11Buffer> offsetMatrixCB;
-    ComPtr<ID3D11Buffer> poseMatrixCB;
-    ComPtr<ID3D11Buffer> postProcessCB;
-    ComPtr<ID3D11Buffer> bloomCB;
-    ComPtr<ID3D11Buffer> effectCB;
 };
