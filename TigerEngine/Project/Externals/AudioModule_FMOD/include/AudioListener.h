@@ -1,7 +1,7 @@
 #pragma once
 
 #include <directxmath.h>
-#include <fmod.hpp>
+#include "..\\fmod\\inc\\fmod.hpp"
 
 class AudioListener {
 public:

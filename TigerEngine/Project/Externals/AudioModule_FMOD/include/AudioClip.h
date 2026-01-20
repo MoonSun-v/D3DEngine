@@ -1,6 +1,6 @@
 #pragma once
 
-#include <fmod.hpp>
+#include "..\\fmod\\inc\\fmod.hpp"
 #include <string>
 
 class AudioClip {
