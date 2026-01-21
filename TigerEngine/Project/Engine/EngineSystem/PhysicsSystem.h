@@ -7,11 +7,27 @@
 #include "../Util/PhysicsFilterShader.h"
 #include "../Util/RaycastHit.h"
 #include "../Util/CollisionLayer.h"
+
 #include "System/Singleton.h"
 
 using namespace physx;
 
 class PhysicsComponent;
+class PhysicsLayerMatrix;
+struct PairHash
+{
+    size_t operator()(const std::pair<PhysicsComponent*, PhysicsComponent*>& p) const
+    {
+        return std::hash<void*>()(p.first) ^ std::hash<void*>()(p.second);
+    }
+};
+
+enum class QueryTriggerInteraction
+{
+    UseGlobal, // (지금은 Collide와 동일 취급)
+    Ignore,    // Trigger 무시
+    Collide    // Trigger 포함
+};
 
 // ----------------------------------------------------
 // [ SimulationEventCallback ] 
@@ -33,6 +49,41 @@ public:
     virtual void onWake(PxActor**, PxU32) override {}
     virtual void onSleep(PxActor**, PxU32) override {}
     virtual void onAdvance(const PxRigidBody* const*, const PxTransform*, const PxU32) override {}
+};
+
+
+// ------------------------------
+// Raycast Filter
+// ------------------------------
+class RaycastFilterCallback : public PxQueryFilterCallback
+{
+public:
+    RaycastFilterCallback(
+        CollisionLayer raycastLayer,
+        QueryTriggerInteraction triggerInteraction,
+        bool bAllHits)
+        : m_RaycastLayer(raycastLayer)
+        , m_TriggerInteraction(triggerInteraction)
+        , m_AllHits(bAllHits)
+    {
+    }
+
+    PxQueryHitType::Enum preFilter(
+        const PxFilterData& filterData,
+        const PxShape* shape,
+        const PxRigidActor* actor,
+        PxHitFlags& queryFlags) override;
+
+    PxQueryHitType::Enum postFilter(
+        const PxFilterData& filterData,
+        const PxQueryHit& hit,
+        const PxShape* shape,
+        const PxRigidActor* actor) override;
+
+private:
+    CollisionLayer m_RaycastLayer;
+    QueryTriggerInteraction m_TriggerInteraction;
+    bool m_AllHits;
 };
 
 
@@ -66,7 +117,12 @@ public:
     // Actor <-> Component 매핑
     std::unordered_map<PxActor*, PhysicsComponent*> m_ActorMap;
 
-    
+    std::unordered_set<std::pair<PhysicsComponent*, PhysicsComponent*>, PairHash> m_TriggerCurr;
+    std::unordered_set<std::pair<PhysicsComponent*, PhysicsComponent*>, PairHash> m_TriggerPrev;
+
+    void ResolveTriggerEvents();
+
+
 private:
     // ------------------------------------------------------
     // PhysX 기본 유틸 객체 
@@ -95,5 +151,20 @@ private:
     // ------------------------------------------------------
     PxPvd* m_Pvd = nullptr;
     PxPvdTransport* m_PvdTransport = nullptr;
+
+    // -----------------------------------------------------
+    SimulationEventCallback m_SimulationEventCallback;
+
+
+public:
+    // Raycast
+    bool Raycast(
+        const PxVec3& origin,
+        const PxVec3& direction,
+        float maxDistance,
+        std::vector<RaycastHit>& outHits,
+        CollisionLayer layer,
+        QueryTriggerInteraction triggerInteraction,
+        bool bAllHits);
 
 };
