@@ -21,6 +21,8 @@
 
 #include "Components/FreeCamera.h"
 #include "Components/FBXData.h"
+#include "Components/AudioListenerComponent.h"
+#include "Components/AudioSourceComponent.h"
 
 namespace fs = std::filesystem;
 
