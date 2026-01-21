@@ -356,10 +356,12 @@ void EngineApp::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::
 #include "Components/Camera.h"
 #include "Components/AudioListenerComponent.h"
 #include "Components/AudioSourceComponent.h"
+#include "Components/PhysicsComponent.h"
 #include "Manager/ComponentFactory.h"
 
 #include "Player/Player1.h"
 #include "Player/Weapon.h"
+
 
 void EngineApp::RegisterAllComponents()
 {
@@ -369,6 +371,7 @@ void EngineApp::RegisterAllComponents()
     ComponentFactory::Instance().Register<Camera>("Camera");
     ComponentFactory::Instance().Register<AudioListenerComponent>("AudioListenerComponent");
     ComponentFactory::Instance().Register<AudioSourceComponent>("AudioSourceComponent");
+    ComponentFactory::Instance().Register<PhysicsComponent>("PhysicsComponent");
 
 	ComponentFactory::Instance().Register<Player1>("Player1");
 	ComponentFactory::Instance().Register<Weapon>("Weapon");

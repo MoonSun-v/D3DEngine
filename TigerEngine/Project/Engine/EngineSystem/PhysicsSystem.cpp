@@ -26,7 +26,6 @@ bool PhysicsSystem::Initialize()
         return false;
     }
 
-
     // ------------------------------------------------------
     // 2. PVD
     // ------------------------------------------------------
@@ -37,7 +36,6 @@ bool PhysicsSystem::Initialize()
         10           // 연결 타임아웃(ms)
     );
     m_Pvd->connect(*m_PvdTransport, PxPvdInstrumentationFlag::eALL); // 모든 디버깅 데이터 전송 
-
 
     // ------------------------------------------------------
     // 3. Physics 객체 생성 
@@ -55,7 +53,6 @@ bool PhysicsSystem::Initialize()
         return false;
     }
 
-
     // ------------------------------------------------------
     // 4. Scene 생성 
     // ------------------------------------------------------
@@ -71,7 +68,6 @@ bool PhysicsSystem::Initialize()
     if (!m_Scene)
         return false;
 
-
     // ------------------------------------------------------
     // 5. PVD Scene 설정 (있어야 충돌/접촉 보임)
     // ------------------------------------------------------
@@ -82,7 +78,6 @@ bool PhysicsSystem::Initialize()
         client->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
     }
 
-
     // ------------------------------------------------------
     // 6. Default Material
     // ------------------------------------------------------
@@ -91,7 +86,6 @@ bool PhysicsSystem::Initialize()
         0.5f, // 동적 마찰력 (dynamic friction)
         0.6f  // 반발력 (restitution)
     );
-
 
     PhysicsLayerMatrix::Initialize();
 

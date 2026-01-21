@@ -84,5 +84,5 @@ public:
     CollisionLayer GetLayer() const { return m_Layer; }
 
 private:
-    void ApplyFilter();
+    // void ApplyFilter();
 };

@@ -6,6 +6,7 @@
 
 #include "../Util/CollisionLayer.h"
 #include "../Object/Component.h"
+#include "../Util/DebugDraw.h"
 
 using namespace DirectX::SimpleMath;
 using namespace physx;
@@ -36,10 +37,10 @@ enum class ColliderType
 // ------------------------------
 struct ColliderDesc
 {
-    Vector3 halfExtents = { 1,1,1 };// Box
-    float radius = 0.5f;            // Sphere / Capsule
-    float height = 1.0f;            // Capsule
-    float density = 1.0f;           // Dynamic
+    Vector3 halfExtents = { 50,50,50 };// Box
+    float radius = 10.0f;            // Sphere / Capsule
+    float height = 10.0f;            // Capsule
+    float density = 10.0f;           // Dynamic
 
     Vector3 localOffset = { 0, 0, 0 };
     Quaternion localRotation = Quaternion::Identity; // 회전 아직 적용X 사용하려나..? 
@@ -61,6 +62,9 @@ class PhysicsComponent : public Component
 //
 //    nlohmann::json Serialize() override;
 //    void Deserialize(nlohmann::json data) override;
+public:
+    // void OnInitialize() override;
+    // void OnDestory() override;
 
 public:
     Transform* transform = nullptr;
@@ -78,19 +82,21 @@ private:
     PhysicsBodyType m_BodyType = PhysicsBodyType::Static;
     ColliderType m_ColliderType = ColliderType::Box;
 
-    Vector3 m_HalfExtents = { 1,1,1 };
-    float m_Radius = 0.5f;
-    float m_Height = 1.0f;
-    float m_Density = 1.0f;
+    Vector3 m_HalfExtents = { 10,10,10 };
+    float m_Radius = 50.0f;
+    float m_Height = 10.0f;
+    float m_Density = 10.0f;
     Vector3 m_LocalOffset = { 0,0,0 };
 
     CollisionLayer m_Layer = CollisionLayer::Default;
     bool m_IsTrigger = false;
 
+
     // [ 런타임 전용 ]
     PxRigidActor* m_Actor = nullptr;
     PxShape* m_Shape = nullptr;
 
+    std::unordered_set<PxRigidActor*> m_CCTActors;
 
 public:
     PhysicsComponent() = default;
@@ -137,12 +143,20 @@ public:
     // --------------------------
     // 충돌 레이어 
     // --------------------------
-    // void SetLayer(CollisionLayer layer);
+    void SetLayer(CollisionLayer layer);
     CollisionLayer GetLayer() const { return m_Layer; }
 
 private:
     void ApplyFilter();
     // void RebuildPhysics();
+
+    // 유틸 
+    void DrawPhysXActors();
+    void DrawPhysXShape(PxShape* shape, const PxTransform& actorPose, FXMVECTOR color);
+    void DrawCharacterControllers();
+    void CollectCCTActors();
+
+    std::unique_ptr<PrimitiveBatch<VertexPositionColor>> m_DebugBatch;
 
 private:
     // --------------------------
