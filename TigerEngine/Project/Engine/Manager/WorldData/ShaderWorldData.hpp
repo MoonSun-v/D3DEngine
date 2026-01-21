@@ -1,6 +1,16 @@
 #pragma once
 #include <pch.h>
 
+struct ShadowOrthoDesc
+{
+    float lookPointDist = 500.f;
+    float shadowLightDist = 1000.f;
+    float shadowWidth = 3000.0f;
+    float shadowHeight = 3000.0f;
+    float shadowNear = 0.01f;
+    float shadowFar = 5000.0f;
+};
+
 struct PostProcessWorldData
 {
     // Base
