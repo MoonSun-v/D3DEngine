@@ -118,7 +118,7 @@ void EngineApp::OnUpdate()
 	SceneSystem::Instance().BeforUpdate();	
 	CameraSystem::Instance().FreeCameraUpdate(GameTimer::Instance().DeltaTime());
 	CameraSystem::Instance().LightCameraUpdate(GameTimer::Instance().DeltaTime());
-	WorldManager::Instance().Update(dxRenderer->GetDeviceContext(), currCam, clientWidth, clientHeight);
+	WorldManager::Instance().Update(dxRenderer->GetDeviceContext(), freeCam, clientWidth, clientHeight);
 	SceneSystem::Instance().UpdateScene(GameTimer::Instance().DeltaTime());
 
 #if _DEBUG
@@ -173,12 +173,12 @@ void EngineApp::OnRender()
     }
     else
     {
-        dxRenderer->ProcessScene(*renderQueue, *shadowPass, currCam);
-        dxRenderer->ProcessScene(*renderQueue, *geometryPass, currCam);
-        dxRenderer->ProcessScene(*renderQueue, *lightPass, currCam);
-        dxRenderer->ProcessScene(*renderQueue, *skyboxPass, currCam);
-        dxRenderer->ProcessScene(*renderQueue, *bloomPass, currCam);
-        dxRenderer->ProcessScene(*renderQueue, *postProcessPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *shadowPass, freeCam);
+        dxRenderer->ProcessScene(*renderQueue, *geometryPass, freeCam);
+        dxRenderer->ProcessScene(*renderQueue, *lightPass, freeCam);
+        dxRenderer->ProcessScene(*renderQueue, *skyboxPass, freeCam);
+        dxRenderer->ProcessScene(*renderQueue, *bloomPass, freeCam);
+        dxRenderer->ProcessScene(*renderQueue, *postProcessPass, freeCam);
     }
 
 #if _DEBUG

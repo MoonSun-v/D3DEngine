@@ -20,7 +20,6 @@ void Mesh::Draw(ComPtr<ID3D11DeviceContext>& pDeviceContext) const
     {
         ProcessTextureByType(pDeviceContext, i);
     }
-    pDeviceContext->UpdateSubresource(sm.materialCB.Get(), 0, nullptr, &sm.materialCBData, 0, 0);
 
     // CB - Material
     sm.materialCBData.useDiffuse = material.hasDiffuse;
@@ -43,6 +42,7 @@ void Mesh::Draw(ComPtr<ID3D11DeviceContext>& pDeviceContext) const
     sm.materialCBData.metallicOverride = material.metallicOverride;
     sm.materialCBData.emissiveOverride = material.emissiveOverride;
     sm.materialCBData.roughnessOverride = material.roughnessOverride;
+    pDeviceContext->UpdateSubresource(sm.materialCB.Get(), 0, nullptr, &sm.materialCBData, 0, 0);
     
     // Draw Call
     pDeviceContext->DrawIndexed(static_cast<UINT>(indices.size()), 0, 0);
