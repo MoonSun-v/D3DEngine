@@ -196,22 +196,11 @@ std::vector<Texture> FBXResourceManager::loadMaterialTextures(std::shared_ptr<FB
 				filename = pAsset->directory + '\\' + filename;
 				std::wstring filenamews = std::wstring(filename.begin(), filename.end());
 
-				std::filesystem::path p(filename);
-
-				if (p.extension() == ".tga")
-				{
-					DirectX::ScratchImage image;
-					ComPtr<ID3D11Resource> tgaTexture{};
-
-					HR_T(DirectX::LoadFromTGAFile(filenamews.c_str(), DirectX::TGA_FLAGS_NONE, nullptr, image)); // Load the TGA data
-					HR_T(DirectX::CreateTexture(device.Get(), image.GetImages(), image.GetImageCount(), image.GetMetadata(), tgaTexture.GetAddressOf())); // convert image to texture
-
-					HR_T(device.Get()->CreateShaderResourceView(tgaTexture.Get(), nullptr, texture.pTexture.GetAddressOf()));
-				}
-				else
-				{
-					HR_T(CreateWICTextureFromFile(device.Get(), deviceContext.Get(), filenamews.c_str(), nullptr, texture.pTexture.GetAddressOf())); 
-				}
+                // SRV Create (SRGB / Linear)
+                if (typeName == TEXTURE_DIFFUSE)
+                    CreateTextureFromFile(device.Get(), filenamews.c_str(), texture.pTexture.GetAddressOf(), TextureColorSpace::SRGB);
+                else
+                    CreateTextureFromFile(device.Get(), filenamews.c_str(), texture.pTexture.GetAddressOf(), TextureColorSpace::LINEAR);
 			}
 
 			texture.type = typeName;
@@ -248,7 +237,6 @@ void FBXResourceManager::loadEmbeddedTexture(const aiTexture* embeddedTexture, C
 
 		ID3D11Texture2D* texture2D = nullptr;
 		HR_T(device->CreateTexture2D(&desc, &subresourceData, &texture2D));
-
 		HR_T(device->CreateShaderResourceView(texture2D, nullptr, outTexture.GetAddressOf()));
 	}
 	else
