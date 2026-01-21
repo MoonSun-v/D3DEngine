@@ -373,6 +373,10 @@ void Editor::RenderWorldSettings()
         //ImGui::InputInt("Main Camera index", &camIndex);
         //WorldManager::Instance().SetCameraIndex(camIndex);
     }
+
+    // TODO :: world manager data 추가
+    // - World Light Data 
+    // - PostProcess Data
 }
 
 template<typename T>

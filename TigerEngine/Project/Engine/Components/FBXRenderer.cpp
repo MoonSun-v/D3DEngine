@@ -16,7 +16,8 @@ RTTR_REGISTRATION
 		.property("Roughness", 			&FBXRenderer::GetRoughness,					&FBXRenderer::SetRoughness)
 		.property("Metalic", 			&FBXRenderer::GetMatalic,					&FBXRenderer::SetMatalic)
 		.property("Color", 				&FBXRenderer::GetColor,						&FBXRenderer::SetColor);
-
+        
+         // TODO :: material data 추가
 
 		rttr::registration::class_<DirectX::SimpleMath::Color>("Color")
 		.constructor<>()
