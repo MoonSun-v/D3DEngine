@@ -515,10 +515,13 @@ void Editor::RenderComponentInfo(std::string compName, T* comp)
                         std::string currFilePath = ImGuiFileDialog::Instance()->GetCurrentFileName();   // 진짜 파일 이름만 뜸
                         std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();           // 절대 경로만 뜸
                         std::string fileFilterPath = ImGuiFileDialog::Instance()->GetCurrentFilter();   // 확장자만 나옴
+
+                        std::filesystem::path relativePath = std::filesystem::relative(filePathName);
+                        std::string relativePathStr = relativePath.string();
                         // action
 
                         FBXData* fbxDataComp = dynamic_cast<FBXData*>(comp);
-                        fbxDataComp->ChangeData(filePathName);
+                        fbxDataComp->ChangeData(relativePathStr);
                     }
                     // close
                     ImGuiFileDialog::Instance()->Close();
