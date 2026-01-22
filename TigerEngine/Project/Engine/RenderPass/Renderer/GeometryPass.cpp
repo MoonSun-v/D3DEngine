@@ -47,8 +47,8 @@ void GeometryPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& qu
     {
         // CB - Transform
         sm.transformCBData.world = m.world.Transpose();
-        sm.transformCBData.isRigid = m.isRigid;
-        sm.transformCBData.refBoneIndex = m.refBoneIndex;
+        //sm.transformCBData.isRigid = m.isRigid;
+        //sm.transformCBData.refBoneIndex = m.refBoneIndex;
         context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
         // CB - Offset, Pose
