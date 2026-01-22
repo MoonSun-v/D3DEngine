@@ -3,10 +3,16 @@
 #include "../EngineSystem/PhysicsSystem.h"
 #include "../Util/PhysicsLayerMatrix.h"
 #include "../Util/PhysXUtils.h"
+#include "../Object/GameObject.h"
 
 #include "Transform.h"
 #include "PhysicsComponent.h"
 
+
+void CharacterControllerComponent::OnInitialize()
+{
+    transform = GetOwner()->GetTransform();
+}
 
 CharacterControllerComponent::~CharacterControllerComponent()
 {
@@ -17,7 +23,7 @@ CharacterControllerComponent::~CharacterControllerComponent()
     }
 }
 
-void CharacterControllerComponent::CreateCharacterCapsule(float radius, float height, const Vector3& offset)
+void CharacterControllerComponent::CreateCharacterCollider(float radius, float height, const Vector3& offset)
 {
     if (!transform) return;
 
@@ -30,7 +36,7 @@ void CharacterControllerComponent::CreateCharacterCapsule(float radius, float he
         (transform->GetPosition().z + offset.z) * WORLD_TO_PHYSX
     );
 
-    m_Controller = phys.CreateCapsuleController(
+    m_Controller = phys.CreateCapsuleCollider(
         pos,
         radius * WORLD_TO_PHYSX,
         height * WORLD_TO_PHYSX,
@@ -108,9 +114,8 @@ void CharacterControllerComponent::SyncFromController()
 
 void CharacterControllerComponent::SetLayer(CollisionLayer layer)
 {
-    uint32_t mask = PhysicsLayerMatrix::GetMask(layer);
     m_FilterData.word0 = (uint32_t)layer;
-    m_FilterData.word1 = mask;
+    m_FilterData.word1 = PhysicsLayerMatrix::GetMask(layer);
     m_FilterData.word2 = 0;
     m_FilterData.word3 = 0;
 }

@@ -70,6 +70,12 @@ void PhysicsComponent::ApplyFilter()
     }
 }
 
+void PhysicsComponent::SetLayer(CollisionLayer layer)
+{
+    m_Layer = layer;
+    ApplyFilter();
+}
+
 
 
 // ------------------------------

@@ -200,7 +200,7 @@ void GameApp::Update()
 
     while (m_PhysicsAccumulator >= fixedDt)
     {
-        FixedUpdate(fixedDt);
+        OnFixedUpdate(fixedDt);
 
         PhysicsSystem::Instance().Simulate(fixedDt);
         m_PhysicsAccumulator -= fixedDt;
@@ -209,8 +209,7 @@ void GameApp::Update()
 	OnUpdate();
 }
 
-// TODO 
-void GameApp::FixedUpdate(float dt)
+void GameApp::OnFixedUpdate(float dt)
 {
 
 }

@@ -16,23 +16,23 @@ void PhysicsTestScript::OnInitialize() // editor
 {
 }
 
-void PhysicsTestScript::OnStart() // ?? 
+void PhysicsTestScript::OnStart() // ?? 아직 사용하지X 
 {
 
 }
 
 void PhysicsTestScript::OnUpdate(float delta)
 {
+    // OnStart() 대용 
     if (!isApply)
     {
         auto rigid = GetOwner()->GetComponent<PhysicsComponent>();
         if (rigid != nullptr)
         {
             rigid->CreateDynamicBox({ 20, 30, 20 }, 5);
+            // rigid->SetLayer(CollisionLayer::Player);
             rigid->SyncToPhysics();
-            // OutputDebugStringW(L"[Player1] CreateDynamicBox! \n");
         }
-        // OutputDebugStringW(L"[Player1] OnStart() \n");
 
         isApply = true;
     }

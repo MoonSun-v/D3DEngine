@@ -202,7 +202,7 @@ void CharacterControllerSystem::UnregisterComponent(PxController* cct)
 
 
 // 플레이어 전용 콜라이더 생성 
-PxController* CharacterControllerSystem::CreateCapsuleController(
+PxController* CharacterControllerSystem::CreateCapsuleCollider(
     const PxExtendedVec3& position,
     float radius,
     float height,
