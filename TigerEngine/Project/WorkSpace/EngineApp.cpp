@@ -372,7 +372,9 @@ void EngineApp::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::
 #include "Player/Player1.h"
 #include "Player/Weapon.h"
 
- #include "PhysicsTest/PhysicsTestScript.h"
+#include "Components/AudioListenerComponent.h"
+  #include "Components/AudioSourceComponent.h"
+  #include "PhysicsTest/PhysicsTestScript.h"
   #include "PhysicsTest/GroundTestScript.h"
   #include "PhysicsTest/CCTTest.h"
 
@@ -382,7 +384,6 @@ void EngineApp::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::
       ComponentFactory::Instance().Register<FBXRenderer>("FBXRenderer");
       ComponentFactory::Instance().Register<Transform>("Transform");
       ComponentFactory::Instance().Register<Camera>("Camera");
-
       ComponentFactory::Instance().Register<AudioListenerComponent>("AudioListenerComponent");
       ComponentFactory::Instance().Register<AudioSourceComponent>("AudioSourceComponent");
       ComponentFactory::Instance().Register<PhysicsComponent>("PhysicsComponent");
