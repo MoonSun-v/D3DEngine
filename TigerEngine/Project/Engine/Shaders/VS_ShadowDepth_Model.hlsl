@@ -25,13 +25,13 @@ PS_INPUT main(VS_Weight_INPUT input)
         weightedOffsetPose += mul(input.boneWeights.w, offsetPos[3]);
        
         finalWorld = mul(weightedOffsetPose, world);
-        output.finalWorld = finalWorld;
     }
     // static, rigid
     else
     {
         finalWorld = mul(bonePose[refBoneIndex], world);
     }
+    output.finalWorld = finalWorld;
     
     // view clip space (shadowView, shadowProjection)
     output.pos = mul(float4(input.pos, 1.0f), finalWorld);
