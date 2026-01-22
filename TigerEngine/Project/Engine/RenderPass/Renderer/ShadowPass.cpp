@@ -17,7 +17,7 @@ void ShadowPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queu
     context->IASetInputLayout(sm.inputLayout_BoneWeightVertex.Get());
 
     // Shader
-    context->PSSetShader(sm.PS_ShadowDepth.Get(), NULL, 0);    // alpha discard
+    context->PSSetShader(nullptr, NULL, 0);    // alpha discard
 
     // Sampler
     context->PSSetSamplers(0, 1, sm.linearSamplerState.GetAddressOf());
@@ -29,7 +29,7 @@ void ShadowPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queu
     context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
     // Render
-    auto& models = queue.GetSkeletaItems();
+    auto& models = queue.GetSkeletaItems();     // 여기 모든 모델이 담겨있음
     for (auto& m : models)
     {
         // CB - Transform
@@ -41,7 +41,7 @@ void ShadowPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queu
         // VS
         if (m.isSkeletal)
         {
-            context->VSSetShader(sm.VS_BaseLit_Skeletal.Get(), NULL, 0);
+            context->VSSetShader(sm.VS_ShadowDepth_Skeletal.Get(), NULL, 0);
 
             // CB - Offset, Pose
             auto& boneOffset = m.offsets->boneOffset;
@@ -56,7 +56,7 @@ void ShadowPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queu
             context->UpdateSubresource(sm.poseMatrixCB.Get(), 0, nullptr, &sm.poseMatrixCBData, 0, 0);
         }
         else
-            context->VSSetShader(sm.VS_BaseLit_Rigid.Get(), NULL, 0);
+            context->VSSetShader(sm.VS_ShadowDepth_Rigid.Get(), NULL, 0);
 
         // IB, VB, SRV, CB -> DrawCall
         m.mesh->Draw(context);
