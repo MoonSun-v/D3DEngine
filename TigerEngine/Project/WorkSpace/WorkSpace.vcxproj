@@ -146,11 +146,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="EngineApp.h" />
+    <ClInclude Include="Player\PhysicsTestScript.h" />
     <ClInclude Include="Player\Player1.h" />
     <ClInclude Include="Player\Weapon.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EngineApp.cpp" />
+    <ClCompile Include="Player\PhysicsTestScript.cpp" />
     <ClCompile Include="Player\Player1.cpp" />
     <ClCompile Include="Player\Weapon.cpp" />
     <ClCompile Include="winMain.cpp" />

@@ -100,6 +100,14 @@ void PhysicsSystem::Simulate(float dt)
 
     m_Scene->simulate(dt);      // 물리 연산 요청 (비동기)
     m_Scene->fetchResults(true);// 결과가 끝날 때까지 대기 후 적용
+
+    for (auto& it : m_ActorMap)
+    {
+        if (it.second)
+            it.second->SyncFromPhysics();
+    }
+
+    ResolveTriggerEvents();
 }
 
 
