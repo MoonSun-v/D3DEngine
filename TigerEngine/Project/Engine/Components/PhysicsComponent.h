@@ -57,11 +57,11 @@ struct ColliderDesc
 // ----------------------------------------------------
 class PhysicsComponent : public Component
 {
-    RTTR_ENABLE(PhysicsComponent)
-//public: // TODO : 직렬화 역직렬화 
-//
-//    nlohmann::json Serialize() override;
-//    void Deserialize(nlohmann::json data) override;
+    RTTR_ENABLE(Component)
+public: 
+
+    nlohmann::json Serialize() override;
+    void Deserialize(nlohmann::json data) override;
 
 public:
     void OnInitialize() override;
@@ -77,7 +77,7 @@ public:
     bool IsTrigger() const { return m_IsTrigger; }
 
 
-private:
+public:
     // [ 직렬화 대상 ]
     PhysicsBodyType m_BodyType = PhysicsBodyType::Static;
     ColliderType m_ColliderType = ColliderType::Box;
