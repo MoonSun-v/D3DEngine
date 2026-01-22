@@ -27,10 +27,10 @@ void GeometryPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& qu
 
     // IA
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    context->IASetInputLayout(sm.inputLayout_Vertex.Get());
+    context->IASetInputLayout(sm.inputLayout_BoneWeightVertex.Get());
 
     // Shader
-    context->VSSetShader(sm.VS_BaseLit_Model.Get(), NULL, 0);
+    context->VSSetShader(sm.VS_BaseLit_Skeletal.Get(), NULL, 0);
     context->PSSetShader(sm.PS_Gbuffer.Get(), NULL, 0);
 
     // Sampler
