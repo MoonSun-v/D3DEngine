@@ -117,7 +117,9 @@ void CharacterControllerComponent::Deserialize(nlohmann::json data)
         }
         else if (name == "offset")
         {
-            m_Offset = JsonToVec3(propData[name], m_Offset);
+            Vector3 curr = prop.get_value(*this).get_value<Vector3>();
+            Vector3 v = JsonToVec3(propData[name], curr);
+            prop.set_value(*this, v);
         }
     }
 
@@ -127,6 +129,14 @@ void CharacterControllerComponent::Deserialize(nlohmann::json data)
     CreateCharacterCollider(m_Radius, m_Height, m_Offset);
     SetLayer(m_Layer);
 }
+
+void CharacterControllerComponent::OnCollisionEnter(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastCollisionEnter(other); }
+void CharacterControllerComponent::OnCollisionStay(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastCollisionStay(other); }
+void CharacterControllerComponent::OnCollisionExit(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastCollisionExit(other); }
+
+void CharacterControllerComponent::OnTriggerEnter(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastTriggerEnter(other); }
+void CharacterControllerComponent::OnTriggerStay(PhysicsComponent* other) { if (GetOwner())GetOwner()->BroadcastTriggerStay(other); }
+void CharacterControllerComponent::OnTriggerExit(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastTriggerExit(other); }
 
 
 void CharacterControllerComponent::OnInitialize()
@@ -283,12 +293,12 @@ void CharacterControllerComponent::ResolveCollisions()
         if (m_CCTPrevContacts.find(other) == m_CCTPrevContacts.end())
         {
             OnCollisionEnter(other);
-            other->OnCCTEnter(this);   // Physics에게 알림
+            other->OnCCTCollisionEnter(this);   // Physics에게 알림
         }
         else
         {
             OnCollisionStay(other);
-            other->OnCCTStay(this);
+            other->OnCCTCollisionStay(this);
         }
     }
 
@@ -298,7 +308,7 @@ void CharacterControllerComponent::ResolveCollisions()
         if (m_CCTCurrContacts.find(other) == m_CCTCurrContacts.end())
         {
             OnCollisionExit(other);
-            other->OnCCTExit(this);
+            other->OnCCTCollisionExit(this);
         }
     }
 
@@ -315,12 +325,12 @@ void CharacterControllerComponent::ResolveTriggers()
         if (m_CCTPrevTriggers.find(other) == m_CCTPrevTriggers.end())
         {
             OnTriggerEnter(other);
-            other->OnCCTEnter(this);
+            other->OnCCTTriggerEnter(this);
         }
         else
         {
             OnTriggerStay(other);
-            other->OnCCTStay(this);
+            other->OnCCTTriggerStay(this);
         }
     }
 
@@ -330,7 +340,7 @@ void CharacterControllerComponent::ResolveTriggers()
         if (m_CCTCurrTriggers.find(other) == m_CCTCurrTriggers.end())
         {
             OnTriggerExit(other);
-            other->OnCCTExit(this);
+            other->OnCCTTriggerExit(this);
         }
     }
 
