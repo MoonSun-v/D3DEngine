@@ -32,7 +32,7 @@ void FrustumPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& que
     auto projection = cam->GetProjection();
 
     FrustumDebugDraw(context, shadowView, shadowProjection, 
-        view, projection, Colors::GreenYellow);
+        view, projection, Colors::Red);
 }
 
 void FrustumPass::FrustumDebugDraw(ComPtr<ID3D11DeviceContext>& context, const Matrix& frustumView, const Matrix& frustumProj, const Matrix& renderView, const Matrix& renderProj, FXMVECTOR color)
