@@ -394,7 +394,6 @@ std::shared_ptr<FBXResourceAsset> FBXResourceManager::LoadFBXByPath(std::string 
 	sharedAsset ->directory = path.substr(0, path.find_last_of("/\\"));
 
 	// skeletonInfo 저장
-    // ...
 	sharedAsset ->skeletalInfo = SkeletonInfo();
 	sharedAsset ->skeletalInfo.CreateFromAiScene(pScene);
 
@@ -407,11 +406,14 @@ std::shared_ptr<FBXResourceAsset> FBXResourceManager::LoadFBXByPath(std::string 
 		sharedAsset->animations.push_back(anim);
 	}
 
-	// bone offest 버퍼 채우기
-    if (sharedAsset->skeletalInfo.IsSkeletal())
-    {
-        // mesh 저장, texture 저장 
-        ProcessSkeletalNode(sharedAsset, pScene->mRootNode, pScene); // 내부에서 mesh의 텍스처 저장함
+	// Process Node (mesh, meterial/textures)
+    // 1) Skeletal Mesh
+    if (sharedAsset->skeletalInfo.IsSkeletal()) {
+        // mesh type
+        sharedAsset->type = ModelType::Skeletal;
+
+        // mesh, material(texture)
+        ProcessSkeletalNode(sharedAsset, pScene->mRootNode, pScene);
 
         for (auto& bone : sharedAsset->skeletalInfo.m_bones)
         {
@@ -420,25 +422,23 @@ std::shared_ptr<FBXResourceAsset> FBXResourceManager::LoadFBXByPath(std::string 
             int boneIndex = sharedAsset->skeletalInfo.GetBoneIndexByName(currBoneName);
 
             if (boneIndex > 0)
-            {
                 offsetMat = sharedAsset->skeletalInfo.GetBoneOffsetByName(currBoneName);
-            }
 
             sharedAsset->m_BoneOffsets.boneOffset[boneIndex] = offsetMat;
         }
     }
-    else
-    {
+    // 2) Static / Rigid Mesh
+    else {
+        // mesh type
+        sharedAsset->type = ModelType::Rigid;       // TODO :: Static / Rigid 구분 필요
+
+        // mesh, material(texture)
         ProcessRigidNode(sharedAsset, pScene->mRootNode, pScene, -1);
         sharedAsset->meshes_modelMat.resize(sharedAsset->meshes.size());
         sharedAsset->meshes_localMat.resize(sharedAsset->meshes.size());
-        // rigid, static
-        //      FBXResourceAsset
-        //     vector<Matrix> local;
-        //     vector<Matrix> model;
     }
 
-    // mesh의 정점 버퍼, 인덱스 버퍼 생성
+    // create vertex/index buffer
     for (auto& mesh : sharedAsset->meshes)
     {
         mesh.CreateVertexBuffer(device);
