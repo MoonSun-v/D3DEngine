@@ -62,6 +62,20 @@ void CCTTest::OnFixedUpdate(float dt)
     // RaycastExample();
 }
 
+void CCTTest::OnCollisionEnter(PhysicsComponent* other)
+{
+    if (!other || !other->GetOwner()) return;
+
+    auto name = this->GetOwner()->GetName();
+    auto otherName = other->GetOwner()->GetName();
+
+    cout << endl << "[CCT]" << name << " - OnCollisionEnter : " << otherName << endl << endl;
+
+    std::wstring wName(name.begin(), name.end());
+    std::wstring wOtherName(otherName.begin(), otherName.end());
+    OutputDebugStringW((L"[CCT] "+ wName + L" - OnCollisionEnter : " + wOtherName + L"\n").c_str());
+}
+
 void CCTTest::CCTMoveExample(float dt)
 {
     Vector3 input(0, 0, 0);
@@ -100,7 +114,6 @@ void CCTTest::CCTMoveExample(float dt)
 
 void CCTTest::RaycastExample()
 {
-    // 발보다 살짝 위에서 시작 (자기 자신 회피)
     Vector3 offset(0, 60.0f, 0);
     PxVec3 originPx = ToPx(GetOwner()->GetTransform()->GetPosition() + offset);
 

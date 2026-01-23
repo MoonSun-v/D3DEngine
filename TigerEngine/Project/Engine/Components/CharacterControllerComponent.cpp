@@ -130,6 +130,14 @@ void CharacterControllerComponent::Deserialize(nlohmann::json data)
     SetLayer(m_Layer);
 }
 
+void CharacterControllerComponent::OnCollisionEnter(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastCollisionEnter(other); }
+void CharacterControllerComponent::OnCollisionStay(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastCollisionStay(other); }
+void CharacterControllerComponent::OnCollisionExit(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastCollisionExit(other); }
+
+void CharacterControllerComponent::OnTriggerEnter(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastTriggerEnter(other); }
+void CharacterControllerComponent::OnTriggerStay(PhysicsComponent* other) { if (GetOwner())GetOwner()->BroadcastTriggerStay(other); }
+void CharacterControllerComponent::OnTriggerExit(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastTriggerExit(other); }
+
 
 void CharacterControllerComponent::OnInitialize()
 {

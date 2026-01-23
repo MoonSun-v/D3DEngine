@@ -45,11 +45,12 @@ void PhysicsTestScript::OnCollisionEnter(PhysicsComponent* other)
 {
     if (!other || !other->GetOwner()) return;
 
-    auto name = other->GetOwner()->GetName();
+    auto name = this->GetOwner()->GetName();
+    auto otherName = other->GetOwner()->GetName();
 
-    cout << endl << "[Rigid] OnCollisionEnter : " << name << endl << endl;
+    cout << endl << "[Rigid]" << name << " - OnCollisionEnter : " << otherName << endl << endl;
 
-    std::wstring wname(name.begin(), name.end());
+    std::wstring wname(otherName.begin(), otherName.end());
     OutputDebugStringW((L"[Rigid] OnCollisionEnter : " + wname + L"\n").c_str());
 }
 
@@ -71,8 +72,8 @@ void PhysicsTestScript::OnCCTCollisionEnter(CharacterControllerComponent* cct)
 
     auto name = cct->GetOwner()->GetName();
 
-    cout << endl << "[CCT] OnCCTCollisionEnter : " << name << endl << endl;
+    cout << endl << "[Rigid] OnCCTCollisionEnter : " << name << endl << endl;
 
     std::wstring wname(name.begin(), name.end());
-    OutputDebugStringW((L"[CCT] OnCCTCollisionEnter : " + wname + L"\n").c_str());
+    OutputDebugStringW((L"[Rigid] OnCCTCollisionEnter : " + wname + L"\n").c_str());
 }

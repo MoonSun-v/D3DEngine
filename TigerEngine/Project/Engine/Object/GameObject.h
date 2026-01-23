@@ -96,7 +96,6 @@ public:
     void BroadcastCCTCollisionEnter(CharacterControllerComponent* cct);
     void BroadcastCCTCollisionStay(CharacterControllerComponent* cct);
     void BroadcastCCTCollisionExit(CharacterControllerComponent* cct);
-
 };
 
 template <typename T>
