@@ -97,7 +97,6 @@ void FBXRenderer::OnUpdate(float delta)
                 auto& node = modelAsset->meshes[i];
                 NodeAnimation aniClip;
                 bool hasAnimation = modelAsset->animations[animationIndex].GetNodeAnimationByName(node.nodeName, aniClip);
-
                 if (hasAnimation)
                 {
                     // get keyframe
