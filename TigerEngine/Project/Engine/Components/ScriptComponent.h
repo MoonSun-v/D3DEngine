@@ -1,5 +1,6 @@
 #pragma once
 #include "../Object/Component.h"
+#include "PhysicsComponent.h"
 
 /// <summary>
 /// 사용자 정의 컴포넌트가 상속 받은 컴포넌트 클래스
@@ -14,4 +15,21 @@ public:
     ~ScriptComponent() = default;
 
     bool IsPlayModeOnly() override { return true; }
+
+public:
+    virtual void OnCollisionEnter(PhysicsComponent*) {}
+    virtual void OnCollisionStay(PhysicsComponent*) {}
+    virtual void OnCollisionExit(PhysicsComponent*) {}
+
+    virtual void OnTriggerEnter(PhysicsComponent*) {}
+    virtual void OnTriggerStay(PhysicsComponent*) {}
+    virtual void OnTriggerExit(PhysicsComponent*) {}
+
+    virtual void OnCCTTriggerEnter(CharacterControllerComponent*) {}
+    virtual void OnCCTTriggerStay(CharacterControllerComponent*) {}
+    virtual void OnCCTTriggerExit(CharacterControllerComponent*) {}
+
+    virtual void OnCCTCollisionEnter(CharacterControllerComponent*) {}
+    virtual void OnCCTCollisionStay(CharacterControllerComponent*) {}
+    virtual void OnCCTCollisionExit(CharacterControllerComponent*) {}
 };

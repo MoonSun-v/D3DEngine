@@ -3,6 +3,8 @@
 #include "System/InputSystem.h"
 #include "Object/Component.h"
 #include "Components/PhysicsComponent.h"
+#include "Components/CharacterControllerComponent.h"
+
 
 RTTR_REGISTRATION
 {
@@ -37,4 +39,40 @@ void PhysicsTestScript::OnUpdate(float delta)
 
         isApply = true;
     }
+}
+
+void PhysicsTestScript::OnCollisionEnter(PhysicsComponent* other) 
+{
+    if (!other || !other->GetOwner()) return;
+
+    auto name = other->GetOwner()->GetName();
+
+    cout << endl << "[Rigid] OnCollisionEnter : " << name << endl << endl;
+
+    std::wstring wname(name.begin(), name.end());
+    OutputDebugStringW((L"[Rigid] OnCollisionEnter : " + wname + L"\n").c_str());
+}
+
+//void PhysicsTestScript::OnCollisionStay(PhysicsComponent* other)
+//{
+//    if (!other || !other->GetOwner()) return;
+//
+//    auto name = other->GetOwner()->GetName();
+//
+//    cout << endl << "[Rigid] OnCollisionStay : " << name << endl << endl;
+//
+//    std::wstring wname(name.begin(), name.end());
+//    OutputDebugStringW((L"[Rigid] OnCollisionStay : " + wname + L"\n").c_str());
+//}
+
+void PhysicsTestScript::OnCCTCollisionEnter(CharacterControllerComponent* cct)
+{
+    if (!cct || !cct->GetOwner()) return;
+
+    auto name = cct->GetOwner()->GetName();
+
+    cout << endl << "[CCT] OnCCTCollisionEnter : " << name << endl << endl;
+
+    std::wstring wname(name.begin(), name.end());
+    OutputDebugStringW((L"[CCT] OnCCTCollisionEnter : " + wname + L"\n").c_str());
 }

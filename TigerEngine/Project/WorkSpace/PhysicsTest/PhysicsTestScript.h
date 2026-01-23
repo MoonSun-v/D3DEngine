@@ -6,9 +6,6 @@
 /// 피직스 컴포넌트 테스트용 클래스.
 /// </summary>
 
-// - inspcter에서 PhysicsTestScript + PhysicsComponent 추가
-// - EngineApp에 ComponentFactory::Instance().Register<PhysicsTestScript>("PhysicsTestScript");
-
 class PhysicsTestScript : public ScriptComponent
 {
     RTTR_ENABLE(ScriptComponent)
@@ -19,5 +16,22 @@ public:
     void OnUpdate(float delta) override;
 
     bool isApply = false;
+
+public:
+    void OnCollisionEnter(PhysicsComponent* other) override;
+    // void OnCollisionStay(PhysicsComponent* other) override;
+    void OnCCTCollisionEnter(CharacterControllerComponent* cct) override;
+
+    //void OnTriggerEnter(PhysicsComponent* other) override;
+    //void OnTriggerStay(PhysicsComponent* other) override;
+    //void OnTriggerExit(PhysicsComponent* other) override;
+
+    //void OnCCTTriggerEnter(CharacterControllerComponent* cct) override;
+    //void OnCCTTriggerStay(CharacterControllerComponent* cct) override;
+    //void OnCCTTriggerExit(CharacterControllerComponent* cct) override;
+
+    //void OnCCTCollisionEnter(CharacterControllerComponent* cct) override;
+    //void OnCCTCollisionStay(CharacterControllerComponent* cct) override;
+    //void OnCCTCollisionExit(CharacterControllerComponent* cct) override;
 
 };

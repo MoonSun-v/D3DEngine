@@ -105,24 +105,30 @@ public:
     // -----------------------------
     // [ Rigid ]  Collision / Trigger 이벤트 콜백 
     // -----------------------------
-    virtual void OnCollisionEnter(PhysicsComponent* other) { OutputDebugStringW(L"[PhysicsComponent] Collision Enter! \n"); }
-    virtual void OnCollisionStay(PhysicsComponent* other) { /*OutputDebugStringW(L"[PhysicsComponent] Collision Stay! \n");*/ }
-    virtual void OnCollisionExit(PhysicsComponent* other) { OutputDebugStringW(L"[PhysicsComponent] Collision Exit! \n"); }
+    // Rigid <-> Rigid
+    virtual void OnCollisionEnter(PhysicsComponent* other);
+    virtual void OnCollisionStay(PhysicsComponent* other);
+    virtual void OnCollisionExit(PhysicsComponent* other);
 
-    virtual void OnTriggerEnter(PhysicsComponent* other) { OutputDebugStringW(L"[PhysicsComponent] Trigger Enter! \n"); }
-    virtual void OnTriggerStay(PhysicsComponent* other) { /*OutputDebugStringW(L"[PhysicsComponent] Trigger Stay \n");*/ }
-    virtual void OnTriggerExit(PhysicsComponent* other) { OutputDebugStringW(L"[PhysicsComponent] Trigger Exit! \n"); }
+    // Trigger <-> Trigger
+    virtual void OnTriggerEnter(PhysicsComponent* other);
+    virtual void OnTriggerStay(PhysicsComponent* other);
+    virtual void OnTriggerExit(PhysicsComponent* other);
+
 
     // -----------------------------
     // [ CCT ]  Collision / Trigger 이벤트 콜백 
     // -----------------------------
-    virtual void OnCCTTriggerEnter(CharacterControllerComponent* cct) { OutputDebugStringW(L"[PhysicsComponent] CCT Trigger Enter \n"); }
-    virtual void OnCCTTriggerStay(CharacterControllerComponent* cct) { /*OutputDebugStringW(L"[PhysicsComponent] CCT Trigger Stay \n");*/ }
-    virtual void OnCCTTriggerExit(CharacterControllerComponent* cct) { OutputDebugStringW(L"[PhysicsComponent] CCT Trigger Exit \n"); }
+    // CCT <-> Trigger
+    virtual void OnCCTTriggerEnter(CharacterControllerComponent* cct);
+    virtual void OnCCTTriggerStay(CharacterControllerComponent* cct);
+    virtual void OnCCTTriggerExit(CharacterControllerComponent* cct);
 
-    virtual void OnCCTCollisionEnter(CharacterControllerComponent* cct) { OutputDebugStringW(L"[PhysicsComponent] CCT Collision Enter \n"); }
-    virtual void OnCCTCollisionStay(CharacterControllerComponent* cct) { /*OutputDebugStringW(L"[PhysicsComponent] CCT Collision Stay \n");*/ }
-    virtual void OnCCTCollisionExit(CharacterControllerComponent* cct) { OutputDebugStringW(L"[PhysicsComponent] CCT Collision Exit \n"); }
+    // CCT <-> Collision
+    virtual void OnCCTCollisionEnter(CharacterControllerComponent* cct);
+    virtual void OnCCTCollisionStay(CharacterControllerComponent* cct);
+    virtual void OnCCTCollisionExit(CharacterControllerComponent* cct);
+
 
 
     // --------------------------

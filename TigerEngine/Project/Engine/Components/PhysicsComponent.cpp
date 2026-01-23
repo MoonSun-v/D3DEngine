@@ -159,6 +159,66 @@ void PhysicsComponent::Deserialize(nlohmann::json data)
     SetLayer(m_Layer);
 }
 
+void PhysicsComponent::OnCollisionEnter(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastCollisionEnter(other);
+}
+
+void PhysicsComponent::OnCollisionStay(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastCollisionStay(other);
+}
+
+void PhysicsComponent::OnCollisionExit(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastCollisionExit(other);
+}
+
+void PhysicsComponent::OnTriggerEnter(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastTriggerEnter(other);
+}
+
+void PhysicsComponent::OnTriggerStay(PhysicsComponent* other)
+{
+    if (GetOwner())GetOwner()->BroadcastTriggerStay(other);
+}
+
+void PhysicsComponent::OnTriggerExit(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastTriggerExit(other);
+}
+
+void PhysicsComponent::OnCCTTriggerEnter(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTTriggerEnter(cct);
+}
+
+void PhysicsComponent::OnCCTTriggerStay(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTTriggerStay(cct);
+}
+
+void PhysicsComponent::OnCCTTriggerExit(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTTriggerExit(cct);
+}
+
+void PhysicsComponent::OnCCTCollisionEnter(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTCollisionEnter(cct);
+}
+
+void PhysicsComponent::OnCCTCollisionStay(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTCollisionStay(cct);
+}
+
+void PhysicsComponent::OnCCTCollisionExit(CharacterControllerComponent* cct)
+{
+    if (GetOwner())  GetOwner()->BroadcastCCTCollisionExit(cct);
+}
+
 
 
 void PhysicsComponent::OnInitialize()

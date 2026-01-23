@@ -64,7 +64,6 @@ void CCTTest::OnFixedUpdate(float dt)
 
 void CCTTest::CCTMoveExample(float dt)
 {
-
     Vector3 input(0, 0, 0);
     if (Input::GetKey(Key::Up))    input.z += 1;
     if (Input::GetKey(Key::Down))  input.z -= 1;
