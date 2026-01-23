@@ -16,6 +16,18 @@ private:
 
     CharacterControllerComponent* cctComp = nullptr;
 
+private:
+    void CCTMoveExample(float dt);
+    void RaycastExample();
+
+    // [ 플레이어 전방 Raycast 디버그 시각화 ]
+    void CheckPlayerForwardDebug(
+        PrimitiveBatch<VertexPositionColor>* batch,
+        bool bAllHits,
+        bool bIncludeTrigger,
+        CollisionLayer layer,
+        float maxDistance);
+
 public:
     void OnInitialize() override;
     void OnStart() override;

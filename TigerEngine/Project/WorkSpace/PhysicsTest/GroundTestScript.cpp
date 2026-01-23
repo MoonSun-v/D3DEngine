@@ -28,7 +28,8 @@ void GroundTestScript::OnUpdate(float delta)
         if (rigid != nullptr)
         {
             rigid->CreateStaticBox({ 600, 70, 600 });
-            rigid->SetLayer(CollisionLayer::IgnoreTest); // 충돌 레이어 테스트 
+            // rigid->CreateTriggerBox({ 600, 70, 600 });
+            // rigid->SetLayer(CollisionLayer::IgnoreTest); // 충돌 레이어 테스트 
             rigid->SyncToPhysics();
         }
 

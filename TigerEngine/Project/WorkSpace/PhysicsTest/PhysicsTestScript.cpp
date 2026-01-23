@@ -30,6 +30,7 @@ void PhysicsTestScript::OnUpdate(float delta)
         if (rigid != nullptr)
         {
             rigid->CreateDynamicBox({ 20, 30, 20 }, 5);
+            // rigid->CreateStaticBox({ 20, 30, 20 });
             // rigid->SetLayer(CollisionLayer::Player);
             rigid->SyncToPhysics();
         }

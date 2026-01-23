@@ -161,6 +161,8 @@ void PhysicsSystem::ResolveTriggerEvents()
             pair.first->OnTriggerStay(pair.second);
             pair.second->OnTriggerStay(pair.first);
         }
+
+        OutputDebugStringW(L"[PhysicsSystem] Trigger Enter / Stay \n");
     }
 
     // --------------------------------------------------

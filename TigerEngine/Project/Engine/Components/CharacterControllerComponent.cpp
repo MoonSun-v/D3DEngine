@@ -117,7 +117,9 @@ void CharacterControllerComponent::Deserialize(nlohmann::json data)
         }
         else if (name == "offset")
         {
-            m_Offset = JsonToVec3(propData[name], m_Offset);
+            Vector3 curr = prop.get_value(*this).get_value<Vector3>();
+            Vector3 v = JsonToVec3(propData[name], curr);
+            prop.set_value(*this, v);
         }
     }
 

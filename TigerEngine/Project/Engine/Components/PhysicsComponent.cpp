@@ -130,14 +130,17 @@ void PhysicsComponent::Deserialize(nlohmann::json data)
             prop.set_value(*this, propData[name].get<float>());
         }
 
-        // Vector3
         else if (name == "halfExtents")
         {
-            m_HalfExtents = Json_Vec3(propData[name], m_HalfExtents);
+            Vector3 curr = prop.get_value(*this).get_value<Vector3>();
+            Vector3 v = Json_Vec3(propData[name], curr);
+            prop.set_value(*this, v);
         }
         else if (name == "localOffset")
         {
-            m_LocalOffset = Json_Vec3(propData[name], m_LocalOffset);
+            Vector3 curr = prop.get_value(*this).get_value<Vector3>();
+            Vector3 v = Json_Vec3(propData[name], curr);
+            prop.set_value(*this, v);
         }
     }
 
