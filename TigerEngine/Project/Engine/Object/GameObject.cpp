@@ -221,3 +221,100 @@ void GameObject::ClearAll()
 
     components.clear();
 }
+
+
+
+// -----------------------------
+// Physics 충돌 이벤트 
+// -----------------------------
+
+// Rigid
+void GameObject::BroadcastCollisionEnter(PhysicsComponent* other)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnCollisionEnter(other);
+}
+
+void GameObject::BroadcastCollisionStay(PhysicsComponent* other)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnCollisionStay(other);
+}
+
+void GameObject::BroadcastCollisionExit(PhysicsComponent* other)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnCollisionExit(other);
+}
+
+
+// Trigger
+void GameObject::BroadcastTriggerEnter(PhysicsComponent* other)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnTriggerEnter(other);
+}
+
+void GameObject::BroadcastTriggerStay(PhysicsComponent* other)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnTriggerStay(other);
+}
+
+void GameObject::BroadcastTriggerExit(PhysicsComponent* other)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnTriggerExit(other);
+}
+
+
+// CCT Trigger
+void GameObject::BroadcastCCTTriggerEnter(CharacterControllerComponent* cct)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnCCTTriggerEnter(cct);
+}
+
+void GameObject::BroadcastCCTTriggerStay(CharacterControllerComponent* cct)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnCCTTriggerStay(cct);
+}
+
+void GameObject::BroadcastCCTTriggerExit(CharacterControllerComponent* cct)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnCCTTriggerExit(cct);
+}
+
+
+// CCT Collision
+void GameObject::BroadcastCCTCollisionEnter(CharacterControllerComponent* cct)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnCCTCollisionEnter(cct);
+}
+
+void GameObject::BroadcastCCTCollisionStay(CharacterControllerComponent* cct)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnCCTCollisionStay(cct);
+}
+
+void GameObject::BroadcastCCTCollisionExit(CharacterControllerComponent* cct)
+{
+    for (auto c : components)
+        if (auto s = dynamic_cast<ScriptComponent*>(c))
+            s->OnCCTCollisionExit(cct);
+}

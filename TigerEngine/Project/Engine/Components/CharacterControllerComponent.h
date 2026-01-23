@@ -66,13 +66,13 @@ public:
     // -----------------------------
     // Collision / Trigger 이벤트 콜백 
     // -----------------------------
-    virtual void OnCollisionEnter(PhysicsComponent* other) { OutputDebugStringW(L"[CharacterControllerComponent] Collision Enter! \n"); }
-    virtual void OnCollisionStay(PhysicsComponent* other) { /*OutputDebugStringW(L"[CharacterControllerComponent] Collision Stay! \n");*/ }
-    virtual void OnCollisionExit(PhysicsComponent* other) { OutputDebugStringW(L"[CharacterControllerComponent] Collision Exit! \n"); }
+    virtual void OnCollisionEnter(PhysicsComponent* other);
+    virtual void OnCollisionStay(PhysicsComponent* other);
+    virtual void OnCollisionExit(PhysicsComponent* other);
 
-    virtual void OnTriggerEnter(PhysicsComponent* other) { OutputDebugStringW(L"[CharacterControllerComponent] Trigger Enter! \n"); }
-    virtual void OnTriggerStay(PhysicsComponent* other) { /*OutputDebugStringW(L"[CharacterControllerComponent] Trigger Stay \n");*/ }
-    virtual void OnTriggerExit(PhysicsComponent* other) { OutputDebugStringW(L"[CharacterControllerComponent] Trigger Exit! \n"); }
+    virtual void OnTriggerEnter(PhysicsComponent* other);
+    virtual void OnTriggerStay(PhysicsComponent* other);
+    virtual void OnTriggerExit(PhysicsComponent* other);
 
 
 public:

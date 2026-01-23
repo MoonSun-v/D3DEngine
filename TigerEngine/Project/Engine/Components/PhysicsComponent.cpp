@@ -130,14 +130,17 @@ void PhysicsComponent::Deserialize(nlohmann::json data)
             prop.set_value(*this, propData[name].get<float>());
         }
 
-        // Vector3
         else if (name == "halfExtents")
         {
-            m_HalfExtents = Json_Vec3(propData[name], m_HalfExtents);
+            Vector3 curr = prop.get_value(*this).get_value<Vector3>();
+            Vector3 v = Json_Vec3(propData[name], curr);
+            prop.set_value(*this, v);
         }
         else if (name == "localOffset")
         {
-            m_LocalOffset = Json_Vec3(propData[name], m_LocalOffset);
+            Vector3 curr = prop.get_value(*this).get_value<Vector3>();
+            Vector3 v = Json_Vec3(propData[name], curr);
+            prop.set_value(*this, v);
         }
     }
 
@@ -154,6 +157,66 @@ void PhysicsComponent::Deserialize(nlohmann::json data)
 
     CreateCollider(m_ColliderType, m_BodyType, d);
     SetLayer(m_Layer);
+}
+
+void PhysicsComponent::OnCollisionEnter(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastCollisionEnter(other);
+}
+
+void PhysicsComponent::OnCollisionStay(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastCollisionStay(other);
+}
+
+void PhysicsComponent::OnCollisionExit(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastCollisionExit(other);
+}
+
+void PhysicsComponent::OnTriggerEnter(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastTriggerEnter(other);
+}
+
+void PhysicsComponent::OnTriggerStay(PhysicsComponent* other)
+{
+    if (GetOwner())GetOwner()->BroadcastTriggerStay(other);
+}
+
+void PhysicsComponent::OnTriggerExit(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastTriggerExit(other);
+}
+
+void PhysicsComponent::OnCCTTriggerEnter(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTTriggerEnter(cct);
+}
+
+void PhysicsComponent::OnCCTTriggerStay(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTTriggerStay(cct);
+}
+
+void PhysicsComponent::OnCCTTriggerExit(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTTriggerExit(cct);
+}
+
+void PhysicsComponent::OnCCTCollisionEnter(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTCollisionEnter(cct);
+}
+
+void PhysicsComponent::OnCCTCollisionStay(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTCollisionStay(cct);
+}
+
+void PhysicsComponent::OnCCTCollisionExit(CharacterControllerComponent* cct)
+{
+    if (GetOwner())  GetOwner()->BroadcastCCTCollisionExit(cct);
 }
 
 
@@ -407,6 +470,53 @@ void PhysicsComponent::CreateCollider(ColliderType collider, PhysicsBodyType bod
 
     ApplyFilter(); // 레이어 필터 
 }
+
+void PhysicsComponent::CheckTriggers()
+{
+    if (!m_Actor) return; // PxActor* m_Actor; (PhysicsSystem에서 매핑됨)
+
+    PxScene* scene = PhysicsSystem::Instance().GetScene();
+
+    // Actor에 연결된 모든 Shape 가져오기
+    PxU32 shapeCount = m_Actor->getNbShapes();
+    if (shapeCount == 0) return;
+
+    std::vector<PxShape*> shapes(shapeCount);
+    m_Actor->getShapes(shapes.data(), shapeCount);
+
+    for (PxShape* shape : shapes)
+    {
+        // Trigger Shape만 처리
+        if (!(shape->getFlags() & PxShapeFlag::eTRIGGER_SHAPE))
+            continue;
+
+        PxGeometryHolder geom = shape->getGeometry();
+        PxTransform pose = m_Actor->getGlobalPose() * shape->getLocalPose();
+
+        // Overlap Query 수행
+        PxOverlapBufferN<64> hitBuffer;
+        PxFilterData shapeFilter = shape->getQueryFilterData();
+        PxQueryFilterData filterData;
+        filterData.data = shapeFilter; 
+
+        if (scene->overlap(geom.any(), pose, hitBuffer, filterData))
+        {
+            for (PxU32 i = 0; i < hitBuffer.getNbAnyHits(); ++i)
+            {
+                PxRigidActor* otherActor = hitBuffer.getAnyHit(i).actor;
+                if (!otherActor) continue;
+
+                PhysicsComponent* other = PhysicsSystem::Instance().GetComponent(otherActor);
+                if (other && other != this)
+                {
+                    m_PendingTriggers.insert(other);
+                }
+            }
+        }
+    }
+}
+
+
 
 
 DirectX::XMVECTOR GetActorDebugColor(PxRigidActor* actor)

@@ -16,9 +16,15 @@ private:
 
     CharacterControllerComponent* cctComp = nullptr;
 
+private:
+    void CCTMoveExample(float dt); // 플레이어 이동 & 점프 예제 
+    void RaycastExample(); // 레이캐스트 사용 & 디버그 예제 
+
 public:
     void OnInitialize() override;
     void OnStart() override;
     void OnUpdate(float delta) override;
     void OnFixedUpdate(float dt) override;
+
+    void OnCollisionEnter(PhysicsComponent* other) override;
 };

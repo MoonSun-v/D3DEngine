@@ -9,6 +9,7 @@
 #include "../EngineSystem/ScriptSystem.h"
 
 class RenderComponent; // NOTE : Component 있는 거랑 순환 참조 조심하기
+class PhysicsComponent;
 
 /// <summary>
 /// GameObject는 컴포넌트를 담고 있는 순수한 컨테이너
@@ -74,6 +75,27 @@ protected:
 	Vector3 aabbCenter{};
 
 	void Initialize();
+
+public:
+    // Rigid
+    void BroadcastCollisionEnter(PhysicsComponent* other);
+    void BroadcastCollisionStay(PhysicsComponent* other);
+    void BroadcastCollisionExit(PhysicsComponent* other);
+
+    // Trigger
+    void BroadcastTriggerEnter(PhysicsComponent* other);
+    void BroadcastTriggerStay(PhysicsComponent* other);
+    void BroadcastTriggerExit(PhysicsComponent* other);
+
+    // CCT Trigger
+    void BroadcastCCTTriggerEnter(CharacterControllerComponent* cct);
+    void BroadcastCCTTriggerStay(CharacterControllerComponent* cct);
+    void BroadcastCCTTriggerExit(CharacterControllerComponent* cct);
+
+    // CCT Collision
+    void BroadcastCCTCollisionEnter(CharacterControllerComponent* cct);
+    void BroadcastCCTCollisionStay(CharacterControllerComponent* cct);
+    void BroadcastCCTCollisionExit(CharacterControllerComponent* cct);
 };
 
 template <typename T>
