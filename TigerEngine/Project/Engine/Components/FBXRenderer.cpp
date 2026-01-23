@@ -52,7 +52,7 @@ void FBXRenderer::OnUpdate(float delta)
 
     // local matrix udpate
     // skeletal mesh
-    if (modelAsset->skeletalInfo.IsSkeletal())
+    if (modelAsset->type == ModelType::Skeletal)
     {
         for (auto& bone : bones)
         {
@@ -133,6 +133,8 @@ void FBXRenderer::OnRender(RenderQueue& queue)
 {
     if (fbxData == nullptr) return; // 그릴 메쉬가 없음 -> data 없음
 
+    ModelType modelType = fbxData->GetFBXInfo()->type;
+
     auto& meshData = fbxData->GetMesh();
     auto world = owner->GetTransform()->GetWorldTransform();
 
@@ -140,25 +142,21 @@ void FBXRenderer::OnRender(RenderQueue& queue)
     {
         auto& mesh = meshData[i];
 
-        SkeletalRenderItem item{};
+        RenderItem item{};
+        item.modelType = modelType;
         item.mesh = &mesh;
+        item.material = mesh.GetMaterial();
         item.world = world;
-        if (!fbxData->GetFBXInfo()->skeletalInfo.IsSkeletal()) item.model = fbxData->GetFBXInfo()->meshes_modelMat[i];
+        
+        if (modelType != ModelType::Skeletal) 
+            item.model = fbxData->GetFBXInfo()->meshes_modelMat[i];
+
+        item.boneCount = fbxData->GetFBXInfo()->skeletalInfo.m_bones.size();
+        item.refBoneIndex = mesh.refBoneIndex;
         item.poses = &bonePoses;
         item.offsets = &fbxData->GetFBXInfo()->m_BoneOffsets;
-        item.refBoneIndex = mesh.refBoneIndex;
-        item.isSkeletal = fbxData->GetFBXInfo()->skeletalInfo.IsSkeletal();
-        item.boneCount = fbxData->GetFBXInfo()->skeletalInfo.m_bones.size();
 
-        // Mesh 기본 Material 복사
-        item.material = mesh.GetMaterial();
-
-        // 인스턴스별 override
-        item.material.roughnessOverride = roughness;
-        item.material.metallicOverride = metalic;
-        item.material.diffuseOverride = { color.x, color.y, color.z };
-
-        queue.AddSkeletal(item);
+        queue.AddRenderItem(item);
     }
 
 }

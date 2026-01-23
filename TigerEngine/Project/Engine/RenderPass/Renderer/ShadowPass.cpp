@@ -32,17 +32,17 @@ void ShadowPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queu
     context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
     // Render
-    auto& models = queue.GetSkeletaItems();     // 여기 모든 모델이 담겨있음
+    auto& models = queue.GetRendertems();     // 여기 모든 모델이 담겨있음
     for (auto& m : models)
     {
         // CB - Transform
         sm.transformCBData.world = m.world.Transpose();
-        if (!m.isSkeletal)
+        if (m.modelType != ModelType::Skeletal)
             sm.transformCBData.model = m.model.Transpose();
         context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
         // VS
-        if (m.isSkeletal)
+        if (m.modelType == ModelType::Skeletal)
         {
             context->VSSetShader(sm.VS_ShadowDepth_Skeletal.Get(), NULL, 0);
 

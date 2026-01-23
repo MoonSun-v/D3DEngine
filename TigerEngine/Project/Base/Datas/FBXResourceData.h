@@ -18,18 +18,30 @@
 //	Matrix modelMatricies[256];
 //};
 
+enum class ModelType
+{
+    Static,
+    Rigid,
+    Skeletal,
+    None
+};
+
 struct FBXResourceAsset
 {
+    // model info
     std::string directory = "";
+    ModelType type = ModelType::None;
 
+    // mesh, texture, animation
     std::vector<Mesh> meshes;
 	std::vector<Texture> textures;	
     std::vector<Animation> animations;
 
+    // skeleton
     SkeletonInfo skeletalInfo;
     OffsetMatrixCB m_BoneOffsets{};
 
-    // sub mesh matrixs
+    // sub mesh (parent-child) matrixs
     vector<Matrix> meshes_bindMat;
     vector<Matrix> meshes_localMat;
     vector<Matrix> meshes_modelMat;

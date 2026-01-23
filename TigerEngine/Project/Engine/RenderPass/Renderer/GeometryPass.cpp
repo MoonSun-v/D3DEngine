@@ -42,17 +42,17 @@ void GeometryPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& qu
     context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
     // Render
-    auto& models = queue.GetSkeletaItems();
+    auto& models = queue.GetRendertems();
     for (auto& m : models)
     {
         // CB - Transform
         sm.transformCBData.world = m.world.Transpose();
-        if (!m.isSkeletal)
+        if (m.modelType != ModelType::Skeletal)
             sm.transformCBData.model = m.model.Transpose();   
         context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
         // VS
-        if (m.isSkeletal)
+        if (m.modelType == ModelType::Skeletal)
         {
             context->VSSetShader(sm.VS_BaseLit_Skeletal.Get(), NULL, 0);
 
