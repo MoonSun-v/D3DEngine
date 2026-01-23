@@ -46,31 +46,36 @@ void GeometryPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& qu
     for (auto& m : models)
     {
         // CB - Transform
+        if (m.modelType == ModelType::Rigid) sm.transformCBData.model = m.model.Transpose();
         sm.transformCBData.world = m.world.Transpose();
-        if (m.modelType != ModelType::Skeletal)
-            sm.transformCBData.model = m.model.Transpose();   
         context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
         // VS
-        if (m.modelType == ModelType::Skeletal)
-        {
-            context->VSSetShader(sm.VS_BaseLit_Skeletal.Get(), NULL, 0);
-
-            // CB - Offset, Pose
-            auto& boneOffset = m.offsets->boneOffset;
-            auto& bonePose = m.poses->bonePose;
-
-            for (int i = 0; i < m.boneCount; i++)
+        switch (m.modelType) {
+            case ModelType::Skeletal:
             {
-                sm.offsetMatrixCBData.boneOffset[i] = boneOffset[i];
-                sm.poseMatrixCBData.bonePose[i] = bonePose[i];
+                context->VSSetShader(sm.VS_BaseLit_Skeletal.Get(), NULL, 0);
+
+                // CB - Offset, Pose
+                auto& boneOffset = m.offsets->boneOffset;
+                auto& bonePose = m.poses->bonePose;
+
+                for (int i = 0; i < m.boneCount; i++)
+                {
+                    sm.offsetMatrixCBData.boneOffset[i] = boneOffset[i];
+                    sm.poseMatrixCBData.bonePose[i] = bonePose[i];
+                }
+                context->UpdateSubresource(sm.offsetMatrixCB.Get(), 0, nullptr, &sm.offsetMatrixCBData, 0, 0);
+                context->UpdateSubresource(sm.poseMatrixCB.Get(), 0, nullptr, &sm.poseMatrixCBData, 0, 0);
+                break;
             }
-            context->UpdateSubresource(sm.offsetMatrixCB.Get(), 0, nullptr, &sm.offsetMatrixCBData, 0, 0);
-            context->UpdateSubresource(sm.poseMatrixCB.Get(), 0, nullptr, &sm.poseMatrixCBData, 0, 0);
+            case ModelType::Rigid:
+            {
+                context->VSSetShader(sm.VS_BaseLit_Rigid.Get(), NULL, 0);
+                break;
+            }
         }
-        else
-            context->VSSetShader(sm.VS_BaseLit_Rigid.Get(), NULL, 0);
-        
+
         // IB, VB, SRV, CB -> DrawCall
         m.mesh->Draw(context);
     }

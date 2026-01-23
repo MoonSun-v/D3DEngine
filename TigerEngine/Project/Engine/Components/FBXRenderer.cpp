@@ -50,10 +50,10 @@ void FBXRenderer::OnUpdate(float delta)
 		progressAnimationTime = fmod(progressAnimationTime, modelAsset->animations[animationIndex].m_duration);
 	}
 
-    // local matrix udpate
-    // skeletal mesh
-    if (modelAsset->type == ModelType::Skeletal)
+    // local & model matrix udpate
+    switch (modelAsset->type)
     {
+    case ModelType::Skeletal:
         for (auto& bone : bones)
         {
             // animation update
@@ -78,25 +78,24 @@ void FBXRenderer::OnUpdate(float delta)
             // bone pose arr update
             bonePoses.bonePose[bone.m_index] = bone.m_worldTransform;
         }
-    }
-    // rigid mesh
-    else {
-        // local udpate
-        if (modelAsset->animations.empty())
-        {
+        break;
+
+    case ModelType::Rigid:
+        // local matrix
+        if (modelAsset->animations.empty()) {
             for (int i = 0; i < modelAsset->meshes_modelMat.size(); i++)
                 modelAsset->meshes_localMat[i] = modelAsset->meshes_bindMat[i];
         }
-        else
-        {
-            // animation udpate
+        else {
             int nodeCount = modelAsset->meshes.size();
             for (int i = 0; i < nodeCount; i++)
             {
-                // get nodeAnimation
+                // node animation find
                 auto& node = modelAsset->meshes[i];
                 NodeAnimation aniClip;
                 bool hasAnimation = modelAsset->animations[animationIndex].GetNodeAnimationByName(node.nodeName, aniClip);
+                
+                // animation keyframe local
                 if (hasAnimation)
                 {
                     // get keyframe
@@ -107,12 +106,13 @@ void FBXRenderer::OnUpdate(float delta)
                         Matrix::CreateFromQuaternion(rot) *
                         Matrix::CreateTranslation(pos);
                 }
+                // bind local
                 else
                     modelAsset->meshes_localMat[i] = modelAsset->meshes_bindMat[i];
             }
         }
 
-        // model matrix udpate
+        // model matrix
         for (int i = 0; i < modelAsset->meshes_modelMat.size(); i++)
         {
             auto& sub = modelAsset->meshes[i];
@@ -122,6 +122,10 @@ void FBXRenderer::OnUpdate(float delta)
             else
                 modelAsset->meshes_modelMat[i] = modelAsset->meshes_localMat[i];
         }
+        break;
+
+    default:
+        break;
     }
 }
 
@@ -148,13 +152,20 @@ void FBXRenderer::OnRender(RenderQueue& queue)
         item.material = mesh.GetMaterial();
         item.world = world;
         
-        if (modelType != ModelType::Skeletal) 
+        switch (modelType)
+        {
+        case ModelType::Skeletal:
+            item.boneCount = fbxData->GetFBXInfo()->skeletalInfo.m_bones.size();
+            item.refBoneIndex = mesh.refBoneIndex;
+            item.poses = &bonePoses;
+            item.offsets = &fbxData->GetFBXInfo()->m_BoneOffsets;
+            break;
+        case ModelType::Rigid:
             item.model = fbxData->GetFBXInfo()->meshes_modelMat[i];
-
-        item.boneCount = fbxData->GetFBXInfo()->skeletalInfo.m_bones.size();
-        item.refBoneIndex = mesh.refBoneIndex;
-        item.poses = &bonePoses;
-        item.offsets = &fbxData->GetFBXInfo()->m_BoneOffsets;
+            break;
+        default:
+            break;
+        }
 
         queue.AddRenderItem(item);
     }
