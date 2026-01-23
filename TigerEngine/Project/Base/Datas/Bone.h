@@ -1,7 +1,7 @@
 #pragma once
 #include "../pch.h"
 #include <string>
-#include "BoneAnimation.h"
+#include "NodeAnimation.h"
 
 using namespace std;
 
