@@ -599,7 +599,7 @@ void PhysicsComponent::DrawPhysXShape(PxShape* shape, const PxTransform& actorPo
         obb.Extents = { PxToDX(box.halfExtents.x),PxToDX(box.halfExtents.y),PxToDX(box.halfExtents.z) };
         obb.Orientation = { worldPose.q.x,worldPose.q.y,worldPose.q.z,worldPose.q.w };
 
-        DebugDraw::Draw(m_DebugBatch.get(), obb, color, isTrigger);
+        DebugDraw::Draw(DebugDraw::g_Batch.get(), obb, color, isTrigger);
         break;
     }
 
@@ -612,7 +612,7 @@ void PhysicsComponent::DrawPhysXShape(PxShape* shape, const PxTransform& actorPo
         bs.Center = ToDX(worldPose.p);
         bs.Radius = PxToDX(sphere.radius);
 
-        DebugDraw::Draw(m_DebugBatch.get(), bs, color, isTrigger);
+        DebugDraw::Draw(DebugDraw::g_Batch.get(), bs, color, isTrigger);
         break;
     }
 
@@ -633,7 +633,7 @@ void PhysicsComponent::DrawPhysXShape(PxShape* shape, const PxTransform& actorPo
         PxQuat finalQ = ToPxQuat(debugQ);
 
         DebugDraw::DrawCapsule(
-            m_DebugBatch.get(),
+            DebugDraw::g_Batch.get(),
             PxVec3(
                 worldPose.p.x * PHYSX_TO_WORLD,
                 worldPose.p.y * PHYSX_TO_WORLD,
@@ -672,7 +672,7 @@ void PhysicsComponent::DrawCharacterControllers()
         PxExtendedVec3 p = capsule->getPosition();
 
         DebugDraw::DrawCapsule(
-            m_DebugBatch.get(),
+            DebugDraw::g_Batch.get(),
             PxVec3(
                 (float)p.x * PHYSX_TO_WORLD,
                 (float)p.y * PHYSX_TO_WORLD,

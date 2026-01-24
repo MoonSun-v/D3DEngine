@@ -13,6 +13,7 @@
 #include "../Manager/Shadermanager.h"
 #include "../EngineSystem/PlayModeSystem.h"
 #include "../Components/Camera.h"
+#include "../EngineSystem/PhysicsSystem.h"
 
 #include "Datas/ReflectionMedtaDatas.hpp"
 
@@ -140,6 +141,10 @@ void Editor::RenderMenuBar(HWND& hwnd)
             {
                 isDiretionalLightDebugOpen = !isDiretionalLightDebugOpen;
             }
+            if (ImGui::MenuItem("Physics Collider"))
+            {
+                isPhysicsDebugOpen = !isPhysicsDebugOpen;
+            }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("World Setting"))
@@ -150,7 +155,6 @@ void Editor::RenderMenuBar(HWND& hwnd)
             }
             ImGui::EndMenu();
         }
-
         RenderPlayModeControls();
     }
     ImGui::EndMainMenuBar();
@@ -550,15 +554,40 @@ void Editor::RenderDebugAABBDraw()
     context->RSSetState(DebugDraw::g_States->CullNone());
 
 
-    // 선택된 오브젝트는 밝은 초록색
-    SceneSystem::Instance().GetCurrentScene()->ForEachGameObject([&](GameObject* gameObject) {
-        if (gameObject->IsDestory()) return;
+    //// 선택된 오브젝트는 밝은 초록색
+    //SceneSystem::Instance().GetCurrentScene()->ForEachGameObject([&](GameObject* gameObject) {
+    //    if (gameObject->IsDestory()) return;
 
-        XMVECTOR color = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
-        DebugDraw::g_Batch->Begin();
-        DebugDraw::Draw(DebugDraw::g_Batch.get(), gameObject->GetAABB(), color);
-        DebugDraw::g_Batch->End();
-     });
+    //    XMVECTOR color = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+    //    DebugDraw::g_Batch->Begin();
+    //    DebugDraw::Draw(DebugDraw::g_Batch.get(), gameObject->GetAABB(), color);
+    //    DebugDraw::g_Batch->End();
+    // });
+
+     // ===============================
+    // Debug Draw Begin
+    // ===============================
+    DebugDraw::g_Batch->Begin();
+
+    // AABB
+    SceneSystem::Instance().GetCurrentScene()->ForEachGameObject([&](GameObject* gameObject)
+        {
+            if (gameObject->IsDestory()) return;
+
+            XMVECTOR color = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+            DebugDraw::Draw(DebugDraw::g_Batch.get(), gameObject->GetAABB(), color);
+        });
+
+    // PhysX
+    if (isPhysicsDebugOpen)
+    {
+        PhysicsSystem::Instance().DrawPhysXActors();
+    }
+
+    // ===============================
+    // Debug Draw End
+    // ===============================
+    DebugDraw::g_Batch->End();
 }
 
 void Editor::SaveCurrentScene(HWND& hwnd)

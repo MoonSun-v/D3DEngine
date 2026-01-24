@@ -417,3 +417,12 @@ bool PhysicsSystem::Raycast(
 
     return !outHits.empty();
 }
+
+void PhysicsSystem::DrawPhysXActors()
+{
+    for (auto& it : m_ActorMap)
+    {
+        if (it.second)
+            it.second->DrawPhysXActors();
+    }
+}
