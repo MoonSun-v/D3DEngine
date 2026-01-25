@@ -74,7 +74,6 @@ void FBXResourceManager::ProcessRigidNode(std::shared_ptr<FBXResourceAsset>& pAs
 
 void FBXResourceManager::ProcessStaticNode(std::shared_ptr<FBXResourceAsset>& pAsset, aiNode* pNode, const aiScene* pScene)
 {
-    vector<Mesh> meshes;
     for (unsigned int i = 0; i < pNode->mNumMeshes; i++)
     {
         // submesh

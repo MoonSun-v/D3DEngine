@@ -119,6 +119,12 @@ bool EngineApp::OnInitialize()
 	return true;
 }
 
+void EngineApp::OnPreUpdate()
+{
+    ScriptSystem::Instance().CheckReadyQueue();
+    RenderSystem::Instance().CheckReadyQueue();
+}
+
 void EngineApp::OnUpdate()
 {
     auto freeCam = CameraSystem::Instance().GetFreeCamera();

@@ -1,6 +1,7 @@
 #pragma once
 #include "System/Singleton.h"
 #include "../Components/RenderComponent.h"
+#include <queue>
 
 /// <summary>
 /// 렌더 컴포넌트(RenderComponent)를 상속받은 컴포넌트들을 관리합니다.
@@ -11,6 +12,11 @@ class RenderSystem : public Singleton<RenderSystem>
 public:
     RenderSystem(token) {}
     ~RenderSystem() = default;
+
+    /// <summary>
+    /// readyQueue에 있는 컴포넌트들의 OnStart 실행 함수
+    /// </summary>
+    void CheckReadyQueue();
 
     /// <summary>
     /// 렌더 시스템에 컴포넌트 등록
@@ -32,5 +38,10 @@ private:
     /// 등록된 컴포넌드 목록
     /// </summary>
     std::vector<RenderComponent*> comps{};
+
+    /// <summary>
+    /// OnStart 실행하지 않는 컴포넌트 모음
+    /// </summary>
+    std::queue<Component*> readyQueue{};
 };
 

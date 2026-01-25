@@ -653,7 +653,7 @@ void Editor::LoadScene(HWND &hwnd)
     }
     else
     {
-    	MessageBoxA(hwnd, "Failed to load scene! File not found.", "Error", MB_OK | MB_ICONERROR);
+    	MessageBoxA(hwnd, "Failed to load scene! object or world data not found.", "Error", MB_OK | MB_ICONERROR);
     }
 }
 
