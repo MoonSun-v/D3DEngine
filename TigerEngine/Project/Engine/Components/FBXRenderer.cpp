@@ -59,7 +59,11 @@ void FBXRenderer::OnUpdate(float delta)
         for (auto& bone : bones)
         {
             // animation update
-            if (bone.m_nodeAnimation.m_nodeName != "" && bone.m_nodeAnimation.m_keys.size() >= 1)
+            if (bone.m_nodeAnimation.m_nodeName != "" &&
+                (!bone.m_nodeAnimation.Positions.empty() ||
+                    !bone.m_nodeAnimation.Rotations.empty() ||
+                    !bone.m_nodeAnimation.Scales.empty()))
+
             {
                 Vector3 positionVec = Vector3::Zero;
                 Vector3 scaleVec = Vector3::One;

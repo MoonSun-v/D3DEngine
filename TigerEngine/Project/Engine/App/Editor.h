@@ -63,6 +63,7 @@ private:
     // flags
     bool isDiretionalLightDebugOpen = false;
     bool isWorldSettingOpen = false;
+    bool isPhysicsDebugOpen = false;
 
     std::string currScenePath{};
 

@@ -161,13 +161,13 @@ public:
     void SetLayer(CollisionLayer layer);
     CollisionLayer GetLayer() const { return m_Layer; }
 
-    
+    // 유틸 
+    void DrawPhysXActors();
 
 private:
     void ApplyFilter();
 
     // 유틸 
-    void DrawPhysXActors();
     void DrawPhysXShape(PxShape* shape, const PxTransform& actorPose, FXMVECTOR color);
     void DrawCharacterControllers();
     void CollectCCTActors();
