@@ -21,7 +21,7 @@ void Player1::OnInitialize()
 
 void Player1::OnStart()
 {
-
+    cout << "ScriptComponent_OnStart() : Player1 OnStart() check...\n"; // Script OnStart 체크
 }
 
 void Player1::OnUpdate(float delta)

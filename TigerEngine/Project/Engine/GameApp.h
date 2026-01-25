@@ -49,6 +49,8 @@ public:
 	void Update();
 	void Render();
     void FixedUpdate();
+    
+    virtual void OnPreUpdate();
 	virtual void OnUpdate();		// Update
     virtual void OnFixedUpdate();
 	virtual void OnRender() = 0;	// Render
