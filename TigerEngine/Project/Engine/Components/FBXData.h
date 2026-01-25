@@ -9,6 +9,8 @@ class FBXData : public Component
     RTTR_ENABLE(Component)
 public:
     void OnInitialize() override;
+    void OnStart() override;
+
     std::vector<Mesh>& GetMesh();
     std::shared_ptr<FBXResourceAsset> GetFBXInfo();
 

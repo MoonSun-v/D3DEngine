@@ -37,6 +37,7 @@ void FBXRenderer::OnInitialize()
 
 void FBXRenderer::OnStart()
 {
+    cout << "RenderComponent_OnStart() : FBXRenderer OnStart() check...\n"; // RenderComponent OnStart 체크
 }
 
 void FBXRenderer::OnUpdate(float delta)
