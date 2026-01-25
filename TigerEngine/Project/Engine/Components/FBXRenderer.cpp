@@ -189,6 +189,7 @@ nlohmann::json FBXRenderer::Serialize()
     {
 		std::string propName = prop.get_name().to_string();
 		rttr::variant value = prop.get_value(*this);
+
 		if (value.is_type<float>())
 		{
 			auto v = value.get_value<float>();
@@ -225,6 +226,8 @@ void FBXRenderer::Deserialize(nlohmann::json data)
     {
 		std::string propName = prop.get_name().to_string();
 		rttr::variant value = prop.get_value(*this);
+        if (!propData.contains(propName)) continue;
+
 		if (value.is_type<float>())
 		{
 			float data = propData[propName];
