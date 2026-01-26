@@ -163,7 +163,7 @@ void FBXRenderer::OnRender(RenderQueue& queue)
     auto& meshData = fbxData->GetMesh();
     auto world = owner->GetTransform()->GetWorldTransform();
 
-    // Render Item Push
+    // Render Queue Add
     for (int i = 0; i < meshData.size(); i++)
     {
         auto& mesh = meshData[i];
@@ -190,9 +190,12 @@ void FBXRenderer::OnRender(RenderQueue& queue)
             break;
         }
 
-        queue.AddRenderItem(item);
+        // Hybird Render Queue
+        if(renderBlendType == RenderBlendType::Opaque)
+            queue.AddOpaqueQueue(item);
+        else if (renderBlendType == RenderBlendType::Transparent)
+            queue.AddTransparentQueue(item);
     }
-
 }
 
 nlohmann::json FBXRenderer::Serialize()

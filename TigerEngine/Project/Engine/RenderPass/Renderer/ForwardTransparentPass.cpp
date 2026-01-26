@@ -40,26 +40,26 @@ void ForwardTransparentPass::Execute(ComPtr<ID3D11DeviceContext>& context, Rende
     context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
     // Render
-    auto& models = queue.GetRendertems();
-    for (auto& m : models)
+    auto& transparentQueue = queue.GetTransparentQueue();
+    for (auto& transparentItem : transparentQueue)
     {
         // CB - Transform
-        if (m.modelType == ModelType::Rigid) sm.transformCBData.model = m.model.Transpose();
-        else if (m.modelType == ModelType::Static) sm.transformCBData.model = Matrix::Identity.Transpose();
-        sm.transformCBData.world = m.world.Transpose();
+        if (transparentItem.modelType == ModelType::Rigid) sm.transformCBData.model = transparentItem.model.Transpose();
+        else if (transparentItem.modelType == ModelType::Static) sm.transformCBData.model = Matrix::Identity.Transpose();
+        sm.transformCBData.world = transparentItem.world.Transpose();
         context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
         // VS
-        switch (m.modelType) {
+        switch (transparentItem.modelType) {
         case ModelType::Skeletal:
         {
             context->VSSetShader(sm.VS_BaseLit_Skeletal.Get(), NULL, 0);
 
             // CB - Offset, Pose
-            auto& boneOffset = m.offsets->boneOffset;
-            auto& bonePose = m.poses->bonePose;
+            auto& boneOffset = transparentItem.offsets->boneOffset;
+            auto& bonePose = transparentItem.poses->bonePose;
 
-            for (int i = 0; i < m.boneCount; i++)
+            for (int i = 0; i < transparentItem.boneCount; i++)
             {
                 sm.offsetMatrixCBData.boneOffset[i] = boneOffset[i];
                 sm.poseMatrixCBData.bonePose[i] = bonePose[i];
@@ -77,7 +77,7 @@ void ForwardTransparentPass::Execute(ComPtr<ID3D11DeviceContext>& context, Rende
         }
 
         // IB, VB, SRV, CB -> DrawCall
-        m.mesh->Draw(context);
+        transparentItem.mesh->Draw(context);
     }
 
     // clean up

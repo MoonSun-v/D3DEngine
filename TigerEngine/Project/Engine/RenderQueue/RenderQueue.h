@@ -29,23 +29,31 @@ struct RenderItem
 class RenderQueue
 {
 public:
-    void AddRenderItem(const RenderItem& item)
+    void AddOpaqueQueue(const RenderItem& item)
     {
-        renderItems.push_back(item);
+        opaqueQueue.push_back(item);
     }
 
-    const auto& GetRendertems()  const { return renderItems; }
+    void AddTransparentQueue(const RenderItem& item)
+    {
+        transparentQueue.push_back(item);
+    }
+
+    const auto& GetOpaqueQueue()  const { return opaqueQueue; }
+    const auto& GetTransparentQueue()  const { return transparentQueue; }
 
     /// <summary>
     /// Queue 클래스에 있는 모든 배열 초기화
     /// </summary>
     void Clear()
     {
-        renderItems.clear();
+        opaqueQueue.clear();
+        transparentQueue.clear();
     };
 
 private:
     // 각 타입별로 컨테이너 추가하기
-    std::vector<RenderItem> renderItems;
+    std::vector<RenderItem> opaqueQueue;        // 불투명 오브젝트 -> Deffered Rendering
+    std::vector<RenderItem> transparentQueue;   // 투명 오브젝트 -> Forward Rendering
 };
 

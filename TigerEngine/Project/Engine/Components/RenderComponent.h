@@ -11,12 +11,21 @@ enum class RenderType
     SkeltalMesh = 1 << 3
 };
 
+// [ RenderBlendType ]
+// 하이브리드 렌더링 방식의 분기로 사용됩니다.
+enum class RenderBlendType
+{
+    Opaque,
+    Transparent
+};
+
 /// @brief 렌더링 처리하는 컴포넌트가 상속받는 컴포넌트
 class RenderComponent : public Component
 {        
     // RTTR_ENABLE(Component)
 public:
-    RenderType renderType;
+    RenderType renderType;          // 성호야 이거 잇는거 왜 말 안해줫니? 이거 지워도 된단다
+    RenderBlendType renderBlendType = RenderBlendType::Opaque;
 
     /// <summary>
     /// renderpass 에서 호출되는 함수
