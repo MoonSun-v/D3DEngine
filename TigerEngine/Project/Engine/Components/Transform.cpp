@@ -29,7 +29,7 @@ Matrix Transform::GetWorldTransform() const
     return worldMatrix;
 }
 
-void Transform::Translate(const Vector3& delta)   // TODO 매트릭스 스스로 업데이트 할 수 있게 변경하기
+void Transform::Translate(const Vector3& delta)
 {
     position += delta;
     dirty = true;

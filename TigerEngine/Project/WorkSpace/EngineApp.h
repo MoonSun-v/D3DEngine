@@ -28,6 +28,7 @@ public:
 	~EngineApp();
 
 	bool OnInitialize() override;
+    void OnPreUpdate() override;
 	void OnUpdate() override;
 	void OnRender() override;
     void OnFixedUpdate() override;

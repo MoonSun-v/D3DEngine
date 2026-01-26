@@ -2,6 +2,7 @@
 #include "System/Singleton.h"
 #include "../Object/Component.h"
 #include "../Components/ScriptComponent.h"
+#include <queue>
 
 /// <summary>
 /// 렌더링을 하지 않는 단순 컴포넌트를 상속받은 컴포넌트들을 관리합니다.
@@ -12,6 +13,11 @@ class ScriptSystem : public Singleton<ScriptSystem>
 public:
     ScriptSystem(token) {}
     ~ScriptSystem() = default;
+
+    /// <summary>
+    /// readyQueue에 있는 컴포넌트들의 OnStart 실행 함수
+    /// </summary>
+    void CheckReadyQueue();
 
     /// <summary>
     /// 일반 컴포넌트 등록
@@ -56,4 +62,9 @@ private:
     /// Play모드에만 돌아가는 스크립트 컴포넌트 목록
     /// </summary>
     std::vector<Component*> scriptComps{};
+
+    /// <summary>
+    /// OnStart 실행하지 않는 컴포넌트 모음
+    /// </summary>
+    std::queue<Component*> readyQueue{};
 };

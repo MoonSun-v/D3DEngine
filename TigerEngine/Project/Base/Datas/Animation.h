@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "BoneAnimation.h"
+#include "NodeAnimation.h"
 #include <map>
 
 using namespace std;
