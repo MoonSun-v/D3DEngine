@@ -20,8 +20,16 @@ void DecalPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queue
     auto& sm = ShaderManager::Instance();
 
     // RTV, DSV
+    ID3D11RenderTargetView* gbuffers[] =
+    {
+        sm.albedoRTV.Get(),
+        sm.normalRTV.Get(),
+        sm.metalRoughRTV.Get(),
+        sm.emissiveRTV.Get()
+    };
+
     context->RSSetViewports(1, &sm.viewport_screen);
-    context->OMSetRenderTargets(1, sm.sceneHDRRTV.GetAddressOf(), sm.depthStencilView.Get());
+    context->OMSetRenderTargets(4, gbuffers, sm.depthStencilView.Get());
 
     // IA
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -41,7 +49,10 @@ void DecalPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queue
     // Render
     // TODO :: decal Compoennt 추가 후 for each 돌면서 world update/ draw
 
-    // clear
+    // clean up
     context->OMSetDepthStencilState(nullptr, 0);
     context->RSSetState(nullptr);
+
+    ID3D11RenderTargetView* nullRTV[4] = { nullptr, nullptr, nullptr, nullptr };
+    context->OMSetRenderTargets(4, nullRTV, nullptr);
 }

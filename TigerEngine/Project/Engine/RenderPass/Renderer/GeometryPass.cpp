@@ -92,5 +92,6 @@ void GeometryPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& qu
     }
 
     // clean up
-    context->OMSetRenderTargets(0, nullptr, nullptr);
+    ID3D11RenderTargetView* nullRTV[4] = { nullptr, nullptr, nullptr, nullptr };
+    context->OMSetRenderTargets(4, nullRTV, nullptr);
 }
