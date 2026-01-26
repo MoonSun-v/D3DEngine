@@ -3,6 +3,9 @@
 #include "System/InputSystem.h"
 #include "Object/Component.h"
 #include "Components/FBXRenderer.h"
+#include "Util/ComponentAutoRegister.h"
+
+REGISTER_COMPONENT(Player1);
 
 RTTR_REGISTRATION
 {
@@ -17,11 +20,12 @@ RTTR_REGISTRATION
 void Player1::OnInitialize()
 {
     weapon = GetOwner()->AddComponent<Weapon>();
+    cout << "[Player1 | PlayModeTest] : OnInitalize() 1\n";
 }
 
 void Player1::OnStart()
 {
-    cout << "ScriptComponent_OnStart() : Player1 OnStart() check...\n"; // Script OnStart 체크
+    cout << "[Player1 | PlayModeTest] : OnStart() 2\n";
 }
 
 void Player1::OnUpdate(float delta)
