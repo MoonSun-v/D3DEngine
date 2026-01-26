@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "../Object/Component.h"
 #include "../RenderQueue/RenderQueue.h"
+#include "../Base/Datas/EnumData.hpp"
 
 enum class RenderType
 {
@@ -9,14 +10,6 @@ enum class RenderType
     StaticMesh = 1 << 1,
     DynamicMesh = 1 << 2,
     SkeltalMesh = 1 << 3
-};
-
-// [ RenderBlendType ]
-// 하이브리드 렌더링 방식의 분기로 사용됩니다.
-enum class RenderBlendType
-{
-    Opaque,
-    Transparent
 };
 
 /// @brief 렌더링 처리하는 컴포넌트가 상속받는 컴포넌트

@@ -11,10 +11,13 @@ RTTR_REGISTRATION
     rttr::registration::class_<FBXRenderer>("FBXRenderer")
         .constructor<>()
             (rttr::policy::ctor::as_std_shared_ptr)
+
         .property("AnimationIndex", 	&FBXRenderer::GetAnimationIndex,			&FBXRenderer::SetAnimationIndex)
         .property("AnimationPlayTime", 	&FBXRenderer::GetProgressAnimationTime,		&FBXRenderer::SetProgressAnimationTime)
         .property("IsAnimationPlay", 	&FBXRenderer::GetIsAnimationPlay,			&FBXRenderer::SetIsAnimationPlay)
 
+        .property("renderBlendType",    &FBXRenderer::GetRenderBlendType,           &FBXRenderer::SetRenderBlendType)
+    
         .property("Diffuse", 	    &FBXRenderer::GetDiffuse,       &FBXRenderer::SetDiffuse)
         .property("Alpha", 	        &FBXRenderer::GetAlpha,         &FBXRenderer::SetAlpha)
         .property("Emissive", 	    &FBXRenderer::GetEmissive,		&FBXRenderer::SetEmissive)

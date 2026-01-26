@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h"
+#include "../Base/Datas/EnumData.hpp"
 
 class JsonHelper
 {
@@ -73,6 +74,15 @@ nlohmann::json JsonHelper::MakeSaveData(const T* typePtr)
             mat.assign(p, p + 16);
             datas["properties"][propName] = mat;
         }
+        else if (value.is_type<RenderBlendType>())
+        {
+            RenderBlendType v = value.get_value<RenderBlendType>();
+
+            rttr::enumeration enumType = rttr::type::get<RenderBlendType>().get_enumeration();
+            std::string enumName = enumType.value_to_name(v).to_string();
+
+            datas["properties"][propName] = enumName;
+        }
     }
 
     return datas;
@@ -141,6 +151,24 @@ inline void JsonHelper::SetDataFromJson(T* typePtr, nlohmann::json data)
                 float* p = (float*)&m;
                 for (int i = 0; i < 16; ++i) p[i] = propData[propName][i];
                 prop.set_value(*typePtr, m);
+            }
+        }
+        else if (value.is_type<RenderBlendType>())
+        {
+            std::string enumStr = propData[propName];
+
+            rttr::enumeration enumType =
+                rttr::type::get<RenderBlendType>().get_enumeration();
+
+            rttr::variant enumValue = enumType.name_to_value(enumStr);
+
+            if (enumValue.is_valid())
+            {
+                prop.set_value(*typePtr, enumValue);
+            }
+            else
+            {
+                prop.set_value(*typePtr, RenderBlendType::Opaque);
             }
         }
     }

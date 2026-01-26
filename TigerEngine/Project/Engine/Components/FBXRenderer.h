@@ -28,7 +28,11 @@ public:
 	bool GetIsAnimationPlay() { return isAnimPlay; }
 	void SetIsAnimationPlay(bool value) { isAnimPlay = value; }
 
-    // material get/set
+    // RenderBlendType Get/Set
+    RenderBlendType GetRenderBlendType() const { return renderBlendType; }
+    void SetRenderBlendType(RenderBlendType v) { renderBlendType = v; }
+
+    // Material Get/Set
     Color GetDiffuse() { return Color(diffuseFactor.x, diffuseFactor.y, diffuseFactor.z); }
     void SetDiffuse(Color color);
     float GetAlpha() { return alphaFactor; }
