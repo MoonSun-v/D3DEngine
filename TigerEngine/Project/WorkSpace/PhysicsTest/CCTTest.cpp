@@ -7,6 +7,7 @@
 #include "CCTTest.h"
 #include <directxtk/Keyboard.h>
 #include <Util/PhysXUtils.h>
+#include <Components/FBXData.h>
 
 using Key = DirectX::Keyboard::Keys;
 
@@ -28,6 +29,7 @@ RTTR_REGISTRATION
 void CCTTest::OnInitialize() 
 {
     cctComp = GetOwner()->GetComponent<CharacterControllerComponent>();
+    animController = GetOwner()->GetComponent<AnimationController>();
 }
 
 void CCTTest::OnStart() 
@@ -41,11 +43,54 @@ void CCTTest::OnStart()
     {
         OutputDebugStringW(L"[CCTTest] OnStart의 cctComp가 null입니다. \n");
     }
+
+    if (animController != nullptr)
+    {
+        auto fbx = GetOwner()->GetComponent<FBXData>();
+        auto asset = fbx->GetFBXInfo();
+
+        // 애니메이션 파일 로드
+        FBXResourceManager::Instance().LoadAnimationByPath(asset, "..\\Assets\\Resource\\Animation\\Test_Idle.fbx", "Idle");
+        FBXResourceManager::Instance().LoadAnimationByPath(asset, "..\\Assets\\Resource\\Animation\\Test_Walk.fbx", "Walk");
+
+        // AnimationController 초기화
+        animController->Initialize(&asset->skeletalInfo);
+
+        auto idleClip = animController->FindClip("Idle");
+        auto walkClip = animController->FindClip("Walk");
+
+        if (!idleClip || !walkClip)
+        {
+            OutputDebugStringW(L"[CCTTest] Clip not found! 이름 확인 필요\n");
+            return;
+        }
+
+        // 상태 등록
+        animController->AddState(std::make_unique<AnimationState>("Idle", idleClip, animController));
+        animController->AddState(std::make_unique<AnimationState>("Walk", walkClip, animController));
+
+        // 시작 상태
+        animController->ChangeState("Idle");
+
+        elapsedTime = 0.0f;  // 시간 초기화
+    }
+    else
+    {
+        OutputDebugStringW(L"[CCTTest] OnStart의 animController가 null입니다. \n");
+    }
 }
 
 void CCTTest::OnUpdate(float delta)
 {
+    if (!animController || hasRunStateChanged) return;
 
+    elapsedTime += delta;
+
+    if (elapsedTime >= 3.0f)
+    {
+        animController->ChangeState("Run", 0.5f); // 애니메이션 전환 
+        hasRunStateChanged = true;
+    }
 }
 
 void CCTTest::OnFixedUpdate(float dt)

@@ -54,22 +54,11 @@ void FBXRenderer::OnUpdate(float delta)
 {
     auto anim = owner->GetComponent<AnimationController>();
 
-    if (owner->GetComponent<AnimationController>())
+    if (anim)
     {
         const auto& pose = anim->AnimatorInstance.GetFinalPose();
         for (int i = 0; i < pose.size(); i++)
             bonePoses.bonePose[i] = pose[i];
-    }
-    else
-    {
-        // 애니메이션 없으면 bind pose 유지
-        auto modelAsset = fbxData->GetFBXInfo();
-        int count = modelAsset->skeletalInfo.m_bones.size();
-
-        for (int i = 0; i < count; i++) 
-        {
-            bonePoses.bonePose[i] = modelAsset->skeletalInfo.m_bones[i].globalBind;
-        }
     }
 }
 
