@@ -37,11 +37,13 @@ void FBXRenderer::OnInitialize()
 
 void FBXRenderer::OnStart()
 {
+    cout << "RenderComponent_OnStart() : FBXRenderer OnStart() check...\n"; // RenderComponent OnStart 체크
 }
 
 void FBXRenderer::OnUpdate(float delta)
 {
-	if(fbxData == nullptr) return;
+	if (fbxData == nullptr) return;
+    if (fbxData->GetFBXInfo()->type == ModelType::Static) return;
 
     auto modelAsset = fbxData->GetFBXInfo();
     if (!modelAsset->animations.empty() && isAnimPlay)
@@ -57,7 +59,11 @@ void FBXRenderer::OnUpdate(float delta)
         for (auto& bone : bones)
         {
             // animation update
-            if (bone.m_nodeAnimation.m_nodeName != "" && bone.m_nodeAnimation.m_keys.size() >= 1)
+            if (bone.m_nodeAnimation.m_nodeName != "" &&
+                (!bone.m_nodeAnimation.Positions.empty() ||
+                    !bone.m_nodeAnimation.Rotations.empty() ||
+                    !bone.m_nodeAnimation.Scales.empty()))
+
             {
                 Vector3 positionVec = Vector3::Zero;
                 Vector3 scaleVec = Vector3::One;
@@ -166,6 +172,9 @@ void FBXRenderer::OnRender(RenderQueue& queue)
         case ModelType::Rigid:
             item.model = fbxData->GetFBXInfo()->meshes_modelMat[i];
             break;
+        case ModelType::Static:
+            item.world = world;
+            break;
         }
 
         queue.AddRenderItem(item);
@@ -185,17 +194,23 @@ nlohmann::json FBXRenderer::Serialize()
     {
 		std::string propName = prop.get_name().to_string();
 		rttr::variant value = prop.get_value(*this);
-		if (value.is_type<float>() && propName == "Roughness")
+
+		if (value.is_type<float>())
 		{
 			auto v = value.get_value<float>();
 			datas["properties"][propName] = v;
 		}
-		else if (value.is_type<float>() && propName == "Metalic")
+		else if (value.is_type<int>())
 		{
-			auto v = value.get_value<float>();
+			auto v = value.get_value<int>();
 			datas["properties"][propName] = v;
 		}
-		else if (value.is_type<Color>() && propName == "Color")
+		else if (value.is_type<bool>())
+		{
+			auto v = value.get_value<bool>();
+			datas["properties"][propName] = v;
+		}
+		else if (value.is_type<Color>())
 		{
 			auto v = value.get_value<Color>();
 			datas["properties"][propName] = { v.x, v.y, v.z, v.w };
@@ -216,14 +231,21 @@ void FBXRenderer::Deserialize(nlohmann::json data)
     {
 		std::string propName = prop.get_name().to_string();
 		rttr::variant value = prop.get_value(*this);
-		if (value.is_type<float>() && propName == "Roughness")
+        if (!propData.contains(propName)) continue;
+
+		if (value.is_type<float>())
 		{
-			float data = propData["Roughness"];
+			float data = propData[propName];
 			prop.set_value(*this, data);
 		}
-		else if (value.is_type<float>() && propName == "Metalic")
+		else if (value.is_type<int>())
 		{
-			float data = propData["Metalic"];
+			int data = propData[propName];
+			prop.set_value(*this, data);
+		}
+        else if (value.is_type<bool>())
+		{
+			bool data = propData[propName];
 			prop.set_value(*this, data);
 		}
 		else if (value.is_type<Color>() && propName == "Color")
@@ -232,6 +254,38 @@ void FBXRenderer::Deserialize(nlohmann::json data)
 			prop.set_value(*this, color);
 		}
 	}
+}
+
+void FBXRenderer::SetRoughness(float value)
+{
+    float factor = std::clamp(value, 0.0f, 1.0f);
+    roughness = factor;
+
+    for (auto& material : fbxData->GetMesh())
+    {
+        material.GetMaterial().roughnessFactor = factor;
+    }
+}
+
+void FBXRenderer::SetMatalic(float value)
+{
+    float factor = std::clamp(value, 0.0f, 1.0f);
+    metalic = factor;
+
+    for (auto& material : fbxData->GetMesh())
+    {
+        material.GetMaterial().metallicFactor = factor;
+    }
+}
+
+void FBXRenderer::SetColor(Color value)
+{
+    for (auto& material : fbxData->GetMesh())
+    {
+        // material.GetMaterial().diffuseOverride = color;
+    }
+
+    color = value;
 }
 
 void FBXRenderer::CreateBoneInfo()

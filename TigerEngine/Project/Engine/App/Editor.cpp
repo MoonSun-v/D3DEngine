@@ -13,6 +13,7 @@
 #include "../Manager/Shadermanager.h"
 #include "../EngineSystem/PlayModeSystem.h"
 #include "../Components/Camera.h"
+#include "../EngineSystem/PhysicsSystem.h"
 
 #include "Datas/ReflectionMedtaDatas.hpp"
 
@@ -140,6 +141,10 @@ void Editor::RenderMenuBar(HWND& hwnd)
             {
                 isDiretionalLightDebugOpen = !isDiretionalLightDebugOpen;
             }
+            if (ImGui::MenuItem("Physics Collider"))
+            {
+                isPhysicsDebugOpen = !isPhysicsDebugOpen;
+            }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("World Setting"))
@@ -150,7 +155,6 @@ void Editor::RenderMenuBar(HWND& hwnd)
             }
             ImGui::EndMenu();
         }
-
         RenderPlayModeControls();
     }
     ImGui::EndMainMenuBar();
@@ -471,8 +475,8 @@ void Editor::RenderComponentInfo(std::string compName, T* comp)
                 // 현재 경로 표시   
                 ImGui::Text("Current Path: %s", path.c_str());
                 
-                // 탐색기 열기 버튼
-                if (ImGui::Button("Browse..."))
+                // 탐색기 열기 버튼 -> rigid, skeletal asset path
+                if (ImGui::Button("Browse nonStatic"))
                 {
                     IGFD::FileDialogConfig config;
                     config.path = "../";
@@ -495,9 +499,33 @@ void Editor::RenderComponentInfo(std::string compName, T* comp)
                         FBXData* fbxDataComp = dynamic_cast<FBXData*>(comp);
                         fbxDataComp->ChangeData(relativePathStr);
                     }
-                    // close
+
                     ImGuiFileDialog::Instance()->Close();
+                } // imguiFileDialog end - non static  
+
+                // 탐색기 열기 버튼 -> static mesh asset path 찾기
+                if (ImGui::Button("Browse static"))
+                {
+                    IGFD::FileDialogConfig config;
+                    config.path = "../";
+                    ImGuiFileDialog::Instance()->OpenDialog("ChooseStaticFileDlgKey", "Choose File", ".fbx,.glb", config);
                 }
+
+                if (ImGuiFileDialog::Instance()->Display("ChooseStaticFileDlgKey"))
+                {
+                    if (ImGuiFileDialog::Instance()->IsOk())
+                    { // action if OK
+                        std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();     // 절대 경로 + 파일 이름
+
+                        std::filesystem::path relativePath = std::filesystem::relative(filePathName);
+                        std::string relativePathStr = relativePath.string();
+                        // action
+
+                        FBXData* fbxDataComp = dynamic_cast<FBXData*>(comp);
+                        fbxDataComp->ChangeStaticData(relativePathStr);
+                    }
+                    ImGuiFileDialog::Instance()->Close();
+                } // imguiFileDialog end - static
             }
         }        
     }
@@ -550,15 +578,40 @@ void Editor::RenderDebugAABBDraw()
     context->RSSetState(DebugDraw::g_States->CullNone());
 
 
-    // 선택된 오브젝트는 밝은 초록색
-    SceneSystem::Instance().GetCurrentScene()->ForEachGameObject([&](GameObject* gameObject) {
-        if (gameObject->IsDestory()) return;
+    //// 선택된 오브젝트는 밝은 초록색
+    //SceneSystem::Instance().GetCurrentScene()->ForEachGameObject([&](GameObject* gameObject) {
+    //    if (gameObject->IsDestory()) return;
 
-        XMVECTOR color = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
-        DebugDraw::g_Batch->Begin();
-        DebugDraw::Draw(DebugDraw::g_Batch.get(), gameObject->GetAABB(), color);
-        DebugDraw::g_Batch->End();
-     });
+    //    XMVECTOR color = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+    //    DebugDraw::g_Batch->Begin();
+    //    DebugDraw::Draw(DebugDraw::g_Batch.get(), gameObject->GetAABB(), color);
+    //    DebugDraw::g_Batch->End();
+    // });
+
+     // ===============================
+    // Debug Draw Begin
+    // ===============================
+    DebugDraw::g_Batch->Begin();
+
+    // AABB
+    SceneSystem::Instance().GetCurrentScene()->ForEachGameObject([&](GameObject* gameObject)
+        {
+            if (gameObject->IsDestory()) return;
+
+            XMVECTOR color = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+            DebugDraw::Draw(DebugDraw::g_Batch.get(), gameObject->GetAABB(), color);
+        });
+
+    // PhysX
+    if (isPhysicsDebugOpen)
+    {
+        PhysicsSystem::Instance().DrawPhysXActors();
+    }
+
+    // ===============================
+    // Debug Draw End
+    // ===============================
+    DebugDraw::g_Batch->End();
 }
 
 void Editor::SaveCurrentScene(HWND& hwnd)
@@ -629,7 +682,7 @@ void Editor::LoadScene(HWND &hwnd)
     }
     else
     {
-    	MessageBoxA(hwnd, "Failed to load scene! File not found.", "Error", MB_OK | MB_ICONERROR);
+    	MessageBoxA(hwnd, "Failed to load scene! object or world data not found.", "Error", MB_OK | MB_ICONERROR);
     }
 }
 

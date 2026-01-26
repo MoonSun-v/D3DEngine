@@ -1,8 +1,19 @@
 #include "RenderSystem.h"
 #include "System/TimeSystem.h"
 
+void RenderSystem::CheckReadyQueue()
+{
+    while (!readyQueue.empty())
+    {
+        auto comp = readyQueue.front();
+        comp->OnStart();
+        readyQueue.pop();
+    }
+}
+
 void RenderSystem::Register(RenderComponent* comp)
 {
+    readyQueue.push(comp);
     comps.push_back(comp);
 }
 
