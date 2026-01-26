@@ -33,7 +33,7 @@ public:
     // DX11 Base
     D3D11_VIEWPORT viewport_screen;                                  
     ComPtr<ID3D11RenderTargetView>    backBufferRTV;                 
-    ComPtr<ID3D11DepthStencilView>    depthStencilView;              
+    ComPtr<ID3D11DepthStencilView>    depthStencilView;          // [stencil buffer] bit0: ground decal mask / bit1: light volume mask  
     ComPtr<ID3D11DepthStencilView>    depthStencilReadOnlyView;      
     ComPtr<ID3D11ShaderResourceView>  depthSRV;                      
 

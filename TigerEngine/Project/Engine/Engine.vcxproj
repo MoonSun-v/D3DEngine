@@ -136,6 +136,8 @@
   <ItemGroup>
     <ClCompile Include="App\Editor.cpp" />
     <ClCompile Include="Components\AnimationController.cpp" />
+    <ClCompile Include="RenderPass\Renderable\DecalVolumeMesh.cpp" />
+    <ClCompile Include="RenderPass\Renderer\DecalPass.cpp" />
     <ClCompile Include="RenderPass\Renderer\ForwardTransparentPass.cpp" />
     <ClCompile Include="Util\Animator.cpp" />
     <ClCompile Include="Components\AudioListenerComponent.cpp" />
@@ -187,6 +189,8 @@
   <ItemGroup>
     <ClInclude Include="App\Editor.h" />
     <ClInclude Include="Components\AnimationController.h" />
+    <ClInclude Include="RenderPass\Renderable\DecalVolumeMesh.h" />
+    <ClInclude Include="RenderPass\Renderer\DecalPass.h" />
     <ClInclude Include="RenderPass\Renderer\ForwardTransparentPass.h" />
     <ClInclude Include="Util\Animator.h" />
     <ClInclude Include="Components\AudioListenerComponent.h" />

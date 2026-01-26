@@ -48,10 +48,10 @@ void LightPass::StencilPass(ComPtr<ID3D11DeviceContext>& context, Camera* camera
 
     // IA
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    context.Get()->IASetInputLayout(sm.inputLayout_Position.Get());
+    context->IASetInputLayout(sm.inputLayout_Position.Get());
 
     // Shader
-    context.Get()->VSSetShader(sm.VS_LightVolume.Get(), nullptr, 0);
+    context->VSSetShader(sm.VS_LightVolume.Get(), nullptr, 0);
     context->PSSetShader(nullptr, nullptr, 0);   // PS x
 
     // DSS
