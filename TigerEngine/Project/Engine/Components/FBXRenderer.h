@@ -29,9 +29,10 @@ public:
 	void SetIsAnimationPlay(bool value) { isAnimPlay = value; }
 
     // material get/set
+    Color GetDiffuse() { return Color(diffuseFactor.x, diffuseFactor.y, diffuseFactor.z); }
+    void SetDiffuse(Color color);
     float GetAlpha() { return alphaFactor; }
     void SetAlpha(float value);
-
     Color GetEmissive() { return Color(emissiveFactor.x, emissiveFactor.y, emissiveFactor.z); }
     void SetEmissive(Color color);
 	float GetRoughness() { return roughnessFactor; }
@@ -76,19 +77,19 @@ private:
     bool isAnimPlay = true;   
 
     // Material
-    float alphaFactor = 1.0f;
+    Vector3 diffuseFactor   = { 1,1,1 };
+    float   alphaFactor     = 1.0f;
+    Vector3 emissiveFactor  = { 1,1,1 };
+	float   roughnessFactor = 1.0f;
+	float   metalicFactor   = 1.0f;
 
-    Vector3 emissiveFactor = { 1,1,1 };
-	float roughnessFactor = 1.0f;
-	float metalicFactor = 1.0f;
-
-    bool useDiffuseOverride = false;
-    bool useEmissiveOverride = false;
-    bool useMetallicOverride = false;
+    bool useDiffuseOverride   = false;
+    bool useEmissiveOverride  = false;
+    bool useMetallicOverride  = false;
     bool useRoughnessOverride = false;
 
-    Vector3 diffuseOverride = { 1,1,1 };
-    Vector3 emissiveOverride = { 1,1,1 };
-    float   metallicOverride = 1.0f;
+    Vector3 diffuseOverride   = { 1,1,1 };
+    Vector3 emissiveOverride  = { 1,1,1 };
+    float   metallicOverride  = 1.0f;
     float   roughnessOverride = 1.0f;
 };

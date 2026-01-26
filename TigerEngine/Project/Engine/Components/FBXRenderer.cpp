@@ -14,6 +14,7 @@ RTTR_REGISTRATION
         .property("AnimationPlayTime", 	&FBXRenderer::GetProgressAnimationTime,		&FBXRenderer::SetProgressAnimationTime)
         .property("IsAnimationPlay", 	&FBXRenderer::GetIsAnimationPlay,			&FBXRenderer::SetIsAnimationPlay)
 
+        .property("Diffuse", 	    &FBXRenderer::GetDiffuse,       &FBXRenderer::SetDiffuse)
         .property("Alpha", 	        &FBXRenderer::GetAlpha,         &FBXRenderer::SetAlpha)
         .property("Emissive", 	    &FBXRenderer::GetEmissive,		&FBXRenderer::SetEmissive)
         .property("Roughness", 	    &FBXRenderer::GetRoughness,		&FBXRenderer::SetRoughness)
@@ -265,6 +266,14 @@ void FBXRenderer::Deserialize(nlohmann::json data)
 			prop.set_value(*this, color);
 		}
 	}
+}
+
+void FBXRenderer::SetDiffuse(Color color)
+{
+    diffuseFactor = { color.R(), color.G(), color.B() };
+
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().diffuseFactor = diffuseFactor;
 }
 
 void FBXRenderer::SetAlpha(float value)

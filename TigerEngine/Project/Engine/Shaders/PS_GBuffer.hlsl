@@ -94,6 +94,7 @@ PS_Output main(PS_INPUT input) : SV_TARGET
     
     // --- [Factor] -----------------------------------
     
+    base_color *= diffuseFactor;
     emissive *= emissiveFactor;
     metallic *= metallicFactor;
     float rf = max(roughnessFactor, 0.04);
