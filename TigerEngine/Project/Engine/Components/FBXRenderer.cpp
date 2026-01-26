@@ -50,13 +50,10 @@ void FBXRenderer::OnUpdate(float delta)
 		progressAnimationTime = fmod(progressAnimationTime, modelAsset->animations[animationIndex].m_duration);
 	}
 
-    // TODO :: isSkeletal
-    // Rigid -> model matrix udpate
-    // Skeletal -> pose matrix udpate
-    
-    if (modelAsset->skeletalInfo.IsSkeletal())
+    // local & model matrix udpate
+    switch (modelAsset->type)
     {
-        // pose 본 갱신
+    case ModelType::Skeletal:
         for (auto& bone : bones)
         {
             // animation update
@@ -81,28 +78,24 @@ void FBXRenderer::OnUpdate(float delta)
             // bone pose arr update
             bonePoses.bonePose[bone.m_index] = bone.m_worldTransform;
         }
-    }
-    else // rigid
-    {
-        // local udpate
-        if (modelAsset->animations.empty())
-        {
+        break;
+
+    case ModelType::Rigid:
+        // local matrix
+        if (modelAsset->animations.empty()) {
             for (int i = 0; i < modelAsset->meshes_modelMat.size(); i++)
-            {
                 modelAsset->meshes_localMat[i] = modelAsset->meshes_bindMat[i];
-            }
         }
-        else
-        {
-            // animation udpate
+        else {
             int nodeCount = modelAsset->meshes.size();
             for (int i = 0; i < nodeCount; i++)
             {
-                // get nodeAnimation
+                // node animation find
                 auto& node = modelAsset->meshes[i];
                 NodeAnimation aniClip;
                 bool hasAnimation = modelAsset->animations[animationIndex].GetNodeAnimationByName(node.nodeName, aniClip);
-                cout << node.nodeName << endl;
+                
+                // animation keyframe local
                 if (hasAnimation)
                 {
                     // get keyframe
@@ -113,23 +106,28 @@ void FBXRenderer::OnUpdate(float delta)
                         Matrix::CreateFromQuaternion(rot) *
                         Matrix::CreateTranslation(pos);
                 }
+                // bind local
                 else
-                {
                     modelAsset->meshes_localMat[i] = modelAsset->meshes_bindMat[i];
-                }
             }
         }
 
-        // model matrix udpate
+        // model matrix
         for (int i = 0; i < modelAsset->meshes_modelMat.size(); i++)
         {
             auto& sub = modelAsset->meshes[i];
 
-            if (sub.parentIndex != -1)
+            if (sub.parentIndex > -1)
                 modelAsset->meshes_modelMat[i] = modelAsset->meshes_localMat[i] * modelAsset->meshes_modelMat[sub.parentIndex];
             else
                 modelAsset->meshes_modelMat[i] = modelAsset->meshes_localMat[i];
         }
+        break;
+
+    default:
+        // static has none model matrix
+        // static has none animation
+        break;
     }
 }
 
@@ -141,32 +139,36 @@ void FBXRenderer::OnRender(RenderQueue& queue)
 {
     if (fbxData == nullptr) return; // 그릴 메쉬가 없음 -> data 없음
 
+    ModelType modelType = fbxData->GetFBXInfo()->type;
+
     auto& meshData = fbxData->GetMesh();
     auto world = owner->GetTransform()->GetWorldTransform();
 
+    // Render Item Push
     for (int i = 0; i < meshData.size(); i++)
     {
         auto& mesh = meshData[i];
 
-        SkeletalRenderItem item{};
+        RenderItem item{};
+        item.modelType = modelType;
         item.mesh = &mesh;
-        item.world = world;
-        if (!fbxData->GetFBXInfo()->skeletalInfo.IsSkeletal()) item.model = fbxData->GetFBXInfo()->meshes_modelMat[i];
-        item.poses = &bonePoses;
-        item.offsets = &fbxData->GetFBXInfo()->m_BoneOffsets;
-        item.refBoneIndex = mesh.refBoneIndex;
-        item.isSkeletal = fbxData->GetFBXInfo()->skeletalInfo.IsSkeletal();
-        item.boneCount = fbxData->GetFBXInfo()->skeletalInfo.m_bones.size();
-
-        // Mesh 기본 Material 복사
         item.material = mesh.GetMaterial();
+        item.world = world;
+        
+        switch (modelType)
+        {
+        case ModelType::Skeletal:
+            item.boneCount = fbxData->GetFBXInfo()->skeletalInfo.m_bones.size();
+            item.refBoneIndex = mesh.refBoneIndex;
+            item.poses = &bonePoses;
+            item.offsets = &fbxData->GetFBXInfo()->m_BoneOffsets;
+            break;
+        case ModelType::Rigid:
+            item.model = fbxData->GetFBXInfo()->meshes_modelMat[i];
+            break;
+        }
 
-        // 인스턴스별 override
-        item.material.roughnessOverride = roughness;
-        item.material.metallicOverride = metalic;
-        item.material.diffuseOverride = { color.x, color.y, color.z };
-
-        queue.AddSkeletal(item);
+        queue.AddRenderItem(item);
     }
 
 }

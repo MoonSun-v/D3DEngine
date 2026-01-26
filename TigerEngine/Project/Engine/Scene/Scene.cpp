@@ -1,7 +1,10 @@
 #include "Scene.h"	
 #include "../Object/GameObject.h"
-#include "System/ObjectSystem.h"
 #include "../EngineSystem/ScriptSystem.h"
+#include "../Manager/WorldManager.h"
+#include "System/ObjectSystem.h"
+#include "../EngineSystem/LightSystem.h"
+#include "../EngineSystem/CameraSystem.h"
 
 void Scene::OnUpdate(float deltaTime)
 {
@@ -113,12 +116,15 @@ void Scene::ClearScene()
 	
 	gameObjects.clear();
     mappedGameObjects.clear();
+    LightSystem::Instance().Clear();
+    CameraSystem::Instance().Clear();
 }
 
 bool Scene::SaveToJson(const std::string &filename) const
 {
 	nlohmann::json root;
 
+    // 씬에 있는 게임 오브젝트 내용 저장
 	root["objects"] = nlohmann::json::array();
 	for(auto& entity : gameObjects)
 	{
@@ -128,10 +134,17 @@ bool Scene::SaveToJson(const std::string &filename) const
 		root["objects"].push_back(entityData);
 	}
 
+    // 해당 씬의 월드 세팅 내용 저장
+    root["worldData"] = nlohmann::json::array();
+    auto& wm = WorldManager::Instance();    
+    nlohmann::json worldData = wm.Serialize();
+    root["worldData"].push_back(worldData);
+
+    // 파일 만들기
 	std::ofstream file(filename);
 	if(!file.is_open()) return false;
 
-	file << root.dump(2); // ??
+	file << root.dump(2); // 보기 좋게 2칸 들여쓰기
 	file.close();
 
 	return true;
@@ -155,12 +168,13 @@ bool Scene::LoadToJson(const std::string &filename)
 		return false;
 	}
 	file.close();	
-
-	ClearScene();
 	
 	// json 데이터에 objects 객체이나 배열이 없음
 	if(!root.contains("objects") || !root["objects"].is_array()) return false;
 
+    ClearScene(); // 데이터가 존재하면 현재 씬 제거
+
+    // 데이터에 있는 게임 오브젝트 불러오기
 	for(const auto& objData : root["objects"])
 	{
 		if(!objData.contains("type")) continue;
@@ -176,6 +190,12 @@ bool Scene::LoadToJson(const std::string &filename)
 
 		instance->Deserialize(objData["properties"]);
 	}
+
+    // 월드 데이터 불러오기
+    if (!root.contains("worldData") || !root["worldData"].is_array()) return false;
+
+    auto& wm = WorldManager::Instance();
+    wm.Deserialize(root["worldData"][0]);
 
     return true;
 }

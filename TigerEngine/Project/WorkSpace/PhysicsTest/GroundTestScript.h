@@ -16,4 +16,6 @@ public:
     void OnInitialize() override;
     void OnStart() override;
     void OnUpdate(float delta) override;
+
+    void OnCCTCollisionEnter(CharacterControllerComponent* cct) override;
 };

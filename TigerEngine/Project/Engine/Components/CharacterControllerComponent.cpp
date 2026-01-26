@@ -9,6 +9,136 @@
 #include "PhysicsComponent.h"
 
 
+RTTR_REGISTRATION
+{
+    rttr::registration::class_<CharacterControllerComponent>("CharacterControllerComponent")
+        .constructor<>()
+
+        .property("offset", &CharacterControllerComponent::m_Offset)
+        .property("radius", &CharacterControllerComponent::m_Radius)
+        .property("height", &CharacterControllerComponent::m_Height)
+
+        .property("jumpSpeed", &CharacterControllerComponent::m_JumpSpeed)
+        .property("moveSpeed", &CharacterControllerComponent::m_MoveSpeed)
+
+        .property("layer", &CharacterControllerComponent::m_Layer)
+        .property("isTrigger", &CharacterControllerComponent::m_IsTrigger);
+}
+
+nlohmann::json Vec3ToJson(const Vector3& v)
+{
+    return nlohmann::json{
+        {"x", v.x},
+        {"y", v.y},
+        {"z", v.z}
+    };
+}
+
+Vector3 JsonToVec3(const nlohmann::json& j, const Vector3& fallback)
+{
+    if (!j.is_object()) return fallback;
+
+    Vector3 v = fallback;
+    if (j.contains("x")) v.x = j["x"].get<float>();
+    if (j.contains("y")) v.y = j["y"].get<float>();
+    if (j.contains("z")) v.z = j["z"].get<float>();
+    return v;
+}
+
+nlohmann::json CharacterControllerComponent::Serialize()
+{
+    nlohmann::json datas;
+    rttr::type t = rttr::type::get(*this);
+
+    datas["type"] = t.get_name().to_string();
+    datas["properties"] = nlohmann::json::object();
+
+    for (auto& prop : t.get_properties())
+    {
+        std::string name = prop.get_name().to_string();
+        rttr::variant value = prop.get_value(*this);
+
+        // enum
+        if (value.is_type<CollisionLayer>())
+            datas["properties"][name] = (int)value.get_value<CollisionLayer>();
+
+        // bool / float
+        else if (value.is_type<bool>())
+            datas["properties"][name] = value.get_value<bool>();
+
+        else if (value.is_type<float>())
+            datas["properties"][name] = value.get_value<float>();
+
+        // Vector3
+        else if (value.is_type<Vector3>())
+            datas["properties"][name] = Vec3ToJson(value.get_value<Vector3>());
+    }
+
+    return datas;
+}
+
+void CharacterControllerComponent::Deserialize(nlohmann::json data)
+{
+    if (!data.is_object() || !data.contains("properties"))
+        return;
+
+    auto propData = data["properties"];
+    rttr::type t = rttr::type::get(*this);
+
+    for (auto& prop : t.get_properties())
+    {
+        std::string name = prop.get_name().to_string();
+        if (!propData.contains(name))
+            continue;
+
+        if (name == "layer")
+        {
+            prop.set_value(*this, (CollisionLayer)propData[name].get<int>());
+        }
+        else if (name == "isTrigger")
+        {
+            prop.set_value(*this, propData[name].get<bool>());
+        }
+        else if (name == "jumpSpeed")
+        {
+            prop.set_value(*this, propData[name].get<float>());
+        }
+        else if (name == "moveSpeed")
+        {
+            prop.set_value(*this, propData[name].get<float>());
+        }
+        else if (name == "radius")
+        {
+            prop.set_value(*this, propData[name].get<float>());
+        }
+        else if (name == "height")
+        {
+            prop.set_value(*this, propData[name].get<float>());
+        }
+        else if (name == "offset")
+        {
+            Vector3 curr = prop.get_value(*this).get_value<Vector3>();
+            Vector3 v = JsonToVec3(propData[name], curr);
+            prop.set_value(*this, v);
+        }
+    }
+
+    // -------------------------
+    // CCT 재생성
+    // -------------------------
+    CreateCharacterCollider(m_Radius, m_Height, m_Offset);
+    SetLayer(m_Layer);
+}
+
+void CharacterControllerComponent::OnCollisionEnter(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastCollisionEnter(other); }
+void CharacterControllerComponent::OnCollisionStay(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastCollisionStay(other); }
+void CharacterControllerComponent::OnCollisionExit(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastCollisionExit(other); }
+
+void CharacterControllerComponent::OnTriggerEnter(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastTriggerEnter(other); }
+void CharacterControllerComponent::OnTriggerStay(PhysicsComponent* other) { if (GetOwner())GetOwner()->BroadcastTriggerStay(other); }
+void CharacterControllerComponent::OnTriggerExit(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastTriggerExit(other); }
+
+
 void CharacterControllerComponent::OnInitialize()
 {
     transform = GetOwner()->GetTransform();
@@ -27,7 +157,10 @@ void CharacterControllerComponent::CreateCharacterCollider(float radius, float h
 {
     if (!transform) return;
 
+    m_Radius = radius;
+    m_Height = height;
     m_Offset = offset;
+
     auto& phys = CharacterControllerSystem::Instance();
 
     PxExtendedVec3 pos(
@@ -160,12 +293,12 @@ void CharacterControllerComponent::ResolveCollisions()
         if (m_CCTPrevContacts.find(other) == m_CCTPrevContacts.end())
         {
             OnCollisionEnter(other);
-            other->OnCCTEnter(this);   // Physics에게 알림
+            other->OnCCTCollisionEnter(this);   // Physics에게 알림
         }
         else
         {
             OnCollisionStay(other);
-            other->OnCCTStay(this);
+            other->OnCCTCollisionStay(this);
         }
     }
 
@@ -175,7 +308,7 @@ void CharacterControllerComponent::ResolveCollisions()
         if (m_CCTCurrContacts.find(other) == m_CCTCurrContacts.end())
         {
             OnCollisionExit(other);
-            other->OnCCTExit(this);
+            other->OnCCTCollisionExit(this);
         }
     }
 
@@ -192,12 +325,12 @@ void CharacterControllerComponent::ResolveTriggers()
         if (m_CCTPrevTriggers.find(other) == m_CCTPrevTriggers.end())
         {
             OnTriggerEnter(other);
-            other->OnCCTEnter(this);
+            other->OnCCTTriggerEnter(this);
         }
         else
         {
             OnTriggerStay(other);
-            other->OnCCTStay(this);
+            other->OnCCTTriggerStay(this);
         }
     }
 
@@ -207,7 +340,7 @@ void CharacterControllerComponent::ResolveTriggers()
         if (m_CCTCurrTriggers.find(other) == m_CCTCurrTriggers.end())
         {
             OnTriggerExit(other);
-            other->OnCCTExit(this);
+            other->OnCCTTriggerExit(this);
         }
     }
 

@@ -15,6 +15,7 @@
 #include "RenderPass/Renderer/SkyboxPass.h"
 #include "RenderPass/Renderer/BloomPass.h"
 #include "RenderPass/Renderer/PostProcessPass.h"
+#include "RenderPass/Renderer/FrustumPass.h"
 
 
 /// <summary>
@@ -29,7 +30,7 @@ public:
 	bool OnInitialize() override;
 	void OnUpdate() override;
 	void OnRender() override;
-    void OnFixedUpdate(float dt) override;
+    void OnFixedUpdate() override;
 
 #if _DEBUG
 	std::unique_ptr<ImguiRenderer> imguiRenderer{};
@@ -43,6 +44,7 @@ public:
     std::unique_ptr<SkyboxPass>       skyboxPass{};
     std::unique_ptr<BloomPass>        bloomPass{};
     std::unique_ptr<PostProcessPass>  postProcessPass{};
+    std::unique_ptr<FrustumPass>      frustumPass{};
     // TODO :: Particle Pass
 
 

@@ -80,7 +80,7 @@ namespace DebugDraw
         bool dashed = false);
 
     // Raycast 전용 
-    static void XM_CALLCONV DrawRayDebug(
+    void XM_CALLCONV DrawRayDebug(
         DirectX::PrimitiveBatch<DirectX::VertexPositionColor>* batch,
         DirectX::FXMVECTOR origin,
         DirectX::FXMVECTOR direction,

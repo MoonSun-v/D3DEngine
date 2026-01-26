@@ -8,6 +8,219 @@
 #include "../Object/GameObject.h"
 
 
+RTTR_REGISTRATION
+{
+    rttr::registration::class_<PhysicsComponent>("PhysicsComponent")
+        .constructor<>()
+
+        .property("bodyType", &PhysicsComponent::m_BodyType)
+        .property("colliderType", &PhysicsComponent::m_ColliderType)
+
+        .property("halfExtents", &PhysicsComponent::m_HalfExtents)
+        .property("radius", &PhysicsComponent::m_Radius)
+        .property("height", &PhysicsComponent::m_Height)
+        .property("density", &PhysicsComponent::m_Density)
+        .property("localOffset", &PhysicsComponent::m_LocalOffset)
+
+        .property("layer", &PhysicsComponent::m_Layer)
+        .property("isTrigger", &PhysicsComponent::m_IsTrigger);
+}
+
+nlohmann::json Vec3_Json(const Vector3& v)
+{
+    return nlohmann::json{
+        {"x", v.x},
+        {"y", v.y},
+        {"z", v.z}
+    };
+}
+
+Vector3 Json_Vec3(const nlohmann::json& j, const Vector3& fallback)
+{
+    if (!j.is_object()) return fallback;
+
+    Vector3 v = fallback;
+    if (j.contains("x")) v.x = j["x"].get<float>();
+    if (j.contains("y")) v.y = j["y"].get<float>();
+    if (j.contains("z")) v.z = j["z"].get<float>();
+    return v;
+}
+
+nlohmann::json PhysicsComponent::Serialize()
+{
+    nlohmann::json datas;
+    rttr::type t = rttr::type::get(*this);
+
+    datas["type"] = t.get_name().to_string();
+    datas["properties"] = nlohmann::json::object();
+
+    for (auto& prop : t.get_properties())
+    {
+        std::string name = prop.get_name().to_string();
+        rttr::variant value = prop.get_value(*this);
+
+        // enum
+        if (value.is_type<PhysicsBodyType>())
+            datas["properties"][name] = (int)value.get_value<PhysicsBodyType>();
+
+        else if (value.is_type<ColliderType>())
+            datas["properties"][name] = (int)value.get_value<ColliderType>();
+
+        else if (value.is_type<CollisionLayer>())
+            datas["properties"][name] = (int)value.get_value<CollisionLayer>();
+
+        // bool / float
+        else if (value.is_type<bool>())
+            datas["properties"][name] = value.get_value<bool>();
+
+        else if (value.is_type<float>())
+            datas["properties"][name] = value.get_value<float>();
+
+        // Vector3
+        else if (value.is_type<Vector3>())
+            datas["properties"][name] = Vec3_Json(value.get_value<Vector3>());
+    }
+
+    return datas;
+}
+
+void PhysicsComponent::Deserialize(nlohmann::json data)
+{
+    if (!data.is_object() || !data.contains("properties"))
+        return;
+
+    auto propData = data["properties"];
+    rttr::type t = rttr::type::get(*this);
+
+    for (auto& prop : t.get_properties())
+    {
+        std::string name = prop.get_name().to_string();
+        if (!propData.contains(name))
+            continue;
+
+        // enum
+        if (name == "bodyType")
+        {
+            prop.set_value(*this, (PhysicsBodyType)propData[name].get<int>());
+        }
+        else if (name == "colliderType")
+        {
+            prop.set_value(*this, (ColliderType)propData[name].get<int>());
+        }
+        else if (name == "layer")
+        {
+            prop.set_value(*this, (CollisionLayer)propData[name].get<int>());
+        }
+
+        // bool / float
+        else if (name == "isTrigger")
+        {
+            prop.set_value(*this, propData[name].get<bool>());
+        }
+        else if (name == "radius")
+        {
+            prop.set_value(*this, propData[name].get<float>());
+        }
+        else if (name == "height")
+        {
+            prop.set_value(*this, propData[name].get<float>());
+        }
+        else if (name == "density")
+        {
+            prop.set_value(*this, propData[name].get<float>());
+        }
+
+        else if (name == "halfExtents")
+        {
+            Vector3 curr = prop.get_value(*this).get_value<Vector3>();
+            Vector3 v = Json_Vec3(propData[name], curr);
+            prop.set_value(*this, v);
+        }
+        else if (name == "localOffset")
+        {
+            Vector3 curr = prop.get_value(*this).get_value<Vector3>();
+            Vector3 v = Json_Vec3(propData[name], curr);
+            prop.set_value(*this, v);
+        }
+    }
+
+    // -------------------------
+    // PhysX 재생성
+    // -------------------------
+    ColliderDesc d;
+    d.halfExtents = m_HalfExtents;
+    d.radius = m_Radius;
+    d.height = m_Height;
+    d.density = m_Density;
+    d.localOffset = m_LocalOffset;
+    d.isTrigger = m_IsTrigger;
+
+    CreateCollider(m_ColliderType, m_BodyType, d); // Note : 반드시 PysicsSystem.Initialize()가 호출된 뒤에 호출되야함.
+    SetLayer(m_Layer);
+}
+
+void PhysicsComponent::OnCollisionEnter(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastCollisionEnter(other);
+}
+
+void PhysicsComponent::OnCollisionStay(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastCollisionStay(other);
+}
+
+void PhysicsComponent::OnCollisionExit(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastCollisionExit(other);
+}
+
+void PhysicsComponent::OnTriggerEnter(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastTriggerEnter(other);
+}
+
+void PhysicsComponent::OnTriggerStay(PhysicsComponent* other)
+{
+    if (GetOwner())GetOwner()->BroadcastTriggerStay(other);
+}
+
+void PhysicsComponent::OnTriggerExit(PhysicsComponent* other)
+{
+    if (GetOwner()) GetOwner()->BroadcastTriggerExit(other);
+}
+
+void PhysicsComponent::OnCCTTriggerEnter(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTTriggerEnter(cct);
+}
+
+void PhysicsComponent::OnCCTTriggerStay(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTTriggerStay(cct);
+}
+
+void PhysicsComponent::OnCCTTriggerExit(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTTriggerExit(cct);
+}
+
+void PhysicsComponent::OnCCTCollisionEnter(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTCollisionEnter(cct);
+}
+
+void PhysicsComponent::OnCCTCollisionStay(CharacterControllerComponent* cct)
+{
+    if (GetOwner()) GetOwner()->BroadcastCCTCollisionStay(cct);
+}
+
+void PhysicsComponent::OnCCTCollisionExit(CharacterControllerComponent* cct)
+{
+    if (GetOwner())  GetOwner()->BroadcastCCTCollisionExit(cct);
+}
+
+
+
 void PhysicsComponent::OnInitialize()
 {
     transform = GetOwner()->GetTransform();
@@ -258,6 +471,53 @@ void PhysicsComponent::CreateCollider(ColliderType collider, PhysicsBodyType bod
     ApplyFilter(); // 레이어 필터 
 }
 
+void PhysicsComponent::CheckTriggers()
+{
+    if (!m_Actor) return; // PxActor* m_Actor; (PhysicsSystem에서 매핑됨)
+
+    PxScene* scene = PhysicsSystem::Instance().GetScene();
+
+    // Actor에 연결된 모든 Shape 가져오기
+    PxU32 shapeCount = m_Actor->getNbShapes();
+    if (shapeCount == 0) return;
+
+    std::vector<PxShape*> shapes(shapeCount);
+    m_Actor->getShapes(shapes.data(), shapeCount);
+
+    for (PxShape* shape : shapes)
+    {
+        // Trigger Shape만 처리
+        if (!(shape->getFlags() & PxShapeFlag::eTRIGGER_SHAPE))
+            continue;
+
+        PxGeometryHolder geom = shape->getGeometry();
+        PxTransform pose = m_Actor->getGlobalPose() * shape->getLocalPose();
+
+        // Overlap Query 수행
+        PxOverlapBufferN<64> hitBuffer;
+        PxFilterData shapeFilter = shape->getQueryFilterData();
+        PxQueryFilterData filterData;
+        filterData.data = shapeFilter; 
+
+        if (scene->overlap(geom.any(), pose, hitBuffer, filterData))
+        {
+            for (PxU32 i = 0; i < hitBuffer.getNbAnyHits(); ++i)
+            {
+                PxRigidActor* otherActor = hitBuffer.getAnyHit(i).actor;
+                if (!otherActor) continue;
+
+                PhysicsComponent* other = PhysicsSystem::Instance().GetComponent(otherActor);
+                if (other && other != this)
+                {
+                    m_PendingTriggers.insert(other);
+                }
+            }
+        }
+    }
+}
+
+
+
 
 DirectX::XMVECTOR GetActorDebugColor(PxRigidActor* actor)
 {
@@ -448,204 +708,3 @@ void PhysicsComponent::CollectCCTActors()
 }
 
 
-
-
-//RTTR_REGISTRATION
-//{
-//    rttr::registration::class_<PhysicsComponent>("PhysicsComponent")
-//        .constructor<>()
-//            (rttr::policy::ctor::as_std_shared_ptr)
-//        .property("BodyType", &PhysicsComponent::GetBodyType, &PhysicsComponent::SetBodyType)
-//        .property("ColliderType", &PhysicsComponent::GetColliderType, &PhysicsComponent::SetColliderType)
-//        .property("HalfExtents", &PhysicsComponent::GetHalfExtents, &PhysicsComponent::SetHalfExtents)
-//        .property("Radius", &PhysicsComponent::GetRadius, &PhysicsComponent::SetRadius)
-//        .property("Height", &PhysicsComponent::GetHeight, &PhysicsComponent::SetHeight)
-//        .property("Density", &PhysicsComponent::GetDensity, &PhysicsComponent::SetDensity)
-//        .property("LocalOffset", &PhysicsComponent::GetLocalOffset, &PhysicsComponent::SetLocalOffset)
-//        .property("Layer", &PhysicsComponent::GetLayer, &PhysicsComponent::SetLayer)
-//        .property("IsTrigger", &PhysicsComponent::IsTrigger, &PhysicsComponent::SetTrigger);
-//}
-//
-//
-//
-//nlohmann::json PhysicsComponent::Serialize()
-//{
-//    nlohmann::json datas;
-//
-//    rttr::type t = rttr::type::get(*this);
-//    datas["type"] = t.get_name().to_string();
-//    datas["properties"] = nlohmann::json::object();
-//
-//    for (auto& prop : t.get_properties())
-//    {
-//        std::string name = prop.get_name().to_string();
-//        rttr::variant value = prop.get_value(*this);
-//
-//        if (value.is_type<PhysicsBodyType>())
-//            datas["properties"][name] = (int)value.get_value<PhysicsBodyType>();
-//        else if (value.is_type<ColliderType>())
-//            datas["properties"][name] = (int)value.get_value<ColliderType>();
-//        else if (value.is_type<Vector3>())
-//        {
-//            auto v = value.get_value<Vector3>();
-//            datas["properties"][name] = { v.x, v.y, v.z };
-//        }
-//        else if (value.is_type<float>())
-//            datas["properties"][name] = value.get_value<float>();
-//        else if (value.is_type<bool>())
-//            datas["properties"][name] = value.get_value<bool>();
-//        else if (value.is_type<CollisionLayer>())
-//            datas["properties"][name] = (int)value.get_value<CollisionLayer>();
-//    }
-//
-//    return datas;
-//}
-//
-//void PhysicsComponent::Deserialize(nlohmann::json data)
-//{
-//    auto propData = data["properties"];
-//    rttr::type t = rttr::type::get(*this);
-//
-//    for (auto& prop : t.get_properties())
-//    {
-//        std::string name = prop.get_name().to_string();
-//
-//        if (!propData.contains(name)) continue;
-//
-//        if (prop.get_type() == rttr::type::get<PhysicsBodyType>())
-//            prop.set_value(*this, (PhysicsBodyType)(int)propData[name]);
-//        else if (prop.get_type() == rttr::type::get<ColliderType>())
-//            prop.set_value(*this, (ColliderType)(int)propData[name]);
-//        else if (prop.get_type() == rttr::type::get<Vector3>())
-//        {
-//            auto v = propData[name];
-//            prop.set_value(*this, Vector3(v[0], v[1], v[2]));
-//        }
-//        else if (prop.get_type() == rttr::type::get<float>())
-//            prop.set_value(*this, propData[name]);
-//        else if (prop.get_type() == rttr::type::get<bool>())
-//            prop.set_value(*this, propData[name]);
-//        else if (prop.get_type() == rttr::type::get<CollisionLayer>())
-//            prop.set_value(*this, (CollisionLayer)(int)propData[name]);
-//    }
-//
-//    RebuildPhysics(); // 복원 후 재생성
-//}
-
-
-// ------------------------------
-// 콜라이더 생성 
-// ------------------------------
-//void PhysicsComponent::RebuildPhysics()
-//{
-//    auto& phys = PhysicsSystem::Instance();
-//    PxPhysics* px = phys.GetPhysics();
-//    PxMaterial* mat = phys.GetDefaultMaterial();
-//
-//    // 기존 제거
-//    if (m_Actor)
-//    {
-//        phys.UnregisterComponent(m_Actor);
-//        PX_RELEASE(m_Actor);
-//        m_Actor = nullptr;
-//        m_Shape = nullptr;
-//    }
-//
-//
-//    // ----------------------
-//    // Shape 생성
-//    // ----------------------
-//    PxTransform localPose;
-//    localPose.p = ToPx(m_LocalOffset);
-//    localPose.q = PxQuat(PxIdentity);
-//
-//    switch (m_ColliderType)
-//    {
-//    case ColliderType::Box:
-//        m_Shape = px->createShape(PxBoxGeometry(m_HalfExtents.x * WORLD_TO_PHYSX, m_HalfExtents.y * WORLD_TO_PHYSX, m_HalfExtents.z * WORLD_TO_PHYSX), *mat, true);
-//        break;
-//
-//    case ColliderType::Sphere:
-//        m_Shape = px->createShape(PxSphereGeometry(m_Radius * WORLD_TO_PHYSX), *mat, true);
-//        break;
-//
-//    case ColliderType::Capsule:
-//        m_Shape = px->createShape(PxCapsuleGeometry(m_Radius * WORLD_TO_PHYSX, (m_Height * 0.5f) * WORLD_TO_PHYSX), *mat, true);
-//
-//        // X축 캡슐 → Y축 : Z축 +90도
-//        {
-//            PxQuat capsuleRot(PxHalfPi, PxVec3(0, 0, 1));
-//            localPose.q = capsuleRot;
-//        }
-//        break;
-//    }
-//
-//    m_Shape->setLocalPose(localPose);
-//
-//
-//    // ----------------------
-//    // Shape Flag (Trigger / Simulation)
-//    // ----------------------
-//    if (m_IsTrigger)
-//    {
-//        // Trigger는 충돌 계산 X
-//        m_Shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
-//        m_Shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
-//    }
-//    else
-//    {
-//        // 일반 Collider 
-//        m_Shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
-//        m_Shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
-//    }
-//
-//    // ----------------------
-//    // Actor 생성
-//    // ----------------------
-//    PxTransform globalPose;
-//    globalPose.p = ToPx(transform->GetPosition());
-//    globalPose.q = ToPxQuat(transform->GetQuaternion());
-//
-//    if (m_BodyType == PhysicsBodyType::Static || m_IsTrigger)
-//    {
-//        m_Actor = px->createRigidStatic(globalPose); // Trigger는 무조건 Static 
-//    }
-//    else
-//    {
-//        PxRigidDynamic* dyn = px->createRigidDynamic(globalPose);
-//
-//        if (m_BodyType == PhysicsBodyType::Kinematic)
-//        {
-//            dyn->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
-//        }
-//
-//        m_Actor = dyn;
-//    }
-//
-//    // ----------------------
-//    // Shape 연결
-//    // ----------------------
-//    m_Actor->attachShape(*m_Shape);
-//
-//
-//    // ----------------------
-//    // 질량 계산
-//    // ----------------------
-//    if (m_BodyType == PhysicsBodyType::Dynamic)
-//    {
-//        PxRigidBodyExt::updateMassAndInertia(*static_cast<PxRigidDynamic*>(m_Actor), m_Density);
-//    }
-//
-//
-//    // ----------------------
-//    // Layer Filter
-//    // ----------------------
-//    ApplyFilter();
-//
-//
-//    // ----------------------
-//    // Scene 등록
-//    // ----------------------
-//    phys.GetScene()->addActor(*m_Actor);
-//    phys.RegisterComponent(m_Actor, this);
-//}

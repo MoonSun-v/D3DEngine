@@ -57,11 +57,11 @@ struct ColliderDesc
 // ----------------------------------------------------
 class PhysicsComponent : public Component
 {
-    RTTR_ENABLE(PhysicsComponent)
-//public: // TODO : 직렬화 역직렬화 
-//
-//    nlohmann::json Serialize() override;
-//    void Deserialize(nlohmann::json data) override;
+    RTTR_ENABLE(Component)
+public: 
+
+    nlohmann::json Serialize() override;
+    void Deserialize(nlohmann::json data) override;
 
 public:
     void OnInitialize() override;
@@ -77,7 +77,7 @@ public:
     bool IsTrigger() const { return m_IsTrigger; }
 
 
-private:
+public:
     // [ 직렬화 대상 ]
     PhysicsBodyType m_BodyType = PhysicsBodyType::Static;
     ColliderType m_ColliderType = ColliderType::Box;
@@ -103,20 +103,32 @@ public:
     ~PhysicsComponent();
 
     // -----------------------------
-    // Collision / Trigger 이벤트 콜백 
+    // [ Rigid ]  Collision / Trigger 이벤트 콜백 
     // -----------------------------
-    virtual void OnCollisionEnter(PhysicsComponent* other) { OutputDebugStringW(L"[PhysicsComponent] Collision Enter! \n"); }
-    virtual void OnCollisionStay(PhysicsComponent* other) { /*OutputDebugStringW(L"[PhysicsComponent] Collision Stay! \n");*/ }
-    virtual void OnCollisionExit(PhysicsComponent* other) { OutputDebugStringW(L"[PhysicsComponent] Collision Exit! \n"); }
+    // Rigid <-> Rigid
+    virtual void OnCollisionEnter(PhysicsComponent* other);
+    virtual void OnCollisionStay(PhysicsComponent* other);
+    virtual void OnCollisionExit(PhysicsComponent* other);
 
-    virtual void OnTriggerEnter(PhysicsComponent* other) { OutputDebugStringW(L"[PhysicsComponent] Trigger Enter! \n"); }
-    virtual void OnTriggerStay(PhysicsComponent* other) { /*OutputDebugStringW(L"[PhysicsComponent] Trigger Stay \n");*/ }
-    virtual void OnTriggerExit(PhysicsComponent* other) { OutputDebugStringW(L"[PhysicsComponent] Trigger Exit! \n"); }
+    // Trigger <-> Trigger
+    virtual void OnTriggerEnter(PhysicsComponent* other);
+    virtual void OnTriggerStay(PhysicsComponent* other);
+    virtual void OnTriggerExit(PhysicsComponent* other);
 
-    // CCT 이벤트
-    virtual void OnCCTEnter(CharacterControllerComponent* cct) {}
-    virtual void OnCCTStay(CharacterControllerComponent* cct) {}
-    virtual void OnCCTExit(CharacterControllerComponent* cct) {}
+
+    // -----------------------------
+    // [ CCT ]  Collision / Trigger 이벤트 콜백 
+    // -----------------------------
+    // CCT <-> Trigger
+    virtual void OnCCTTriggerEnter(CharacterControllerComponent* cct);
+    virtual void OnCCTTriggerStay(CharacterControllerComponent* cct);
+    virtual void OnCCTTriggerExit(CharacterControllerComponent* cct);
+
+    // CCT <-> Collision
+    virtual void OnCCTCollisionEnter(CharacterControllerComponent* cct);
+    virtual void OnCCTCollisionStay(CharacterControllerComponent* cct);
+    virtual void OnCCTCollisionExit(CharacterControllerComponent* cct);
+
 
 
     // --------------------------
@@ -134,6 +146,9 @@ public:
     void CreateDynamicCapsule(float radius, float height, float density = 1.0f, const Vector3& localOffset = { 0,0,0 });
 
 
+    // 트리거 체크 
+    void CheckTriggers();
+    
     // --------------------------
     // Transform 연동
     // --------------------------
@@ -146,9 +161,10 @@ public:
     void SetLayer(CollisionLayer layer);
     CollisionLayer GetLayer() const { return m_Layer; }
 
+    
+
 private:
     void ApplyFilter();
-    // void RebuildPhysics();
 
     // 유틸 
     void DrawPhysXActors();

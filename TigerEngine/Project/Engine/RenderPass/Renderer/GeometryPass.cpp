@@ -42,31 +42,41 @@ void GeometryPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& qu
     context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
     // Render
-    auto& models = queue.GetSkeletaItems();
+    auto& models = queue.GetRendertems();
     for (auto& m : models)
     {
-        if(m.isSkeletal)
-            context->VSSetShader(sm.VS_BaseLit_Skeletal.Get(), NULL, 0);
-        else
-            context->VSSetShader(sm.VS_BaseLit_Rigid.Get(), NULL, 0);
-
         // CB - Transform
+        if (m.modelType == ModelType::Rigid) sm.transformCBData.model = m.model.Transpose();
+        else if (m.modelType == ModelType::Static) sm.transformCBData.model = Matrix::Identity.Transpose();
         sm.transformCBData.world = m.world.Transpose();
-        if (!m.isSkeletal)
-            sm.transformCBData.model = m.model.Transpose();   
         context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
-        // CB - Offset, Pose
-        auto& boneOffset = m.offsets->boneOffset;
-        auto& bonePose = m.poses->bonePose;
+        // VS
+        switch (m.modelType) {
+            case ModelType::Skeletal:
+            {
+                context->VSSetShader(sm.VS_BaseLit_Skeletal.Get(), NULL, 0);
 
-        for (int i = 0; i < m.boneCount; i++)
-        {
-            sm.offsetMatrixCBData.boneOffset[i] = boneOffset[i];
-            sm.poseMatrixCBData.bonePose[i] = bonePose[i];
+                // CB - Offset, Pose
+                auto& boneOffset = m.offsets->boneOffset;
+                auto& bonePose = m.poses->bonePose;
+
+                for (int i = 0; i < m.boneCount; i++)
+                {
+                    sm.offsetMatrixCBData.boneOffset[i] = boneOffset[i];
+                    sm.poseMatrixCBData.bonePose[i] = bonePose[i];
+                }
+                context->UpdateSubresource(sm.offsetMatrixCB.Get(), 0, nullptr, &sm.offsetMatrixCBData, 0, 0);
+                context->UpdateSubresource(sm.poseMatrixCB.Get(), 0, nullptr, &sm.poseMatrixCBData, 0, 0);
+                break;
+            }
+            case ModelType::Rigid:
+            case ModelType::Static:
+            {
+                context->VSSetShader(sm.VS_BaseLit_Rigid.Get(), NULL, 0);
+                break;
+            }
         }
-        context->UpdateSubresource(sm.offsetMatrixCB.Get(), 0, nullptr, &sm.offsetMatrixCBData, 0, 0);
-        context->UpdateSubresource(sm.poseMatrixCB.Get(), 0, nullptr, &sm.poseMatrixCBData, 0, 0);
 
         // IB, VB, SRV, CB -> DrawCall
         m.mesh->Draw(context);

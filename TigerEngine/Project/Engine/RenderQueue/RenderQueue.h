@@ -5,17 +5,20 @@
 #include "Datas/FBXResourceData.h"
 #include "Datas/ConstantBuffer.hpp"
 
-struct SkeletalRenderItem
+struct RenderItem
 {
+    // model
+    ModelType modelType;
     const Mesh* mesh;
-    Matrix world;
-    Matrix model;
     Material material;
+    
+    // matrix
+    Matrix world;       // static, rigid, skeletal
+    Matrix model;       // rigid
 
+    // skeleton
+    int boneCount;
     int refBoneIndex;
-    int isSkeletal;
-    int boneCount;  // skeletal bone 개수
-
     const PoseMatrixCB* poses;
     const OffsetMatrixCB* offsets;
 };
@@ -26,23 +29,23 @@ struct SkeletalRenderItem
 class RenderQueue
 {
 public:
-    void AddSkeletal(const SkeletalRenderItem& item)
+    void AddRenderItem(const RenderItem& item)
     {
-        skeletalItems.push_back(item);
+        renderItems.push_back(item);
     }
 
-    const auto& GetSkeletaItems()  const { return skeletalItems; }
+    const auto& GetRendertems()  const { return renderItems; }
 
     /// <summary>
     /// Queue 클래스에 있는 모든 배열 초기화
     /// </summary>
     void Clear()
     {
-        skeletalItems.clear();
+        renderItems.clear();
     };
 
 private:
     // 각 타입별로 컨테이너 추가하기
-    std::vector<SkeletalRenderItem> skeletalItems;
+    std::vector<RenderItem> renderItems;
 };
 

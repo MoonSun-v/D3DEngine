@@ -18,6 +18,7 @@
 #include "EngineSystem/CameraSystem.h"
 #include "EngineSystem/PlayModeSystem.h"
 #include "EngineSystem/LightSystem.h"
+#include "EngineSystem/PhysicsSystem.h"
 
 #include "Components/FreeCamera.h"
 #include "Components/FBXData.h"
@@ -31,6 +32,7 @@ EngineApp::EngineApp(HINSTANCE hInstance)
 
 EngineApp::~EngineApp()
 {
+    PhysicsSystem::Instance().Shutdown();
     AudioManager::Instance().Shutdown();
 }
 
@@ -49,6 +51,7 @@ bool EngineApp::OnInitialize()
 	FBXResourceManager::Instance().GetDevice(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext());
     ShaderManager::Instance().Init(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext(), clientWidth, clientHeight);
     AudioManager::Instance().Initialize();
+    if (!PhysicsSystem::Instance().Initialize()) { return false; }
 
     auto& sm = ShaderManager::Instance();
     sm.viewport_screen = dxRenderer->GetRenderViewPort();
@@ -92,6 +95,7 @@ bool EngineApp::OnInitialize()
     skyboxPass = std::make_unique<SkyboxPass>();
     bloomPass = std::make_unique<BloomPass>();
     postProcessPass = std::make_unique<PostProcessPass>();
+    frustumPass = std::make_unique<FrustumPass>();
 
     shadowPass->Init();
     geometryPass->Init();
@@ -99,6 +103,7 @@ bool EngineApp::OnInitialize()
     skyboxPass->Init(dxRenderer->GetDevice());
     bloomPass->Init();
     postProcessPass->Init();
+    frustumPass->Init(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext());
 
 
     // == init world data ==
@@ -184,6 +189,7 @@ void EngineApp::OnRender()
         dxRenderer->ProcessScene(*renderQueue, *skyboxPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *bloomPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *postProcessPass, freeCam);
+        dxRenderer->ProcessScene(*renderQueue, *frustumPass, freeCam);      // light cam frustum용으로 잠깐 추가
     }
 
 #if _DEBUG
@@ -195,9 +201,22 @@ void EngineApp::OnRender()
 	EndRender(); 					// 업데이트 마무리
 }
 
-void EngineApp::OnFixedUpdate(float dt)
+void EngineApp::OnFixedUpdate()
 {
-    SceneSystem::Instance().FixedUpdateScene(dt);
+    // [ Physics Update : 프레임 드랍 방지 ] 
+    constexpr float fixedDt = 1.0f / 60.0f;
+    if (GameTimer::Instance().DeltaTime() > 0.1f)
+        m_PhysicsAccumulator += 0.1f;
+    else
+        m_PhysicsAccumulator += GameTimer::Instance().DeltaTime();
+
+    while (m_PhysicsAccumulator >= fixedDt)
+    {
+        SceneSystem::Instance().FixedUpdateScene(fixedDt);
+        PhysicsSystem::Instance().Simulate(fixedDt);
+
+        m_PhysicsAccumulator -= fixedDt;
+    }
 }
 
 void GameApp::ConsoleInitialize()
@@ -372,11 +391,11 @@ void EngineApp::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::
 #include "Player/Player1.h"
 #include "Player/Weapon.h"
 
-#include "Components/AudioListenerComponent.h"
-  #include "Components/AudioSourceComponent.h"
-  #include "PhysicsTest/PhysicsTestScript.h"
-  #include "PhysicsTest/GroundTestScript.h"
-  #include "PhysicsTest/CCTTest.h"
+
+#include "PhysicsTest/PhysicsTestScript.h"
+#include "PhysicsTest/GroundTestScript.h"
+#include "PhysicsTest/CCTTest.h"
+
 
   void EngineApp::RegisterAllComponents()
   {
@@ -389,9 +408,27 @@ void EngineApp::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::
       ComponentFactory::Instance().Register<PhysicsComponent>("PhysicsComponent");
       ComponentFactory::Instance().Register<CharacterControllerComponent>("CharacterControllerComponent");
 
-      ComponentFactory::Instance().Register<Player1>("Player1");
-      ComponentFactory::Instance().Register<Weapon>("Weapon");
-      ComponentFactory::Instance().Register<Light>("Light");
+
+void EngineApp::RegisterAllComponents()
+{
+    ComponentFactory::Instance().Register<FBXData>("FBXData");
+    ComponentFactory::Instance().Register<FBXRenderer>("FBXRenderer");
+    ComponentFactory::Instance().Register<Transform>("Transform");
+    ComponentFactory::Instance().Register<Camera>("Camera");
+    
+    ComponentFactory::Instance().Register<Player1>("Player1");
+    ComponentFactory::Instance().Register<Weapon>("Weapon");
+    ComponentFactory::Instance().Register<Light>("Light");
+
+    ComponentFactory::Instance().Register<AudioListenerComponent>("AudioListenerComponent");
+    ComponentFactory::Instance().Register<AudioSourceComponent>("AudioSourceComponent");
+    ComponentFactory::Instance().Register<PhysicsTestScript>("PhysicsTestScript");
+    ComponentFactory::Instance().Register<GroundTestScript>("GroundTestScript");
+    ComponentFactory::Instance().Register<CCTTest>("CCTTestScript");
+    ComponentFactory::Instance().Register<CharacterControllerComponent>("CharacterControllerComponent");
+    ComponentFactory::Instance().Register<PhysicsComponent>("PhysicsComponent");
+}
+
 
       ComponentFactory::Instance().Register<PhysicsTestScript>("PhysicsTestScript");
       ComponentFactory::Instance().Register<GroundTestScript>("GroundTestScript");

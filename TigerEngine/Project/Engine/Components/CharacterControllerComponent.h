@@ -14,11 +14,11 @@ class PhysicsComponent;
 
 class CharacterControllerComponent : public Component
 {
-    RTTR_ENABLE(CharacterControllerComponent)
-//public: // TODO : 직렬화 역직렬화 
-//
-//    nlohmann::json Serialize() override;
-//    void Deserialize(nlohmann::json data) override;
+    RTTR_ENABLE(Component)
+public: 
+
+    nlohmann::json Serialize() override;
+    void Deserialize(nlohmann::json data) override;
 
 public:
     void OnInitialize() override;
@@ -36,35 +36,43 @@ public:
 
 
 public:
-    PxController* m_Controller = nullptr;
-    Vector3 m_Offset = { 0,0,0 };       // CCT 전용 오프셋
+    PxController* m_Controller = nullptr;    
 
 private:
     const float m_MinDown = -1.0f;
 
     float m_VerticalVelocity = 0.0f;
     bool m_RequestJump = false;
-    float m_JumpSpeed = 5.5f;
-    float m_MoveSpeed = 2.0f;
-   
+
     PxFilterData m_FilterData;
 
-    CollisionLayer m_Layer = CollisionLayer::Default;
-    CollisionMask  m_Mask = 0xFFFFFFFF;
-    bool m_IsTrigger = false;
+public:
+    // 직렬화 대상 
+    Vector3 m_Offset;
+    float m_JumpSpeed = 5.5f;
+    float m_MoveSpeed = 2.0f;
+
+    CollisionLayer m_Layer;
+    CollisionMask  m_Mask;
+    bool m_IsTrigger;
+
+    // CCT Shape 정보
+    float m_Radius = 30.0f;
+    float m_Height = 120.0f;
+
 
 
 public:
     // -----------------------------
     // Collision / Trigger 이벤트 콜백 
     // -----------------------------
-    virtual void OnCollisionEnter(PhysicsComponent* other) { OutputDebugStringW(L"[CharacterControllerComponent] Collision Enter! \n"); }
-    virtual void OnCollisionStay(PhysicsComponent* other) { /*OutputDebugStringW(L"[CharacterControllerComponent] Collision Stay! \n");*/ }
-    virtual void OnCollisionExit(PhysicsComponent* other) { OutputDebugStringW(L"[CharacterControllerComponent] Collision Exit! \n"); }
+    virtual void OnCollisionEnter(PhysicsComponent* other);
+    virtual void OnCollisionStay(PhysicsComponent* other);
+    virtual void OnCollisionExit(PhysicsComponent* other);
 
-    virtual void OnTriggerEnter(PhysicsComponent* other) { OutputDebugStringW(L"[CharacterControllerComponent] Trigger Enter! \n"); }
-    virtual void OnTriggerStay(PhysicsComponent* other) { /*OutputDebugStringW(L"[CharacterControllerComponent] Trigger Stay \n");*/ }
-    virtual void OnTriggerExit(PhysicsComponent* other) { OutputDebugStringW(L"[CharacterControllerComponent] Trigger Exit! \n"); }
+    virtual void OnTriggerEnter(PhysicsComponent* other);
+    virtual void OnTriggerStay(PhysicsComponent* other);
+    virtual void OnTriggerExit(PhysicsComponent* other);
 
 
 public:
