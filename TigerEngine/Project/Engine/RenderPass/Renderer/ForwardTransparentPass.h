@@ -5,7 +5,7 @@
 /*
     [ Forward Transparent Renderer ]
 
-     불투명 오브젝트 렌더링을 위한 Forward Rendering을 진행하는 렌더러입니다.
+     투명 오브젝트 렌더링을 위한 Forward Rendering을 진행하는 렌더러입니다.
      지오메트리를 그리며 라이팅을 계산하고, 알파블렌딩을 수행합니다.
 
      ** Forward Transparent Renderer의 Renderable 객체 **
