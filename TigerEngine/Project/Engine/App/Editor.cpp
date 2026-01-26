@@ -98,10 +98,17 @@ void Editor::Render(HWND &hwnd)
     RenderMenuBar(hwnd);
     RenderHierarchy();
     RenderInspector();
-    RenderDebugAABBDraw();
+    //RenderDebugAABBDraw();
     RenderCameraFrustum();
     RenderWorldSettings();
     RenderShadowMap();
+
+
+    ImGui::Begin("DebugPickItem");
+    {
+        ImGui::Text("%d", currPickedID);
+    }
+    ImGui::End();
 }
 
 void Editor::RenderEnd(const ComPtr<ID3D11DeviceContext>& context)
@@ -721,7 +728,13 @@ void Editor::CheckObjectPicking()
 
     mouseXY = { mouse.x, mouse.y };
 
-    if (isMouseLeftClick)
+    ImGuiIO& io = ImGui::GetIO();
+
+    bool allowWorldPick =
+        !io.WantCaptureMouse       // ImGui가 마우스를 쓰는 중이면 차단
+        && !io.WantTextInput;      // (선택) 텍스트 입력 중이면 차단
+
+    if (isMouseLeftClick && allowWorldPick)
     {
         auto& sm = ShaderManager::Instance();
         context->CopyResource(coppedPickingTex.Get(), sm.pickingTex.Get()); // 기록된 값 가져오기
@@ -733,6 +746,9 @@ void Editor::CheckObjectPicking()
         currPickedID = row[mouseXY.x] - 1;	// x, y 좌표에 있는 ID 찾기
 
         context->Unmap(coppedPickingTex.Get(), 0);
+
+        auto scene = SceneSystem::Instance().GetCurrentScene();
+        SelectObject(scene->GetGameObjectByIndex(static_cast<int>(currPickedID + 1)));
     }
 }
 

@@ -96,15 +96,23 @@ void GeometryPass::ExecutePickingPass(ComPtr<ID3D11DeviceContext>& context, Rend
 {
     auto scene = SceneSystem::Instance().GetCurrentScene();
     auto& sm = ShaderManager::Instance();
-    context->OMSetRenderTargets(1, sm.pickingRTV.GetAddressOf(), sm.depthStencilView.Get()); // 이건 다음줄에서 해제되므로 따로 해제안함
+
+    // 픽킹 RT는 보통 0(= 아무것도 없음)으로 초기화
+    const float clearColor[4] = { 0, 0, 0, 0 };
+    context->ClearRenderTargetView(sm.pickingRTV.Get(), clearColor);
+
+    context->ClearDepthStencilView(sm.depthStencilView.Get(),
+        D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+    context->OMSetRenderTargets(1, sm.pickingRTV.GetAddressOf(), sm.depthStencilView.Get());
     context->PSSetShader(sm.PS_Picking.Get(), NULL, 0); // ps용 피킹 바인드 
     // vs는 이전 gbuffer vs 사용 ( 이미 바인드 되어있다고 가정하고 사용 )
-
 
     // Model Render
     PickingCB _picking{};
     D3D11_MAPPED_SUBRESOURCE mapped{};
     auto& models = queue.GetRendertems();
+    context->PSSetConstantBuffers(9, 1, sm.pickingCB.GetAddressOf());
 
     for (auto& m : models)
     {
@@ -139,7 +147,7 @@ void GeometryPass::ExecutePickingPass(ComPtr<ID3D11DeviceContext>& context, Rend
             context->VSSetShader(sm.VS_BaseLit_Rigid.Get(), NULL, 0);
             break;
         }
-        }
+        } // switch end
 
         int index = scene->GetGameObjectIndex(m.objPtr);    // 인덱스 찾기
         _picking.pickID = static_cast<UINT>(index);         // 각 메쉬별 id 등록
@@ -152,15 +160,14 @@ void GeometryPass::ExecutePickingPass(ComPtr<ID3D11DeviceContext>& context, Rend
             &mapped
         );
         memcpy(mapped.pData, &_picking, sizeof(PickingCB));
-        context->Unmap(sm.pickingCB.Get(), 0);
-
-        context->PSSetConstantBuffers(9, 1, sm.pickingCB.GetAddressOf());
 
         // IB, VB, SRV, CB -> DrawCall
         m.mesh->Draw(context);
 
+        context->Unmap(sm.pickingCB.Get(), 0);
     }
 
     context->PSSetShader(nullptr, 0, 0); // ps 바인드 해제
+    ID3D11RenderTargetView* nullrtv = {};
 }
 #endif

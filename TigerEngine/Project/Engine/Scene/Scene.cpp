@@ -251,3 +251,10 @@ int Scene::GetGameObjectIndex(GameObject* ptr)
 
     return res;
 }
+
+GameObject* Scene::GetGameObjectByIndex(int index)
+{
+    if (index < 0 || index >= gameObjects.size()) return nullptr;
+
+	return gameObjects[index].objPtr;
+}
