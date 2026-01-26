@@ -50,11 +50,23 @@ public:
 	/// Rigid, Skeletal FBX 모델 가져오는 함수
 	/// </summary>
 	/// <param name="path">상대 경로</param>
-	std::shared_ptr<FBXResourceAsset> LoadFBXByPath(std::string path);
+	// std::shared_ptr<FBXResourceAsset> LoadFBXByPath(std::string path);
+
+    /// <summary>
+    /// Rigid, Skeletal FBX 모델 가져오는 함수 ("모델" 만 가져옴. 애니메이션은 별도로 추가)
+    /// </summary>
+    /// <param name="path">상대 경로</param>
+    std::shared_ptr<FBXResourceAsset> LoadFBXByPath(std::string path);
 
     /// <summary>
     /// Static FBX 모델 가져오는 함수
     /// </summary>
     /// <param name="path">상대 경로</param>
     std::shared_ptr<FBXResourceAsset> LoadStaticFBXByPath(std::string path);
+
+
+    /// <summary>
+    /// 애니메이션만 로드해서 기존 asset에 추가
+    /// </summary>
+    bool LoadAnimationByPath( std::shared_ptr<FBXResourceAsset> asset, std::string animPath );
 };

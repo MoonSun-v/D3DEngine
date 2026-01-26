@@ -454,14 +454,14 @@ std::shared_ptr<FBXResourceAsset> FBXResourceManager::LoadFBXByPath(std::string 
 	sharedAsset ->skeletalInfo = SkeletonInfo();
 	sharedAsset ->skeletalInfo.CreateFromAiScene(pScene);
 
-	// animation 저장
-	int animationsNum = pScene->mNumAnimations;
-	for (int i = 0; i < animationsNum; i++)
-	{
-		Animation anim;
-		anim.CreateNodeAnimation(pScene->mAnimations[i]);
-		sharedAsset->animations.push_back(anim);
-	}
+	//// animation 저장
+	//int animationsNum = pScene->mNumAnimations;
+	//for (int i = 0; i < animationsNum; i++)
+	//{
+	//	Animation anim;
+	//	anim.CreateNodeAnimation(pScene->mAnimations[i]);
+	//	sharedAsset->animations.push_back(anim);
+	//}
 
 	// Process Node (mesh, meterial/textures)
     // 1) Skeletal Mesh
@@ -583,4 +583,30 @@ std::shared_ptr<FBXResourceAsset> FBXResourceManager::LoadStaticFBXByPath(std::s
     sharedAsset->boxCenter = Vector3::Zero;
 
     return sharedAsset;
+}
+
+
+bool FBXResourceManager::LoadAnimationByPath(std::shared_ptr<FBXResourceAsset> asset, std::string animPath)
+{
+    if (!asset) return false;
+    if (!asset->skeletalInfo.IsSkeletal()) return false;
+
+    Assimp::Importer importer;
+    unsigned int importFlag =
+        aiProcess_Triangulate |
+        aiProcess_ConvertToLeftHanded;
+
+    const aiScene* pScene = importer.ReadFile(animPath, importFlag);
+    if (!pScene || !pScene->HasAnimations())
+        return false;
+
+    for (int i = 0; i < pScene->mNumAnimations; i++)
+    {
+        Animation anim;
+        anim.CreateNodeAnimation(pScene->mAnimations[i]);
+
+        asset->animations.push_back(anim);
+    }
+
+    return true;
 }
