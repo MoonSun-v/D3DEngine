@@ -167,4 +167,5 @@ public:
         QueryTriggerInteraction triggerInteraction,
         bool bAllHits);
 
+    void DrawPhysXActors();
 };
