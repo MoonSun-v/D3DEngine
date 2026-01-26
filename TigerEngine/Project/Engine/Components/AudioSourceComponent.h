@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "../Object/Component.h"
+#include "../EngineSystem/PlayModeSystem.h"
 #include "..\\..\\Externals\\AudioModule_FMOD\\include\\AudioSource.h"
 #include "..\\..\\Externals\\AudioModule_FMOD\\include\\AudioTransform.h"
 
@@ -44,6 +45,7 @@ public:
 
     void Play(bool restart = true);
     void PlayOneShot();
+    void Pause(bool paused);
     void Stop();
     void Update3D();
     bool IsPlaying() const;
@@ -60,4 +62,11 @@ private:
     bool m_Loop = false;
     float m_MinDistance = 1.0f;
     float m_MaxDistance = 100.0f;
+
+#if _DEBUG
+    bool m_PlayModeAuto = false;
+    PlayModeState m_prevPlayMode = PlayModeState::Stopped;
+    bool m_WasPaused = false;
+    bool m_HasAutoStarted = false;
+#endif
 };

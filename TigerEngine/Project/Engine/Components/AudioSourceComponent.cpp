@@ -19,11 +19,64 @@ RTTR_REGISTRATION
 void AudioSourceComponent::OnInitialize()
 {
     Init(&AudioManager::Instance().GetSystem());
+
+#if _DEBUG
+    m_prevPlayMode = PlayModeSystem::Instance().GetPlayMode();
+#endif
 }
 
 void AudioSourceComponent::OnUpdate(float delta)
 {
     (void)delta;
+
+#if _DEBUG
+    if (!m_PlayModeAuto)
+    {
+        if (m_ClipId == "BGM_Main" || m_ClipId == "AMB_Wind")
+        {
+            m_PlayModeAuto = true;
+        }
+    }
+
+    if (m_PlayModeAuto)
+    {
+        PlayModeState curr = PlayModeSystem::Instance().GetPlayMode();
+        if (curr == PlayModeState::Playing)
+        {
+            if (!m_HasAutoStarted)
+            {
+                Play(true);
+                m_HasAutoStarted = true;
+                m_WasPaused = false;
+            }
+            else if (m_WasPaused)
+            {
+                Pause(false);
+                m_WasPaused = false;
+            }
+        }
+        else if (curr == PlayModeState::Paused)
+        {
+            if (!m_WasPaused)
+            {
+                Pause(true);
+                m_WasPaused = true;
+            }
+        }
+        else if (curr == PlayModeState::Stopped)
+        {
+            if (m_HasAutoStarted || IsPlaying())
+            {
+                Stop();
+            }
+            m_HasAutoStarted = false;
+            m_WasPaused = false;
+        }
+
+        m_prevPlayMode = curr;
+    }
+#endif
+
     Update3D();
 }
 
@@ -105,6 +158,13 @@ void AudioSourceComponent::Deserialize(nlohmann::json data)
         }
     }
 
+#if _DEBUG
+    if (!m_ClipId.empty() && (m_ClipId == "BGM_Main" || m_ClipId == "AMB_Wind"))
+    {
+        m_PlayModeAuto = true;
+    }
+#endif
+
     m_Source.SetVolume(m_Volume);
     m_Source.SetLoop(m_Loop);
     m_Source.SetPitch(m_Pitch);
@@ -148,6 +208,13 @@ void AudioSourceComponent::SetClipId(const std::string& id)
     {
         m_Source.SetClip(std::move(clip));
     }
+
+#if _DEBUG
+    if (m_ClipId == "BGM_Main" || m_ClipId == "AMB_Wind")
+    {
+        m_PlayModeAuto = true;
+    }
+#endif
 }
 
 bool AudioSourceComponent::GetLoop() const
@@ -225,6 +292,11 @@ void AudioSourceComponent::Play(bool restart)
 void AudioSourceComponent::PlayOneShot()
 {
     m_Source.PlayOneShot();
+}
+
+void AudioSourceComponent::Pause(bool paused)
+{
+    m_Source.Pause(paused);
 }
 
 void AudioSourceComponent::Stop()
