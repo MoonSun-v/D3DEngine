@@ -7,17 +7,27 @@
 
 RTTR_REGISTRATION
 {
-	rttr::registration::class_<FBXRenderer>("FBXRenderer")
-		.constructor<>()
-			(rttr::policy::ctor::as_std_shared_ptr)
-		.property("AnimationIndex", 	&FBXRenderer::GetAnimationIndex,			&FBXRenderer::SetAnimationIndex)
-		.property("AnimationPlayTime", 	&FBXRenderer::GetProgressAnimationTime,		&FBXRenderer::SetProgressAnimationTime)
-		.property("IsAnimationPlay", 	&FBXRenderer::GetIsAnimationPlay,			&FBXRenderer::SetIsAnimationPlay)
-		.property("Roughness", 			&FBXRenderer::GetRoughness,					&FBXRenderer::SetRoughness)
-		.property("Metalic", 			&FBXRenderer::GetMatalic,					&FBXRenderer::SetMatalic)
-		.property("Color", 				&FBXRenderer::GetColor,						&FBXRenderer::SetColor);
-        
-         // TODO :: material data 추가
+    rttr::registration::class_<FBXRenderer>("FBXRenderer")
+        .constructor<>()
+            (rttr::policy::ctor::as_std_shared_ptr)
+        .property("AnimationIndex", 	&FBXRenderer::GetAnimationIndex,			&FBXRenderer::SetAnimationIndex)
+        .property("AnimationPlayTime", 	&FBXRenderer::GetProgressAnimationTime,		&FBXRenderer::SetProgressAnimationTime)
+        .property("IsAnimationPlay", 	&FBXRenderer::GetIsAnimationPlay,			&FBXRenderer::SetIsAnimationPlay)
+
+        .property("EmissiveFactor", 	&FBXRenderer::GetEmissiveFactor,			&FBXRenderer::SetEmissiveFactor)
+        .property("RoughnessFactor", 	&FBXRenderer::GetRoughnessFactor,			&FBXRenderer::SetRoughnessFactor)
+        .property("MetalicFactor", 		&FBXRenderer::GetMatalicFactor,				&FBXRenderer::SetMatalicFactor)
+
+        .property("UseDiffuseOverride", 	&FBXRenderer::GetUseDiffuseOverride,	&FBXRenderer::SetUseDiffuseOverride)
+        .property("UseEmissiveOverride", 	&FBXRenderer::GetUseEmissiveOverride,	&FBXRenderer::SetUseEmissiveOverride)
+        .property("UseMetallicOverride", 	&FBXRenderer::GetUseRoughnessOverride,	&FBXRenderer::SetUseRoughnessOverride)
+        .property("UseRoughnessOverride", 	&FBXRenderer::GetUseMatalicOverride,	&FBXRenderer::SetUseMatalicOverride)
+
+        .property("Diffuse", 	    &FBXRenderer::GetDiffuse,			&FBXRenderer::SetDiffuse)
+        .property("Emissive", 	    &FBXRenderer::GetEmissive,			&FBXRenderer::SetEmissive)
+        .property("Metallic", 		&FBXRenderer::GetMetallic,			&FBXRenderer::SetMetallic)
+        .property("Roughness",  	&FBXRenderer::GetRoughness,			&FBXRenderer::SetRoughness);
+
 
 		rttr::registration::class_<DirectX::SimpleMath::Color>("Color")
 		.constructor<>()
@@ -143,7 +153,7 @@ void FBXRenderer::OnDestory()
 
 void FBXRenderer::OnRender(RenderQueue& queue)
 {
-    if (fbxData == nullptr) return; // 그릴 메쉬가 없음 -> data 없음
+    if (fbxData == nullptr) return;
 
     ModelType modelType = fbxData->GetFBXInfo()->type;
 
@@ -256,37 +266,89 @@ void FBXRenderer::Deserialize(nlohmann::json data)
 	}
 }
 
+void FBXRenderer::SetEmissiveFactor(float value)
+{
+    float factor = std::clamp(value, 0.0f, 1.0f);
+    emissiveFactor = factor;
+
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().emissiveFactor = factor;
+}
+
+void FBXRenderer::SetRoughnessFactor(float value)
+{
+    float factor = std::clamp(value, 0.0f, 1.0f);
+    roughnessFactor = factor;
+
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().roughnessFactor = factor;
+}
+
+void FBXRenderer::SetMatalicFactor(float value)
+{
+    float factor = std::clamp(value, 0.0f, 1.0f);
+    metalicFactor = factor;
+
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().metallicFactor = factor;
+}
+
+void FBXRenderer::SetUseDiffuseOverride(bool flag)
+{
+    useDiffuseOverride = flag;
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().usediffuseOverride = useDiffuseOverride;
+}
+
+void FBXRenderer::SetUseEmissiveOverride(bool flag)
+{
+    useEmissiveOverride = flag;
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().useEmissiveOverride = useEmissiveOverride;
+}
+
+void FBXRenderer::SetUseRoughnessOverride(bool flag)
+{
+    useRoughnessOverride = flag;
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().useRoughnessOverride = useRoughnessOverride;
+}
+
+void FBXRenderer::SetUseMatalicOverride(bool flag)
+{
+    useMetallicOverride = flag;
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().useMetallicOverride = useMetallicOverride;
+}
+
+void FBXRenderer::SetDiffuse(Color color)
+{
+    diffuseOverride = { color.R(), color.G(), color.B() };
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().diffuseOverride = diffuseOverride;
+}
+
+void FBXRenderer::SetEmissive(Color color)
+{
+    emissiveOverride = { color.R(), color.G(), color.B() };
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().emissiveOverride = emissiveOverride;
+}
+
+void FBXRenderer::SetMetallic(float value)
+{
+    metallicOverride = value;
+    for (auto& material : fbxData->GetMesh())
+        material.GetMaterial().metallicOverride = metallicOverride;
+}
+
 void FBXRenderer::SetRoughness(float value)
 {
-    float factor = std::clamp(value, 0.0f, 1.0f);
-    roughness = factor;
-
+    roughnessOverride = value;
     for (auto& material : fbxData->GetMesh())
-    {
-        material.GetMaterial().roughnessFactor = factor;
-    }
+        material.GetMaterial().roughnessOverride = roughnessOverride;
 }
 
-void FBXRenderer::SetMatalic(float value)
-{
-    float factor = std::clamp(value, 0.0f, 1.0f);
-    metalic = factor;
-
-    for (auto& material : fbxData->GetMesh())
-    {
-        material.GetMaterial().metallicFactor = factor;
-    }
-}
-
-void FBXRenderer::SetColor(Color value)
-{
-    for (auto& material : fbxData->GetMesh())
-    {
-        // material.GetMaterial().diffuseOverride = color;
-    }
-
-    color = value;
-}
 
 void FBXRenderer::CreateBoneInfo()
 {
