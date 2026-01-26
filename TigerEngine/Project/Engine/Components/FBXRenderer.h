@@ -87,6 +87,9 @@ private:
     float progressAnimationTime = 0.0f;   // 현재 애니메이션 시간
     bool  isAnimPlay = true;   
 
+    // Ground Mesh
+    bool isGround = false;      // Ground Projection Decal 처리를 위한 flag
+
     // Material
     Vector3 diffuseFactor   = { 1,1,1 };
     float   alphaFactor     = 1.0f;
