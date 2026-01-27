@@ -160,11 +160,10 @@ void GeometryPass::ExecutePickingPass(ComPtr<ID3D11DeviceContext>& context, Rend
             &mapped
         );
         memcpy(mapped.pData, &_picking, sizeof(PickingCB));
+        context->Unmap(sm.pickingCB.Get(), 0);
 
         // IB, VB, SRV, CB -> DrawCall
         m.mesh->Draw(context);
-
-        context->Unmap(sm.pickingCB.Get(), 0);
     }
 
     context->PSSetShader(nullptr, 0, 0); // ps 바인드 해제
