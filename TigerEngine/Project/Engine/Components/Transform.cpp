@@ -16,6 +16,10 @@ void Transform::OnUpdate(float delta)
     // dirty 해소
     if (dirty)
     {
+        if (quaternion.LengthSquared() > 0.0f)
+        {
+            quaternion.Normalize();
+        }
         worldMatrix = Matrix::CreateScale(scale) *
                       // Matrix::CreateFromYawPitchRoll(euler.y, euler.x, euler.z) *
                       Matrix::CreateFromQuaternion(quaternion) *
