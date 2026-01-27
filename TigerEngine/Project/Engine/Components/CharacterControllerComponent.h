@@ -22,6 +22,8 @@ public:
 
 public:
     void OnInitialize() override;
+    void OnStart() override; 
+    void OnDestory() override;
 
 public:
     Transform* transform = nullptr;
@@ -48,17 +50,16 @@ private:
 
 public:
     // 직렬화 대상 
+    float m_Radius = 30.0f;
+    float m_Height = 120.0f;
     Vector3 m_Offset;
+
     float m_JumpSpeed = 5.5f;
     float m_MoveSpeed = 2.0f;
 
     CollisionLayer m_Layer;
     CollisionMask  m_Mask;
     bool m_IsTrigger;
-
-    // CCT Shape 정보
-    float m_Radius = 30.0f;
-    float m_Height = 120.0f;
 
 
 

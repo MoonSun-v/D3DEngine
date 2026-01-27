@@ -59,8 +59,8 @@ void CharacterControllerComponent::Deserialize(nlohmann::json data)
     // -------------------------
     // CCT 재생성
     // -------------------------
-    CreateCharacterCollider(m_Radius, m_Height, m_Offset);
-    SetLayer(m_Layer);
+    // CreateCharacterCollider(m_Radius, m_Height, m_Offset);
+    // SetLayer(m_Layer);
 }
 
 void CharacterControllerComponent::OnCollisionEnter(PhysicsComponent* other) { if (GetOwner()) GetOwner()->BroadcastCollisionEnter(other); }
@@ -75,25 +75,37 @@ void CharacterControllerComponent::OnTriggerExit(PhysicsComponent* other) { if (
 void CharacterControllerComponent::OnInitialize()
 {
     transform = GetOwner()->GetTransform();
+
+    if (!m_Controller)
+        CreateCharacterCollider(m_Radius, m_Height, m_Offset);
 }
 
-CharacterControllerComponent::~CharacterControllerComponent()
+void CharacterControllerComponent::OnStart()
+{
+}
+
+void CharacterControllerComponent::OnDestory()
 {
     if (m_Controller)
     {
         CharacterControllerSystem::Instance().UnRegisterComponent(this);
+        m_Controller = nullptr;
     }
+}
+
+
+CharacterControllerComponent::~CharacterControllerComponent()
+{
 }
 
 void CharacterControllerComponent::CreateCharacterCollider(float radius, float height, const Vector3& offset)
 {
     if (!transform) return;
+    CharacterControllerSystem::Instance().UnRegisterComponent(this); // 혹시 남아있다면 제거 
 
     m_Radius = radius;
     m_Height = height;
     m_Offset = offset;
-
-    auto& phys = CharacterControllerSystem::Instance();
 
     PxExtendedVec3 pos(
         (transform->GetPosition().x + offset.x) * WORLD_TO_PHYSX,
@@ -101,20 +113,25 @@ void CharacterControllerComponent::CreateCharacterCollider(float radius, float h
         (transform->GetPosition().z + offset.z) * WORLD_TO_PHYSX
     );
 
-    m_Controller = phys.CreateCapsuleCollider(
+    m_Controller = CharacterControllerSystem::Instance().CreateCapsuleCollider(
         pos,
         radius * WORLD_TO_PHYSX,
         height * WORLD_TO_PHYSX,
         10.0f   // density (사실상 무의미) density는 반드시 > 0
     );
 
-    phys.RegisterComponent(this, m_Controller);
+    CharacterControllerSystem::Instance().RegisterComponent(this, m_Controller);
 
     SetLayer(CollisionLayer::Default); // 초기 레이어 적용
 }
 
 void CharacterControllerComponent::MoveCharacter(const Vector3& wishDir, float fixedDt)
 {
+    if (!m_Controller) // 방어코드 !! 유니티 내부도 이렇게 방어 한다고 함 
+    {
+        return;
+    }
+
     auto& sys = CharacterControllerSystem::Instance();
     sys.GetHitReport().owner = this;
 

@@ -35,12 +35,7 @@ void CCTTest::OnStart()
 {
     if (cctComp != nullptr)
     {
-        // [ CreateCharacterCollider ] 
-        // - CharacterControllerComponent는 CreateCharacterCollider 하나밖에 없음. 
-        // - CreateCharacterCollider는 무조건 캡슐 모양의 콜라이더      
-        // - CreateCharacterCollider는 따로 SyncToPhysics() 필요X 
-        cctComp->CreateCharacterCollider(30.0f, 120.0f, { 0,50,0 }); // (가로, 세로, {오프셋})
-        // cctComp->SetLayer(CollisionLayer::Player); // 충돌 레이어 테스트 
+
     }
     else
     {
