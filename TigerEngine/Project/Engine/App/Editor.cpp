@@ -581,11 +581,11 @@ void Editor::RenderComponentInfo(std::string compName, T* comp)
                         Decal* decalComp = dynamic_cast<Decal*>(comp);
                         decalComp->ChangeData(relativePathStr);
                     }
-
                     ImGuiFileDialog::Instance()->Close();
                 } 
             }
         }
+        ReadVariants(*comp);
     }
     else
     {
@@ -853,6 +853,12 @@ void Editor::ReadVariants(rttr::instance inst)
             bool v = value.get_value<bool>();
             if (ImGui::Checkbox(name.c_str(), &v))
                 prop.set_value(inst, v);
+        }
+        else if (value.is_type<Vector2>())
+        {
+            Vector2 vec = value.get_value<SimpleMath::Vector2>();
+            if (ImGui::DragFloat2(name.c_str(), &vec.x, 0.1f))
+                prop.set_value(inst, vec);
         }
         else if (value.is_type<DirectX::SimpleMath::Vector3>())
         {
