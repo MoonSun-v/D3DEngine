@@ -19,6 +19,7 @@
 #include "EngineSystem/PlayModeSystem.h"
 #include "EngineSystem/LightSystem.h"
 #include "EngineSystem/PhysicsSystem.h"
+#include "EngineSystem/AnimationSystem.h"
 
 #include "Components/FreeCamera.h"
 #include "Components/FBXData.h"
@@ -93,6 +94,7 @@ bool EngineApp::OnInitialize()
     geometryPass = std::make_unique<GeometryPass>();
     lightPass = std::make_unique<LightPass>();
     skyboxPass = std::make_unique<SkyboxPass>();
+    forwardTransparentPass = std::make_unique<ForwardTransparentPass>();
     bloomPass = std::make_unique<BloomPass>();
     postProcessPass = std::make_unique<PostProcessPass>();
     frustumPass = std::make_unique<FrustumPass>();
@@ -101,6 +103,7 @@ bool EngineApp::OnInitialize()
     geometryPass->Init();
     lightPass->Init(dxRenderer->GetDevice());
     skyboxPass->Init(dxRenderer->GetDevice());
+    forwardTransparentPass->Init();
     bloomPass->Init();
     postProcessPass->Init();
     frustumPass->Init(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext());
@@ -136,6 +139,7 @@ void EngineApp::OnUpdate()
 	WorldManager::Instance().Update(dxRenderer->GetDeviceContext(), freeCam, clientWidth, clientHeight);
 	SceneSystem::Instance().UpdateScene(GameTimer::Instance().DeltaTime());
     AudioManager::Instance().Update();
+    AnimationSystem::Instance().Update(GameTimer::Instance().DeltaTime());
 
 #if _DEBUG
 	editor->Update();
@@ -184,6 +188,7 @@ void EngineApp::OnRender()
         dxRenderer->ProcessScene(*renderQueue, *geometryPass, currCam);
         dxRenderer->ProcessScene(*renderQueue, *lightPass, currCam);
         dxRenderer->ProcessScene(*renderQueue, *skyboxPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *forwardTransparentPass, currCam);
         dxRenderer->ProcessScene(*renderQueue, *bloomPass, currCam);
         dxRenderer->ProcessScene(*renderQueue, *postProcessPass, currCam);
     }
@@ -193,6 +198,7 @@ void EngineApp::OnRender()
         dxRenderer->ProcessScene(*renderQueue, *geometryPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *lightPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *skyboxPass, freeCam);
+        dxRenderer->ProcessScene(*renderQueue, *forwardTransparentPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *bloomPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *postProcessPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *frustumPass, freeCam);      // light cam frustum용으로 잠깐 추가
@@ -393,6 +399,7 @@ void EngineApp::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::
 #include "Components/AudioSourceComponent.h"
 #include "Components/PhysicsComponent.h"
 #include "Components/CharacterControllerComponent.h"
+#include "Components/AnimationController.h"
 #include "Manager/ComponentFactory.h"
 
 #include "Player/Player1.h"
@@ -421,5 +428,6 @@ void EngineApp::RegisterAllComponents()
     ComponentFactory::Instance().Register<CCTTest>("CCTTestScript");
     ComponentFactory::Instance().Register<CharacterControllerComponent>("CharacterControllerComponent");
     ComponentFactory::Instance().Register<PhysicsComponent>("PhysicsComponent");
+    ComponentFactory::Instance().Register<AnimationController>("AnimationController");
 }
 
