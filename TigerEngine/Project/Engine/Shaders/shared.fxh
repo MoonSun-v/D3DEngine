@@ -38,6 +38,7 @@
 // Texture2D bloomATex           : register(t16);
 // Texture2D bloomBTex           : register(t17);
 // Texture2D effectTex           : register(t18);
+// Texture2D decalTex            : register(t19);
 
 
 // [ SamplerState ]
@@ -224,11 +225,22 @@ cbuffer EffectCB : register(b8)
     float2 padding17;
 }
 
-// 여기 성호 9번 들어감
+cbuffer PickingCB : register(b9)
+{
+    uint PickingID;
+    float3 pad;
+}
 
 cbuffer DecalCB : register(b10)
 {
+    matrix decalInvWorld;
     
+    float2 tiling;
+    float2 offset;
+
+    float opacity;
+    float upThreshold;
+    float2 padding18;
 }
 
 // ----------------------
@@ -287,7 +299,7 @@ struct PS_INPUT
     float4 posShadow : TEXCOORD1;
 };
 
-struct PS_OutLine_INPUT
+struct PS_Position_INPUT
 {
     float4 pos : SV_POSITION;
 };

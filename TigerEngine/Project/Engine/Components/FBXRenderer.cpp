@@ -29,6 +29,7 @@ RTTR_REGISTRATION
             (rttr::policy::ctor::as_std_shared_ptr)
 
         .property("RenderBlendType",    &FBXRenderer::GetRenderBlendType,           &FBXRenderer::SetRenderBlendType)
+        .property("IsGround",           &FBXRenderer::GetIsGround,                  &FBXRenderer::SetIsGround)
     
         .property("Diffuse", 	    &FBXRenderer::GetDiffuse,       &FBXRenderer::SetDiffuse)
         .property("Alpha", 	        &FBXRenderer::GetAlpha,         &FBXRenderer::SetAlpha)
@@ -60,6 +61,8 @@ void FBXRenderer::OnStart()
 
 void FBXRenderer::OnUpdate(float delta)
 {
+    if (fbxData == nullptr || fbxData->GetMesh().empty()) return;
+
     auto anim = owner->GetComponent<AnimationController>();
 
     if (anim && PlayModeSystem::Instance().IsPlaying()) // Transpose O 
@@ -83,11 +86,18 @@ void FBXRenderer::OnUpdate(float delta)
 
 void FBXRenderer::OnDestory()
 {
+    Vector3 center = { 0.0f, 0.0f, 0.0f };
+    Vector3 extent = { 10.0f, 10.0f, 10.0f };
+
+    Vector3 min = center - extent;
+    Vector3 max = center + extent;
+
+    GetOwner()->SetAABB(min, max, center);
 }
 
 void FBXRenderer::OnRender(RenderQueue& queue)
 {
-    if (fbxData == nullptr) return;
+    if (fbxData == nullptr || fbxData->GetMesh().empty()) return;
 
     ModelType modelType = fbxData->GetFBXInfo()->type;
 
@@ -105,6 +115,7 @@ void FBXRenderer::OnRender(RenderQueue& queue)
         item.mesh = &mesh;
         item.material = mesh.GetMaterial();
         item.world = world;
+        item.objPtr = GetOwner();
         item.isGround = isGround;
         
         switch (modelType)
@@ -133,6 +144,8 @@ void FBXRenderer::OnRender(RenderQueue& queue)
 
 void FBXRenderer::CreateBoneInfo()
 {
+    if (fbxData->GetMesh().empty()) return; // 데이터 지정 안하면 무시
+
     auto modelAsset = fbxData->GetFBXInfo();
     int size = modelAsset->skeletalInfo.m_bones.size();
 

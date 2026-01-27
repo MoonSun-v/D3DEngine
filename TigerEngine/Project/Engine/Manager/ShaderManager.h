@@ -30,6 +30,11 @@ private:
 public:
     void CreateBackBufferResource(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight);
 
+    // device, deviceContext
+    // DX11 소유인데 쓸데가 있어서 일단 가져옴..
+    ComPtr<ID3D11Device>            device;
+    ComPtr<ID3D11DeviceContext>     deviceContext;
+
     // DX11 Base
     D3D11_VIEWPORT viewport_screen;                                  
     ComPtr<ID3D11RenderTargetView>    backBufferRTV;                 
@@ -120,6 +125,7 @@ public:
     ComPtr<ID3D11VertexShader> VS_FullScreen;
     ComPtr<ID3D11VertexShader> VS_LightVolume;
     ComPtr<ID3D11VertexShader> VS_Effect;
+    ComPtr<ID3D11VertexShader> VS_Decal;
 
     // Pixel Shader
     ComPtr<ID3D11PixelShader> PS_ShadowDepth;
@@ -132,6 +138,7 @@ public:
     ComPtr<ID3D11PixelShader> PS_BloomDownsampleBlur;
     ComPtr<ID3D11PixelShader> PS_BloomUpsampleCombine;
     ComPtr<ID3D11PixelShader> PS_PostProcess;
+    ComPtr<ID3D11PixelShader> PS_Decal;
 
     // CB buffer
     ComPtr<ID3D11Buffer> frameCB;
@@ -157,6 +164,22 @@ public:
     EffectCB        effectCBData;
     DecalCB         decalCBData;
 
+    // Debug Picking 
+#if _DEBUG
+    ComPtr<ID3D11ShaderResourceView>    pickingSRV;
+    ComPtr<ID3D11RenderTargetView>      pickingRTV;
+    ComPtr<ID3D11Texture2D>             pickingTex;         // ID 기록 텍스처
+    ComPtr<ID3D11Buffer>                pickingCB;          // ID 획득용 상수버퍼
+    ComPtr<ID3D11PixelShader>           PS_Picking;
+    ComPtr<ID3D11Texture2D>             pickingDepthTex;
+    ComPtr<ID3D11DepthStencilView>      pickingDSV;
+
+    // NOTE 따로 볼려고 함수 분리
+    void CreatePickingGBufferTex(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight);
+    void CreatePickingCB(const ComPtr<ID3D11Device>& dev);
+    void CreatePickingPS(const ComPtr<ID3D11Device>& dev);
+    void CreatePickingDSV(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight);
+#endif
 
 public:
     // Util funcs
