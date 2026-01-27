@@ -106,6 +106,7 @@ void FBXRenderer::OnRender(RenderQueue& queue)
         item.material = mesh.GetMaterial();
         item.world = world;
         item.objPtr = GetOwner();
+        item.isGround = isGround;
         
         switch (modelType)
         {
