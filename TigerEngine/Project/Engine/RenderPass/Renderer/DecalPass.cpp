@@ -2,6 +2,7 @@
 #include "../Renderable/DecalVolumeMesh.h"
 #include "../../Manager/ShaderManager.h"
 #include "../../EngineSystem/CameraSystem.h"
+#include "../../EngineSystem/DecalSystem.h"
 #include "../../Object/GameObject.h"
 
 DecalPass::~DecalPass()
@@ -29,7 +30,7 @@ void DecalPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queue
     // RS
     //context.Get()->RSSetState(sm.cullfrontRS.Get());  // 확인 필요
 
-    // DSS
+    // DSS - Stencil Test(ground)
     const UINT stencilRef = 0x01;          // Stencil Reference Value
     context->OMSetDepthStencilState(sm.groundTestDSS.Get(), stencilRef);
 
@@ -50,7 +51,12 @@ void DecalPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queue
     context->OMSetBlendState(sm.alphaBlendState.Get(), blendFactor, sampleMask);
 
     // Render
-    // TODO :: decal Compoennt 추가 후 for each 돌면서 world update/ draw
+    auto decals = DecalSystem::Instance().GetComponents();
+    for(Decal* decal : decals)
+    {
+        decalVolume->UpdateWolrd(decal);
+        decalVolume->Draw(context, *cam);
+    }
 
     // clean up
     context->OMSetDepthStencilState(nullptr, 0);

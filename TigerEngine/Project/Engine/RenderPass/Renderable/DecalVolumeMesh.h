@@ -8,6 +8,7 @@
     그 영역에 decal을 그리기 위해 사용하는 Mesh
 */
 
+class Decal;
 class Camera;
 struct Position_Vertex;
 
@@ -26,7 +27,7 @@ private:
 
 public:
     DecalVolumeMesh();
-    void UpdateWolrd();     // TODO :: Decal Compoent
+    void UpdateWolrd(Decal* decal);     // TODO :: Decal Compoent
     void Draw(ComPtr<ID3D11DeviceContext>& context, const Camera& camera) const;
 
     // friend

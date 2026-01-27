@@ -1,4 +1,5 @@
 #include "DecalVolumeMesh.h"
+#include "../../Components/Decal.h"
 #include "../../Components/Camera.h"
 #include "../../../Base/Datas/Vertex.h"
 #include "../../../Base/Datas/ConstantBuffer.hpp"
@@ -11,9 +12,9 @@ DecalVolumeMesh::DecalVolumeMesh()
 {
 }
 
-void DecalVolumeMesh::UpdateWolrd()
+void DecalVolumeMesh::UpdateWolrd(Decal* decal)
 {
-    // TODO :: Decal Compoent 받아서 world update
+    world = decal->GetOwner()->GetTransform()->GetWorldTransform();
 }
 
 void DecalVolumeMesh::Draw(ComPtr<ID3D11DeviceContext>&context, const Camera & camera) const
