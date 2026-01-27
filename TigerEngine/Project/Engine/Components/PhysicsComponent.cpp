@@ -465,6 +465,8 @@ void PhysicsComponent::CreateCollider(ColliderType collider, PhysicsBodyType bod
     phys.GetScene()->addActor(*m_Actor); // 물리 씬에 추가 
     phys.RegisterComponent(m_Actor, this);
 
+    SyncToPhysics(); // 좌표 연결 
+
     m_BodyType = body;
     m_ColliderType = collider;
 

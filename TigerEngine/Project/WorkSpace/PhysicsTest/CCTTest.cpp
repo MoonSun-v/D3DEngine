@@ -18,7 +18,6 @@ T Clamp(T v, T min, T max)
     return (v < min) ? min : (v > max) ? max : v;
 }
 
-
 RTTR_REGISTRATION
 {
     rttr::registration::class_<CCTTest>("CCTTest")
@@ -36,7 +35,11 @@ void CCTTest::OnStart()
 {
     if (cctComp != nullptr)
     {
-        cctComp->CreateCharacterCollider(30.0f, 120.0f, { 0,50,0 });
+        // [ CreateCharacterCollider ] 
+        // - CharacterControllerComponent는 CreateCharacterCollider 하나밖에 없음. 
+        // - CreateCharacterCollider는 무조건 캡슐 모양의 콜라이더      
+        // - CreateCharacterCollider는 따로 SyncToPhysics() 필요X 
+        cctComp->CreateCharacterCollider(30.0f, 120.0f, { 0,50,0 }); // (가로, 세로, {오프셋})
         // cctComp->SetLayer(CollisionLayer::Player); // 충돌 레이어 테스트 
     }
     else
@@ -44,17 +47,15 @@ void CCTTest::OnStart()
         OutputDebugStringW(L"[CCTTest] OnStart의 cctComp가 null입니다. \n");
     }
 
+
+    // [ 애니메이션 FSM 등록 ] 
     if (animController != nullptr)
     {
         auto fbx = GetOwner()->GetComponent<FBXData>();
-        auto asset = fbx->GetFBXInfo();
 
-        // 애니메이션 파일 로드
-        FBXResourceManager::Instance().LoadAnimationByPath(asset, "..\\Assets\\Resource\\Animation\\Test_Idle.fbx", "Idle");
-        FBXResourceManager::Instance().LoadAnimationByPath(asset, "..\\Assets\\Resource\\Animation\\Test_Walk.fbx", "Walk");
-
-        // AnimationController 초기화
-        animController->Initialize(&asset->skeletalInfo);
+        // 애니메이션 파일 로드 (FBXData, 경로, 애니메이션 이름, loop여부)
+        FBXResourceManager::Instance().LoadAnimationByPath(fbx->GetFBXInfo(), "..\\Assets\\Resource\\Animation\\Test_Idle.fbx", "Idle");
+        FBXResourceManager::Instance().LoadAnimationByPath(fbx->GetFBXInfo(), "..\\Assets\\Resource\\Animation\\Test_Walk.fbx", "Walk");
 
         auto idleClip = animController->FindClip("Idle");
         auto walkClip = animController->FindClip("Walk");
@@ -72,14 +73,16 @@ void CCTTest::OnStart()
         // 시작 상태
         animController->ChangeState("Idle");
 
-        elapsedTime = 0.0f;  // 시간 초기화
+        elapsedTime = 0.0f;
     }
     else
     {
         OutputDebugStringW(L"[CCTTest] OnStart의 animController가 null입니다. \n");
     }
+    
 }
 
+// 3초 후에 Walk 상태로 전환 
 void CCTTest::OnUpdate(float delta)
 {
     if (!animController || hasRunStateChanged) return;
@@ -88,7 +91,7 @@ void CCTTest::OnUpdate(float delta)
 
     if (elapsedTime >= 3.0f)
     {
-        animController->ChangeState("Walk", 0.2f); // 애니메이션 전환 
+        animController->ChangeState("Walk", 0.2f); // 상태 전환 
         hasRunStateChanged = true;
     }
 }
@@ -101,10 +104,12 @@ void CCTTest::OnFixedUpdate(float dt)
         return;
     }
 
-    CCTMoveExample(dt);
-    // RaycastExample();
+    CCTMoveExample(dt);  // 캐릭터 이동 예시 코드 
+    // RaycastExample(); // 레이캐스트  예시 코드 
 }
 
+
+// [ 충돌 이벤트 함수 ] 
 void CCTTest::OnCollisionEnter(PhysicsComponent* other)
 {
     if (!other || !other->GetOwner()) return;
@@ -119,8 +124,12 @@ void CCTTest::OnCollisionEnter(PhysicsComponent* other)
     OutputDebugStringW((L"[CCT] "+ wName + L" - OnCollisionEnter : " + wOtherName + L"\n").c_str());
 }
 
+
+// [ CCT를 소유한 캐릭터의 움직임 구현 코드 예시 ]
+// - 걷기, 점프 구현 예시 
 void CCTTest::CCTMoveExample(float dt)
 {
+    // 걷기 
     Vector3 input(0, 0, 0);
     if (Input::GetKey(Key::Up))    input.z += 1;
     if (Input::GetKey(Key::Down))  input.z -= 1;
@@ -128,7 +137,6 @@ void CCTTest::CCTMoveExample(float dt)
     if (Input::GetKey(Key::Right)) input.x += 1;
 
     input.Normalize();
-
 
     // 점프
     bool spaceDown = Input::GetKey(Key::Space) != 0;
@@ -150,11 +158,17 @@ void CCTTest::CCTMoveExample(float dt)
 
 
     // ----------------------------
-    // MoveCharacter 는 입력이 없더라도 항상 호출되어야 함! 
+    // MoveCharacter는 입력이 없더라도 무.족.권. 항상 호출되어야 함!
+    // CCT의 물리 연산을 담당 
+    // 즉, 이 코드는 무슨일이 있어도 실행 되고 있어야함. 지우지 마세요 
     // ----------------------------
     cctComp->MoveCharacter(moveDir, dt);
 }
 
+
+// [ CCT를 소유한 객체의 레이캐스트 예제 ]
+// - 아래 방향으로 레이캐스트 발사
+// - 레이캐스트가 충돌한 객체의 이름 디버그 출력 
 void CCTTest::RaycastExample()
 {
     Vector3 offset(0, 60.0f, 0);
@@ -178,7 +192,7 @@ void CCTTest::RaycastExample()
 
     if (!bHit || hits.empty())
     {
-        OutputDebugStringW(L"[CCTTest] Ground Raycast miss\n");
+        OutputDebugStringW(L"[CCTTest] Raycast miss\n");
         return;
     }
 
@@ -204,10 +218,6 @@ void CCTTest::RaycastExample()
     }
 
     wchar_t buf[256];
-    swprintf(buf, 256,
-        L"[CCTTest] Hit: %s at distance %.2f\n",
-        hitName.c_str(),
-        hit.distance);
-
+    swprintf(buf, 256, L"[CCTTest] Hit: %s at distance %.2f\n", hitName.c_str(), hit.distance);
     OutputDebugStringW(buf);
 }
