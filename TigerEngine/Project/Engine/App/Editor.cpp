@@ -861,7 +861,7 @@ void Editor::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::Key
             float outHitDistance = 0.0f;
             auto hitObject = SceneSystem::Instance().GetCurrentScene()->RayCastGameObject(ray, &outHitDistance);
 
-            if (hitObject->GetComponent<FBXRenderer>() == nullptr)
+            if (hitObject != nullptr && hitObject->GetComponent<FBXRenderer>() == nullptr)
             {
                 SelectObject(hitObject);
                 isAABBPicking = true;

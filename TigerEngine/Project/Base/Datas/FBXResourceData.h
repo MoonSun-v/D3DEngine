@@ -46,7 +46,7 @@ struct FBXResourceAsset
     vector<Matrix> meshes_localMat;
     vector<Matrix> meshes_modelMat;
 
-    // AABB Debug Draw -> NOTE : 이거 더 이상사용안함 (26.01.27)
+    // AABB Debug Draw -> NOTE : Mesh 없는 GameObject만 사용
 	Vector3 boxMin { FLT_MAX, FLT_MAX, FLT_MAX };
 	Vector3 boxMax{};
 	Vector3 boxCenter{};
