@@ -143,6 +143,7 @@ public:
     ComPtr<ID3D11Buffer> postProcessCB;
     ComPtr<ID3D11Buffer> bloomCB;
     ComPtr<ID3D11Buffer> effectCB;
+    ComPtr<ID3D11Buffer> decalCB;
 
     // CB Data
     FrameCB         frameCBData;
@@ -154,6 +155,7 @@ public:
     PostProcessCB   postProcessCBData;
     BloomCB         bloomCBData;
     EffectCB        effectCBData;
+    DecalCB         decalCBData;
 
 
 public:

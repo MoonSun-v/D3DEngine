@@ -783,6 +783,16 @@ void ShaderManager::CreateCB(const ComPtr<ID3D11Device>& dev)
         constBuffer_Desc.CPUAccessFlags = 0;
         HR_T(dev->CreateBuffer(&constBuffer_Desc, nullptr, &effectCB));
     }
+
+    // 10. Decal CB
+    {
+        D3D11_BUFFER_DESC constBuffer_Desc = {};
+        constBuffer_Desc.Usage = D3D11_USAGE_DEFAULT;
+        constBuffer_Desc.ByteWidth = sizeof(DecalCB);
+        constBuffer_Desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        constBuffer_Desc.CPUAccessFlags = 0;
+        HR_T(dev->CreateBuffer(&constBuffer_Desc, nullptr, &decalCB));
+    }
 }
 
 void ShaderManager::CreateBackBufferResource(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight)
