@@ -74,11 +74,8 @@ public:
     virtual void OnTriggerStay(PhysicsComponent* other);
     virtual void OnTriggerExit(PhysicsComponent* other);
 
-
 public:
     bool IsTrigger() const { return m_IsTrigger; }
-
-
 
 public:
     CharacterControllerComponent() = default;

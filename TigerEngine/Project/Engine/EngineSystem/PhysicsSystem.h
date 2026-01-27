@@ -106,7 +106,6 @@ public:
     void Shutdown();
 
     void RegisterComponent(PhysicsComponent* comp, PxRigidActor* actor);
-    // void UnregisterComponent(PxActor* actor);
     void UnregisterComponent(PhysicsComponent* comp);
 
     // getter 
