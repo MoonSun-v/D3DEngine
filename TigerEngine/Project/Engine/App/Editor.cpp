@@ -840,7 +840,6 @@ void Editor::ReadVariants(rttr::instance inst)
 
     rttr::type t = inst.get_derived_type();
 
-
     // Get value from type
     for (auto& prop : t.get_properties())
     {
@@ -856,7 +855,64 @@ void Editor::ReadVariants(rttr::instance inst)
         // Render elements
         // ImGui::Text("%s : %s", name.c_str(), value.get_type().get_name().to_string().c_str());
 
-        if (metaBool.is_valid() && metaBool.to_bool())
+        if (value.get_type().is_enumeration())
+        {
+            rttr::type enumType = value.get_type();
+            rttr::enumeration e = enumType.get_enumeration();
+
+            // 현재 선택된 항목 이름
+            std::string currentName;
+            {
+                rttr::variant cur = value; // 현재 enum 값
+                rttr::string_view sv = e.value_to_name(cur);
+                currentName = sv.empty() ? std::string("<invalid>") : sv.to_string();
+            }
+
+            // 모든 enum 이름 리스트
+            auto names = e.get_names(); // array_range<string_view>
+            if (!names.empty())
+            {
+                // currentName이 names 중 몇 번째인지 찾기
+                int currentIndex = 0;
+                int idx = 0;
+                for (auto n : names)
+                {
+                    if (n.to_string() == currentName) // 선택한 인덱스 찾기
+                    {
+                        currentIndex = idx;
+                        break;
+                    }
+                    ++idx;
+                }
+
+                // ImGui Combo
+                const char* preview = currentName.c_str();
+                if (ImGui::BeginCombo(name.c_str(), preview))
+                {
+                    int i = 0;
+                    for (auto n : names)
+                    {
+                        std::string itemName = n.to_string();
+                        bool selected = (i == currentIndex);
+                        if (ImGui::Selectable(itemName.c_str(), selected))
+                        {
+                            // 이름 -> enum 값 variant
+                            rttr::variant newVal = e.name_to_value(n);
+                            if (newVal.is_valid())
+                            {
+                                // prop이 enum 타입이면 그대로 set_value
+                                prop.set_value(inst, newVal);
+                            }
+                        }
+                        if (selected)
+                            ImGui::SetItemDefaultFocus();
+                        ++i;
+                    }
+                    ImGui::EndCombo();
+                }
+            }
+        }
+        else if (metaBool.is_valid() && metaBool.to_bool())
         {
             int iv = value.to_int();     // BOOL이든 int든 흡수
             bool b = (iv != 0);
