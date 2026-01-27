@@ -404,16 +404,12 @@ void CharacterControllerComponent::CheckTriggers()
     }
 }
 
-//void CharacterControllerComponent::ApplyFilter()
-//{
-//    // ----------------------------
-//    // CCT 전용 Query Filter
-//    // ----------------------------
-//    if (m_Controller)
-//    {
-//        m_FilterData.word0 = (uint32_t)m_Layer;          // 자기 레이어
-//        m_FilterData.word1 = PhysicsLayerMatrix::GetMask(m_Layer);
-//        m_FilterData.word2 = 0;
-//        m_FilterData.word3 = 0;
-//    }
-//}
+void CharacterControllerComponent::Teleport(const Vector3& pos)
+{
+    PxExtendedVec3 p(
+        pos.x * WORLD_TO_PHYSX + m_Offset.x,
+        pos.y * WORLD_TO_PHYSX + m_Offset.y,
+        pos.z * WORLD_TO_PHYSX + m_Offset.z
+    );
+    m_Controller->setPosition(p);
+}

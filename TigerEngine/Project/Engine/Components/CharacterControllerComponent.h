@@ -100,6 +100,8 @@ public:
     void SetLayer(CollisionLayer layer);
     CollisionLayer GetLayer() const { return m_Layer; }
 
+    void Teleport(const Vector3& pos);
+
 private:
     // void ApplyFilter();
 };
