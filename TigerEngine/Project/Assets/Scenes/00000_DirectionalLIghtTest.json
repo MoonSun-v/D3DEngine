@@ -1220,7 +1220,17 @@
           "Decal": {
             "properties": {
               "DecalType": "TextureMap",
-              "TexturePath": "..\\Assets\\Resource\\DB2X2_L01.png"
+              "Offset": [
+                0.0,
+                0.0
+              ],
+              "Opacity": 1.0,
+              "TexturePath": "..\\Assets\\Resource\\Decals\\Blood_Decals_A.tga",
+              "Tiling": [
+                1.0,
+                1.0
+              ],
+              "UpThreshold": 0.8999999761581421
             },
             "type": "Decal"
           },

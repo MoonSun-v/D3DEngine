@@ -28,7 +28,7 @@ void DecalPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queue
     context->IASetInputLayout(sm.inputLayout_Position.Get());
 
     // DSS - Stencil Test(ground)
-    const UINT stencilRef = 0x01;          // Stencil Reference Value
+    const UINT stencilRef = 0x01;   // Stencil Reference Value
     context->OMSetDepthStencilState(sm.groundTestDSS.Get(), stencilRef);
 
     // Shader
@@ -46,6 +46,13 @@ void DecalPass::Execute(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queue
     // Blend State
     float blendFactor[4] = { 0,0,0,0 }; UINT sampleMask = 0xffffffff;
     context->OMSetBlendState(sm.alphaBlendState.Get(), blendFactor, sampleMask);
+
+    // CB - Transform
+    auto view = cam->GetView(); auto projection = cam->GetProjection();
+    sm.transformCBData.view = XMMatrixTranspose(view);
+    sm.transformCBData.projection = XMMatrixTranspose(projection);
+    sm.transformCBData.invViewProjection = XMMatrixTranspose(XMMatrixInverse(nullptr, view * projection));
+    context->UpdateSubresource(sm.transformCB.Get(), 0, nullptr, &sm.transformCBData, 0, 0);
 
     // Render
     auto decals = DecalSystem::Instance().GetComponents();
