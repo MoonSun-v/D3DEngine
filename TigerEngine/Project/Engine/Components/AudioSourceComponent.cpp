@@ -12,6 +12,7 @@ RTTR_REGISTRATION
         .property("Volume", &AudioSourceComponent::GetVolume, &AudioSourceComponent::SetVolume)
         .property("Loop", &AudioSourceComponent::GetLoop, &AudioSourceComponent::SetLoop)
         .property("Pitch", &AudioSourceComponent::GetPitch, &AudioSourceComponent::SetPitch)
+        .property("ChannelGroup", &AudioSourceComponent::GetChannelGroup, &AudioSourceComponent::SetChannelGroup)
         .property("MinDistance", &AudioSourceComponent::GetMinDistance, &AudioSourceComponent::SetMinDistance)
         .property("MaxDistance", &AudioSourceComponent::GetMaxDistance, &AudioSourceComponent::SetMaxDistance);
 }
@@ -46,7 +47,7 @@ nlohmann::json AudioSourceComponent::Serialize()
     {
         std::string propName = prop.get_name().to_string();
         rttr::variant value = prop.get_value(*this);
-        if (value.is_type<std::string>() && propName == "ClipId")
+        if (value.is_type<std::string>() && (propName == "ClipId" || propName == "ChannelGroup"))
         {
             datas["properties"][propName] = value.get_value<std::string>();
         }
@@ -88,6 +89,10 @@ void AudioSourceComponent::Deserialize(nlohmann::json data)
     {
         m_Pitch = propData["Pitch"].get<float>();
     }
+    if (propData.contains("ChannelGroup"))
+    {
+        m_ChannelGroup = propData["ChannelGroup"].get<std::string>();
+    }
     if (propData.contains("MinDistance"))
     {
         m_MinDistance = propData["MinDistance"].get<float>();
@@ -99,16 +104,13 @@ void AudioSourceComponent::Deserialize(nlohmann::json data)
 
     if (!m_ClipId.empty())
     {
-        auto clip = AudioManager::Instance().GetOrCreateClip(m_ClipId);
-        if (clip)
-        {
-            m_Source.SetClip(std::move(clip));
-        }
+        SetClipId(m_ClipId);
     }
 
-    m_Source.SetVolume(m_Volume);
+    SetVolume(m_Volume);
     m_Source.SetLoop(m_Loop);
     m_Source.SetPitch(m_Pitch);
+    SetChannelGroup(m_ChannelGroup);
     m_Source.Set3DMinMaxDistance(m_MinDistance, m_MaxDistance);
 }
 
@@ -150,6 +152,17 @@ void AudioSourceComponent::SetClipId(const std::string& id)
         m_Source.SetClip(std::move(clip));
     }
 
+    if (m_ChannelGroup.empty())
+    {
+        if (const auto* entry = AudioManager::Instance().GetEntry(m_ClipId))
+        {
+            if (!entry->group.empty())
+            {
+                SetChannelGroup(entry->group);
+            }
+        }
+    }
+
 }
 
 bool AudioSourceComponent::GetLoop() const
@@ -175,6 +188,10 @@ float AudioSourceComponent::GetVolume() const
 
 void AudioSourceComponent::SetVolume(float volume)
 {
+    if (volume < 0.0f)
+    {
+        volume = 0.0f;
+    }
     m_Volume = volume;
     m_Source.SetVolume(volume);
 }
@@ -188,6 +205,19 @@ void AudioSourceComponent::SetPitch(float pitch)
 {
     m_Pitch = pitch;
     m_Source.SetPitch(pitch);
+}
+
+const std::string& AudioSourceComponent::GetChannelGroup() const
+{
+    return m_ChannelGroup;
+}
+
+void AudioSourceComponent::SetChannelGroup(const std::string& name)
+{
+    m_ChannelGroup = name;
+    auto& system = AudioManager::Instance().GetSystem();
+    FMOD::ChannelGroup* group = system.GetOrCreateChannelGroup(m_ChannelGroup);
+    m_Source.SetChannelGroup(group);
 }
 
 float AudioSourceComponent::GetMinDistance() const
