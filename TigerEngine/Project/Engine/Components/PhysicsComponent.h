@@ -49,6 +49,7 @@ public:
 
 public:
     void OnInitialize() override;
+    void OnStart() override;
 
 public:
     Transform* transform = nullptr;
