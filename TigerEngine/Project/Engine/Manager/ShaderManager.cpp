@@ -18,6 +18,11 @@ void ShaderManager::Init(const ComPtr<ID3D11Device>& dev, const ComPtr<ID3D11Dev
 
     CreateInputLayoutShader(dev, ctx);
     CreateCB(dev);
+
+#if _DEBUG
+    CreatePickingGBufferTex(dev, width, height);
+    CreatePickingDSV(dev, width, height);
+#endif
 }
 
 
@@ -46,17 +51,18 @@ void ShaderManager::CreateDSS(const ComPtr<ID3D11Device>& dev)
         HR_T(dev->CreateDepthStencilState(&dsDesc, depthTestOnlyDSS.GetAddressOf()));
     }
 
-    // create DSS (depth test only / stencil write on (stencil test ALWAYS))
-    // Light Volume Stencil Pass
+    // create DSS 
+    // Ground Geometry Pass - ground Draw (0x01)
+    // (depth test + write / stencil write on (stencil test ALWAYS))
     {
         D3D11_DEPTH_STENCIL_DESC dsDesc = {};
-        dsDesc.DepthEnable = TRUE;                              // Depth Test ON                          
-        dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;    // 버퍼 기록 x        
-        dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;         // 라이트 볼륨 표면이 씬 표면보다 앞이거나 같으면 통과    
+        dsDesc.DepthEnable = TRUE;                              // 깊이 테스트 o  
+        dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;     // 버퍼 기록 o
+        dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;         
 
         dsDesc.StencilEnable = TRUE;        // Stencil Test ON
-        dsDesc.StencilReadMask = 0xFF;
-        dsDesc.StencilWriteMask = 0xFF;     // Write ON
+        dsDesc.StencilReadMask = 0x01;
+        dsDesc.StencilWriteMask = 0x01;     // Write ON
 
         // Front Face
         dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;       // Stencil Test 무조건 통과
@@ -67,19 +73,20 @@ void ShaderManager::CreateDSS(const ComPtr<ID3D11Device>& dev)
         // Back Face (동일)
         dsDesc.BackFace = dsDesc.FrontFace;
 
-        HR_T(dev->CreateDepthStencilState(&dsDesc, depthTestStencilWriteDSS.GetAddressOf()));
+        HR_T(dev->CreateDepthStencilState(&dsDesc, groundDrawDSS.GetAddressOf()));
     }
 
-    // create DSS (stencil test only)
-    // Llight Volume Light Pass
+    // create DSS 
+    // Decal Pass - ground Test (0x01)
+    // depth test / stencil test
     {
         D3D11_DEPTH_STENCIL_DESC dsDesc = {};
-        dsDesc.DepthEnable = FALSE;                                 // Depth Test OFF
-        dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-        dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+        dsDesc.DepthEnable = TRUE;                                 // Depth Test ON
+        dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;       //
+        dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
         dsDesc.StencilEnable = TRUE;       // Stencil Test ON
-        dsDesc.StencilReadMask = 0xFF;
+        dsDesc.StencilReadMask = 0x01;
         dsDesc.StencilWriteMask = 0x00;    // Write OFF
 
         // Front Face
@@ -91,10 +98,57 @@ void ShaderManager::CreateDSS(const ComPtr<ID3D11Device>& dev)
         // Back Face (동일)
         dsDesc.BackFace = dsDesc.FrontFace;
 
-        HR_T(dev->CreateDepthStencilState(
-            &dsDesc,
-            stencilTestOnlyDSS.GetAddressOf()
-        ));
+        HR_T(dev->CreateDepthStencilState(&dsDesc, groundTestDSS.GetAddressOf()));
+    }
+
+    // create DSS 
+    // Light Volume Stencil Pass - lightingVolume Draw (0x02)
+    // (depth test only / stencil write on (stencil test ALWAYS))
+    {
+        D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+        dsDesc.DepthEnable = TRUE;                              // Depth Test ON                          
+        dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;    // 버퍼 기록 x        
+        dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;         // 라이트 볼륨 표면이 씬 표면보다 앞이거나 같으면 통과    
+
+        dsDesc.StencilEnable = TRUE;        // Stencil Test ON
+        dsDesc.StencilReadMask = 0x02;
+        dsDesc.StencilWriteMask = 0x02;     // Write ON
+
+        // Front Face
+        dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;       // Stencil Test 무조건 통과
+        dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;       // 변경 x
+        dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;  // 변경 x
+        dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;    // Depth, Stencil 통과시 Ref로 Stencil 값 변경
+
+        // Back Face (동일)
+        dsDesc.BackFace = dsDesc.FrontFace;
+
+        HR_T(dev->CreateDepthStencilState(&dsDesc, lightingVolumeDrawDSS.GetAddressOf()));
+    }
+
+    // create DSS 
+    // Llight Volume Light Pass - lightingVolume Test (0x02)
+    // stencil test only
+    {
+        D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+        dsDesc.DepthEnable = FALSE;                                 // Depth Test OFF
+        dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+        dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+
+        dsDesc.StencilEnable = TRUE;       // Stencil Test ON
+        dsDesc.StencilReadMask = 0x02;
+        dsDesc.StencilWriteMask = 0x00;    // Write OFF
+
+        // Front Face
+        dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;      // stencil == 1(Ref)인 픽셀만 통과
+        dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+        dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+        dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+
+        // Back Face (동일)
+        dsDesc.BackFace = dsDesc.FrontFace;
+
+        HR_T(dev->CreateDepthStencilState(&dsDesc, lightingVolumeTestDSS.GetAddressOf()));
     }
 
     // create DSS (all disable)
@@ -631,6 +685,37 @@ void ShaderManager::CreateInputLayoutShader(const ComPtr<ID3D11Device>& dev, con
         SAFE_RELEASE(pixelShaderBuffer);
     }
 
+#if _DEBUG
+    CreatePickingPS(dev);
+#endif
+    //---------------------------
+    // ForwardTransparent PS
+    {
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\..\\Engine\\Shaders\\PS_ForwardTransparent.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+            pixelShaderBuffer->GetBufferSize(), NULL, &PS_ForwardTransparent));
+        SAFE_RELEASE(pixelShaderBuffer);
+    }
+
+    //---------------------------
+    // Decal VS, PS
+    {
+        ID3D10Blob* vertexShaderBuffer = nullptr;
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\..\\Engine\\Shaders\\VS_Decal.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "vs_5_0", &vertexShaderBuffer));
+        HR_T(dev->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(),
+            vertexShaderBuffer->GetBufferSize(), NULL, &VS_Decal));
+        SAFE_RELEASE(vertexShaderBuffer);
+
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        std::wstring path2 = PathHelper::GetExeDir().wstring() + L"\\..\\..\\Engine\\Shaders\\PS_Decal.hlsl";
+        HR_T(CompileShaderFromFile(path2.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+            pixelShaderBuffer->GetBufferSize(), NULL, &PS_Decal));
+        SAFE_RELEASE(pixelShaderBuffer);
+    }
 }
 
 void ShaderManager::CreateCB(const ComPtr<ID3D11Device>& dev)
@@ -724,6 +809,20 @@ void ShaderManager::CreateCB(const ComPtr<ID3D11Device>& dev)
         constBuffer_Desc.CPUAccessFlags = 0;
         HR_T(dev->CreateBuffer(&constBuffer_Desc, nullptr, &effectCB));
     }
+
+    // 10. Decal CB
+    {
+        D3D11_BUFFER_DESC constBuffer_Desc = {};
+        constBuffer_Desc.Usage = D3D11_USAGE_DEFAULT;
+        constBuffer_Desc.ByteWidth = sizeof(DecalCB);
+        constBuffer_Desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        constBuffer_Desc.CPUAccessFlags = 0;
+        HR_T(dev->CreateBuffer(&constBuffer_Desc, nullptr, &decalCB));
+    }
+  
+#if _DEBUG
+    CreatePickingCB(dev);
+#endif
 }
 
 void ShaderManager::CreateBackBufferResource(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight)
@@ -731,8 +830,11 @@ void ShaderManager::CreateBackBufferResource(const ComPtr<ID3D11Device>& dev, in
     CreateHDRResource(dev, screenWidth, screenHeight);
     CreateGbufferResource(dev, screenWidth, screenHeight);
     CreateBloomResource(dev, screenWidth, screenHeight);
+#if _DEBUG
+    CreatePickingGBufferTex(dev, screenWidth, screenHeight);
+    CreatePickingDSV(dev, screenWidth, screenHeight);
+#endif
 }
-
 
 // [ Util Funcs ] --------------------------------------------------------------
 void ShaderManager::CreateRTTex_RTV_SRV(const ComPtr<ID3D11Device>& device, int w, int h, DXGI_FORMAT fomat,
@@ -822,4 +924,72 @@ void ShaderManager::ReleaseBackBufferResources()
     sceneHDRTex.Reset();
     sceneHDRRTV.Reset();
     sceneHDRSRV.Reset();
+
+#if _DEBUG
+    pickingSRV.Reset();
+    pickingRTV.Reset();
+    pickingTex.Reset();
+#endif
 }
+
+#if _DEBUG
+void ShaderManager::CreatePickingGBufferTex(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight)
+{
+    CreateRTTex_RTV_SRV(dev,
+        screenWidth,
+        screenHeight,
+        DXGI_FORMAT_R32_UINT,
+        pickingTex.ReleaseAndGetAddressOf(),
+        pickingRTV.ReleaseAndGetAddressOf(),
+        pickingSRV.ReleaseAndGetAddressOf());
+}
+void ShaderManager::CreatePickingCB(const ComPtr<ID3D11Device>& dev)
+{
+    // 9. Effect CB
+    {
+        D3D11_BUFFER_DESC constBuffer_Desc{};
+        constBuffer_Desc.Usage = D3D11_USAGE_DYNAMIC;
+        constBuffer_Desc.ByteWidth = sizeof(PickingCB);
+        constBuffer_Desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        constBuffer_Desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        HR_T(dev->CreateBuffer(&constBuffer_Desc, nullptr, &pickingCB));
+    }
+}
+void ShaderManager::CreatePickingPS(const ComPtr<ID3D11Device>& dev)
+{
+    //---------------------------
+    // Picking PS
+    {
+        ID3D10Blob* pixelShaderBuffer = nullptr;
+        std::wstring path = PathHelper::GetExeDir().wstring() + L"\\..\\..\\Engine\\Shaders\\PS_Picking.hlsl";
+        HR_T(CompileShaderFromFile(path.c_str(), "main", "ps_5_0", &pixelShaderBuffer));
+        HR_T(dev->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(),
+            pixelShaderBuffer->GetBufferSize(), NULL, PS_Picking.GetAddressOf()));
+    }
+}
+void ShaderManager::CreatePickingDSV(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight)
+{
+    // Depth texture (separate from pickingTex)
+    D3D11_TEXTURE2D_DESC td{};
+    td.Width = screenWidth;
+    td.Height = screenHeight;
+    td.MipLevels = 1;
+    td.ArraySize = 1;
+    td.Format = DXGI_FORMAT_D32_FLOAT;              // depth-only is fine for picking
+    td.SampleDesc.Count = 1;
+    td.SampleDesc.Quality = 0;
+    td.Usage = D3D11_USAGE_DEFAULT;
+    td.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    td.CPUAccessFlags = 0;
+    td.MiscFlags = 0;
+
+    HR_T(dev->CreateTexture2D(&td, nullptr, pickingDepthTex.GetAddressOf()));
+
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsv{};
+    dsv.Format = td.Format;
+    dsv.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    dsv.Texture2D.MipSlice = 0;
+
+    HR_T(dev->CreateDepthStencilView(pickingDepthTex.Get(), &dsv, pickingDSV.GetAddressOf()));
+}
+#endif

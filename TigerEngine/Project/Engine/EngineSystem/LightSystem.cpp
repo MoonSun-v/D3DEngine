@@ -17,19 +17,9 @@ void LightSystem::UnRegister(Light* comp)
     }
 }
 
-Vector3 LightSystem::GetSunDirection()
+void LightSystem::Clear()
 {
-    Vector3 lightDir;
-    for (auto& light : comps)
-    {
-        if (light->isSunLight)
-        {
-            lightDir = light->direction;
-            break;
-        }
-    }
-
-    return lightDir;
+    comps.clear();
 }
 
 std::vector<Light*> LightSystem::GetComponents()
@@ -37,7 +27,23 @@ std::vector<Light*> LightSystem::GetComponents()
     return comps;
 }
 
-void LightSystem::Clear()
+Vector3 LightSystem::GetSunDirection()
 {
-    comps.clear();
+    Vector3 lightDir;
+    bool foundSunLight = false;
+
+    for (auto& light : comps)
+    {
+        if (light->isSunLight)
+        {
+            lightDir = light->direction;
+            foundSunLight = true;
+            break;
+        }
+    }
+
+    if (!foundSunLight)
+        lightDir = Vector3(0, 0, 1);       // 임시
+
+    return lightDir;
 }

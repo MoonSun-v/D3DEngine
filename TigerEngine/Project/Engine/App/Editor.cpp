@@ -7,6 +7,7 @@
 #include <commdlg.h>
 #include "imguiFileDialog/ImGuiFileDialog.h"
 #include "../Components/FBXData.h"
+#include "../Components/Decal.h"
 #include "../Object/GameObject.h"
 #include "../Util/DebugDraw.h"
 #include "../Manager/WorldManager.h"
@@ -14,8 +15,11 @@
 #include "../EngineSystem/PlayModeSystem.h"
 #include "../Components/Camera.h"
 #include "../EngineSystem/PhysicsSystem.h"
+#include "../Components/CharacterControllerComponent.h"
 
 #include "Datas/ReflectionMedtaDatas.hpp"
+
+#include "../Components/FBXRenderer.h"
 
 // 사용자 정의 미리 등록 (SimpleMath 등)
 RTTR_REGISTRATION
@@ -77,6 +81,8 @@ void Editor::Initialize(const ComPtr<ID3D11Device>& device, const ComPtr<ID3D11D
 
     this->device = device;
     this->context = deviceContext;
+
+    CreatePickingStagingTex();
 }
 
 void Editor::Update()
@@ -87,6 +93,8 @@ void Editor::Update()
         if(obj->GetName() == "FreeCamera") return;        
         obj->UpdateAABB();
      });    
+
+    CheckObjectPicking();
 }
 
 void Editor::Render(HWND &hwnd)
@@ -98,6 +106,13 @@ void Editor::Render(HWND &hwnd)
     RenderCameraFrustum();
     RenderWorldSettings();
     RenderShadowMap();
+
+
+    ImGui::Begin("DebugPickItem");
+    {
+        ImGui::Text("%d", currPickedID);
+    }
+    ImGui::End();
 }
 
 void Editor::RenderEnd(const ComPtr<ID3D11DeviceContext>& context)
@@ -451,15 +466,40 @@ void Editor::RenderComponentInfo(std::string compName, T* comp)
             {
                 DirectX::SimpleMath::Vector3 rot = value.get_value<DirectX::SimpleMath::Vector3>();
                 DirectX::SimpleMath::Vector3 eulerDegree = { XMConvertToDegrees(rot.x), XMConvertToDegrees(rot.y),  XMConvertToDegrees(rot.z) };
-                ImGui::DragFloat3("Rotation", &eulerDegree.x, 0.1f);
-                rot = { XMConvertToRadians(eulerDegree.x), XMConvertToRadians(eulerDegree.y),  XMConvertToRadians(eulerDegree.z) };
-                prop.set_value(*comp, rot);
+
+                if (ImGui::DragFloat3("Rotation", &eulerDegree.x, 0.1f))
+                {
+                    rot = { XMConvertToRadians(eulerDegree.x), XMConvertToRadians(eulerDegree.y), XMConvertToRadians(eulerDegree.z) };
+
+                    prop.set_value(*comp, rot);
+
+                    GameObject* owner = comp->GetOwner();
+                    if (auto phys = owner->GetComponent<PhysicsComponent>())
+                    {
+                        phys->SyncToPhysics();
+                    }
+                }
+
             }
             else if (value.is_type<DirectX::SimpleMath::Vector3>())
             {
                 DirectX::SimpleMath::Vector3 vec = value.get_value<DirectX::SimpleMath::Vector3>();
-                ImGui::DragFloat3(name.c_str(), &vec.x, 0.1f);
-                prop.set_value(*comp, vec);
+
+                // [ Physics, CCT 컴포넌트 Transform 동기화 ]
+                if (ImGui::DragFloat3(name.c_str(), &vec.x, 0.1f))
+                {
+                    prop.set_value(*comp, vec);
+
+                    GameObject* owner = comp->GetOwner();
+                    if (auto phys = owner->GetComponent<PhysicsComponent>())
+                    {
+                        phys->SyncToPhysics();
+                    }
+                    if (auto cct = owner->GetComponent<CharacterControllerComponent>())
+                    {
+                        cct->Teleport(vec); // setPosition 래핑 함수
+                    }
+                }
             }
         } 
     }
@@ -530,6 +570,49 @@ void Editor::RenderComponentInfo(std::string compName, T* comp)
             }
         }        
     }
+    else if (compName == "Decal")
+    {
+        for (auto& prop : t.get_properties())
+        {
+            rttr::variant value = prop.get_value(*comp);   
+            std::string name = prop.get_name().to_string();
+            if (value.is_type<std::string>() && name == "TexturePath")
+            {
+                std::string path = value.get_value<std::string>();
+
+                // 현재 경로 표시   
+                ImGui::Text("Current Path: %s", path.c_str());
+
+                // 탐색기 열기 버튼
+                if (ImGui::Button("Browse"))
+                {
+                    IGFD::FileDialogConfig config;
+                    config.path = "../";
+                    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".png,.tga", config);
+                }
+                // display
+                if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+                {
+                    if (ImGuiFileDialog::Instance()->IsOk())
+                    { // action if OK
+                        std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();     // 절대 경로 + 파일 이름
+                        std::string currFilePath = ImGuiFileDialog::Instance()->GetCurrentFileName();   // 진짜 파일 이름만 뜸
+                        std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();           // 절대 경로만 뜸
+                        std::string fileFilterPath = ImGuiFileDialog::Instance()->GetCurrentFilter();   // 확장자만 나옴
+
+                        std::filesystem::path relativePath = std::filesystem::relative(filePathName);
+                        std::string relativePathStr = relativePath.string();
+                        // action
+
+                        Decal* decalComp = dynamic_cast<Decal*>(comp);
+                        decalComp->ChangeData(relativePathStr);
+                    }
+                    ImGuiFileDialog::Instance()->Close();
+                } 
+            }
+        }
+        ReadVariants(*comp);
+    }
     else
     {
         ImGui::PushID(comp);
@@ -598,6 +681,7 @@ void Editor::RenderDebugAABBDraw()
     SceneSystem::Instance().GetCurrentScene()->ForEachGameObject([&](GameObject* gameObject)
         {
             if (gameObject->IsDestory()) return;
+            if (gameObject->GetComponent<FBXRenderer>() != nullptr) return;
 
             XMVECTOR color = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
             DebugDraw::Draw(DebugDraw::g_Batch.get(), gameObject->GetAABB(), color);
@@ -687,6 +771,60 @@ void Editor::LoadScene(HWND &hwnd)
     }
 }
 
+void Editor::CreatePickingStagingTex()
+{
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = screenWidth;
+    desc.Height = screenHeight;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_R32_UINT;
+    desc.SampleDesc.Count = 1; 
+    desc.SampleDesc.Quality = 0;
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    desc.MiscFlags = 0;
+
+    HR_T(device->CreateTexture2D(&desc, nullptr, coppedPickingTex.ReleaseAndGetAddressOf()));
+}
+
+void Editor::CheckObjectPicking()
+{
+    isMouseLeftClick = false;
+    auto mouse = DirectX::Mouse::Get().GetState();
+    static bool lastMouseLeft = false;
+
+    bool currMouseLeft = mouse.leftButton;
+    isMouseLeftClick = (!lastMouseLeft && currMouseLeft);
+    lastMouseLeft = currMouseLeft;
+
+    mouseXY = { mouse.x, mouse.y };
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    bool allowWorldPick =
+        !io.WantCaptureMouse       // ImGui가 마우스를 쓰는 중이면 차단
+        && !io.WantTextInput;      // (선택) 텍스트 입력 중이면 차단
+
+    if (isMouseLeftClick && allowWorldPick && !isAABBPicking)
+    {
+        auto& sm = ShaderManager::Instance();
+        context->CopyResource(coppedPickingTex.Get(), sm.pickingTex.Get()); // 기록된 값 가져오기
+
+        D3D11_MAPPED_SUBRESOURCE mapped;
+        context->Map(coppedPickingTex.Get(), 0, D3D11_MAP_READ, 0, &mapped); // Map : 하위 리소스에 대한 포인터 가져오기
+
+        uint32_t* row = (uint32_t*)((uint8_t*)mapped.pData + mouseXY.y * mapped.RowPitch); // 마우스값의 row 
+        currPickedID = row[mouseXY.x] - 1;	// x, y 좌표에 있는 ID 찾기
+
+        context->Unmap(coppedPickingTex.Get(), 0);
+
+        auto scene = SceneSystem::Instance().GetCurrentScene();
+        SelectObject(scene->GetGameObjectByIndex(static_cast<int>(currPickedID + 1)));
+    }
+}
+
 void Editor::ReadVariants(rttr::variant& var)
 {
     ReadVariants(rttr::instance(var));
@@ -742,6 +880,12 @@ void Editor::ReadVariants(rttr::instance inst)
             if (ImGui::Checkbox(name.c_str(), &v))
                 prop.set_value(inst, v);
         }
+        else if (value.is_type<Vector2>())
+        {
+            Vector2 vec = value.get_value<SimpleMath::Vector2>();
+            if (ImGui::DragFloat2(name.c_str(), &vec.x, 0.1f))
+                prop.set_value(inst, vec);
+        }
         else if (value.is_type<DirectX::SimpleMath::Vector3>())
         {
             auto vec = value.get_value<DirectX::SimpleMath::Vector3>();
@@ -759,11 +903,11 @@ void Editor::ReadVariants(rttr::instance inst)
 
 void Editor::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::KeyboardStateTracker &KeyTracker, const Mouse::State &MouseState, const Mouse::ButtonStateTracker &MouseTracker)
 {
-    // check picking gameOject
-    
-    if(MouseTracker.leftButton == Mouse::ButtonStateTracker::PRESSED)
+    isAABBPicking = false;
+
+    if (MouseTracker.leftButton == Mouse::ButtonStateTracker::PRESSED)
     {
-        if(!ImGui::GetIO().WantCaptureMouse)
+        if (!ImGui::GetIO().WantCaptureMouse)
         {
             // 마우스 스크린 좌표를 [0, 1] -> [-1, 1] 로 변경
             float x = (2.0f * MouseState.x) / screenWidth - 1.0f;
@@ -780,7 +924,7 @@ void Editor::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::Key
             // NDC -> World
             Vector4 nearWorld = Vector4::Transform(nearNDC, invViewProj);
             Vector4 farWorld = Vector4::Transform(farNDC, invViewProj);
-            
+
             // 투영 행렬은 원근을 만들기 때문에 perpective divide로 월드 좌표를 얻는다.
             nearWorld /= nearWorld.w;
             farWorld /= farWorld.w;
@@ -793,7 +937,11 @@ void Editor::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::Key
             float outHitDistance = 0.0f;
             auto hitObject = SceneSystem::Instance().GetCurrentScene()->RayCastGameObject(ray, &outHitDistance);
 
-            SelectObject(hitObject);
+            if (hitObject != nullptr && hitObject->GetComponent<FBXRenderer>() == nullptr)
+            {
+                SelectObject(hitObject);
+                isAABBPicking = true;
+            }
         }
     }
 }

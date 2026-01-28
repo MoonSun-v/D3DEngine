@@ -2,6 +2,7 @@
 #include "../Util/Animator.h"
 #include "../Util/AnimationState.h"
 #include "../Util/AnimatorParameter.h"
+#include "../EngineSystem/AnimationSystem.h"
 
 // ----------------------------------------------------
 // [ AnimationController ] 
@@ -12,6 +13,8 @@
 
 class AnimationController : public Component
 {
+    RTTR_ENABLE(Component)
+
 public:
     Animator AnimatorInstance; // 실제 애니메이션 재생기
     AnimatorParameter Params;
@@ -28,8 +31,17 @@ public:
 
     AnimationState* GetCurrentState() const { return CurrentState; }
 
+    const Animation* FindClip(const std::string& name);
 
-public: // [ 디버그용 ]
+    // AnimationSystem 등록/해제
+    void OnStart() override;
+    void OnDestory() override;
+
+    nlohmann::json Serialize() override;
+    void Deserialize(nlohmann::json data) override;
+
+
+public: // [ 디버그용 ] ---------- 아마 안쓰려나..? -------------- 
 
     // States 읽기용 getter
     const std::unordered_map<std::string, std::unique_ptr<AnimationState>>& GetStates() const

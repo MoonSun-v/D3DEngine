@@ -46,8 +46,12 @@ struct FBXResourceAsset
     vector<Matrix> meshes_localMat;
     vector<Matrix> meshes_modelMat;
 
-    // AABB Debug Draw
+    // AABB Debug Draw -> NOTE : Mesh 없는 GameObject만 사용
 	Vector3 boxMin { FLT_MAX, FLT_MAX, FLT_MAX };
 	Vector3 boxMax{};
 	Vector3 boxCenter{};
+
+    // [ 루트 노드의 Transform ]
+    // aiScene->mRootNode->mTransformation
+    Matrix rootTransform;   
 };

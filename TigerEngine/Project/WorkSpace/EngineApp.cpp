@@ -19,6 +19,8 @@
 #include "EngineSystem/PlayModeSystem.h"
 #include "EngineSystem/LightSystem.h"
 #include "EngineSystem/PhysicsSystem.h"
+#include "EngineSystem/AnimationSystem.h"
+#include "EngineSystem/DecalSystem.h"
 
 #include "Components/FreeCamera.h"
 #include "Components/FBXData.h"
@@ -59,6 +61,8 @@ bool EngineApp::OnInitialize()
     sm.depthStencilView = dxRenderer->GetDepthStencilView();
     sm.depthStencilReadOnlyView = dxRenderer->GetDepthStencilReadOnlyView();
     sm.depthSRV = dxRenderer->GetDepthSRV();
+    sm.device = dxRenderer->GetDevice();
+    sm.deviceContext = dxRenderer->GetDeviceContext();
 
 
     renderQueue = std::make_unique<RenderQueue>();
@@ -91,16 +95,20 @@ bool EngineApp::OnInitialize()
 	// NOTE : 랜더링하는 순서대로 추가 할 것
     shadowPass = std::make_unique<ShadowPass>();
     geometryPass = std::make_unique<GeometryPass>();
+    decalPass = std::make_unique<DecalPass>();
     lightPass = std::make_unique<LightPass>();
     skyboxPass = std::make_unique<SkyboxPass>();
+    forwardTransparentPass = std::make_unique<ForwardTransparentPass>();
     bloomPass = std::make_unique<BloomPass>();
     postProcessPass = std::make_unique<PostProcessPass>();
     frustumPass = std::make_unique<FrustumPass>();
 
     shadowPass->Init();
     geometryPass->Init();
+    decalPass->Init(dxRenderer->GetDevice());
     lightPass->Init(dxRenderer->GetDevice());
     skyboxPass->Init(dxRenderer->GetDevice());
+    forwardTransparentPass->Init();
     bloomPass->Init();
     postProcessPass->Init();
     frustumPass->Init(dxRenderer->GetDevice(), dxRenderer->GetDeviceContext());
@@ -136,6 +144,7 @@ void EngineApp::OnUpdate()
 	WorldManager::Instance().Update(dxRenderer->GetDeviceContext(), freeCam, clientWidth, clientHeight);
 	SceneSystem::Instance().UpdateScene(GameTimer::Instance().DeltaTime());
     AudioManager::Instance().Update();
+    AnimationSystem::Instance().Update(GameTimer::Instance().DeltaTime());
 
 #if _DEBUG
 	editor->Update();
@@ -166,6 +175,7 @@ void EngineApp::OnRender()
         context->VSSetConstantBuffers(6, 1, sm.postProcessCB.GetAddressOf());
         context->VSSetConstantBuffers(7, 1, sm.bloomCB.GetAddressOf());
         context->VSSetConstantBuffers(8, 1, sm.effectCB.GetAddressOf());
+        context->VSSetConstantBuffers(10, 1, sm.decalCB.GetAddressOf());
 
         context->PSSetConstantBuffers(0, 1, sm.frameCB.GetAddressOf());
         context->PSSetConstantBuffers(1, 1, sm.transformCB.GetAddressOf());
@@ -176,14 +186,17 @@ void EngineApp::OnRender()
         context->PSSetConstantBuffers(6, 1, sm.postProcessCB.GetAddressOf());
         context->PSSetConstantBuffers(7, 1, sm.bloomCB.GetAddressOf());
         context->PSSetConstantBuffers(8, 1, sm.effectCB.GetAddressOf());
+        context->PSSetConstantBuffers(10, 1, sm.decalCB.GetAddressOf());
     }
 
     if (PlayModeSystem::Instance().IsPlaying())
     {
         dxRenderer->ProcessScene(*renderQueue, *shadowPass, currCam);
         dxRenderer->ProcessScene(*renderQueue, *geometryPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *decalPass, currCam);
         dxRenderer->ProcessScene(*renderQueue, *lightPass, currCam);
         dxRenderer->ProcessScene(*renderQueue, *skyboxPass, currCam);
+        dxRenderer->ProcessScene(*renderQueue, *forwardTransparentPass, currCam);
         dxRenderer->ProcessScene(*renderQueue, *bloomPass, currCam);
         dxRenderer->ProcessScene(*renderQueue, *postProcessPass, currCam);
     }
@@ -191,8 +204,10 @@ void EngineApp::OnRender()
     {
         dxRenderer->ProcessScene(*renderQueue, *shadowPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *geometryPass, freeCam);
+        dxRenderer->ProcessScene(*renderQueue, *decalPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *lightPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *skyboxPass, freeCam);
+        dxRenderer->ProcessScene(*renderQueue, *forwardTransparentPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *bloomPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *postProcessPass, freeCam);
         dxRenderer->ProcessScene(*renderQueue, *frustumPass, freeCam);      // light cam frustum용으로 잠깐 추가
@@ -330,6 +345,7 @@ void EngineApp::ResizeResource()
     // editor 참조
     editor->GetDSV(dxRenderer->GetDepthStencilView());
     editor->GetRTV(dxRenderer->GetBackBufferRTV());
+    editor->CreatePickingStagingTex();
 #endif
 
     // Camera
@@ -392,6 +408,7 @@ void EngineApp::OnInputProcess(const Keyboard::State &KeyState, const Keyboard::
 #include "Components/AudioSourceComponent.h"
 #include "Components/PhysicsComponent.h"
 #include "Components/CharacterControllerComponent.h"
+#include "Components/AnimationController.h"
 #include "Manager/ComponentFactory.h"
 
 #include "Player/Player1.h"
@@ -413,6 +430,7 @@ void EngineApp::RegisterAllComponents()
     // ComponentFactory::Instance().Register<Player1>("Player1");
     ComponentFactory::Instance().Register<Weapon>("Weapon");
     ComponentFactory::Instance().Register<Light>("Light");
+    ComponentFactory::Instance().Register<Decal>("Decal");
 
     ComponentFactory::Instance().Register<AudioListenerComponent>("AudioListenerComponent");
     ComponentFactory::Instance().Register<AudioSourceComponent>("AudioSourceComponent");
@@ -422,5 +440,6 @@ void EngineApp::RegisterAllComponents()
     ComponentFactory::Instance().Register<CCTTest>("CCTTestScript");
     ComponentFactory::Instance().Register<CharacterControllerComponent>("CharacterControllerComponent");
     ComponentFactory::Instance().Register<PhysicsComponent>("PhysicsComponent");
+    ComponentFactory::Instance().Register<AnimationController>("AnimationController");
 }
 

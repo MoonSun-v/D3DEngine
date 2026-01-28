@@ -30,18 +30,25 @@ private:
 public:
     void CreateBackBufferResource(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight);
 
+    // device, deviceContext
+    // DX11 소유인데 쓸데가 있어서 일단 가져옴..
+    ComPtr<ID3D11Device>            device;
+    ComPtr<ID3D11DeviceContext>     deviceContext;
+
     // DX11 Base
     D3D11_VIEWPORT viewport_screen;                                  
     ComPtr<ID3D11RenderTargetView>    backBufferRTV;                 
-    ComPtr<ID3D11DepthStencilView>    depthStencilView;              
+    ComPtr<ID3D11DepthStencilView>    depthStencilView;          // [stencil buffer] bit0: ground decal mask / bit1: light volume mask  
     ComPtr<ID3D11DepthStencilView>    depthStencilReadOnlyView;      
     ComPtr<ID3D11ShaderResourceView>  depthSRV;                      
 
     // DSS
     ComPtr<ID3D11DepthStencilState>   defualtDSS;                 // depth test on + write on
     ComPtr<ID3D11DepthStencilState>   depthTestOnlyDSS;           // depth test only
-    ComPtr<ID3D11DepthStencilState>   depthTestStencilWriteDSS;   // depth test only / stencil write on (stencil test ALWAYS)
-    ComPtr<ID3D11DepthStencilState>   stencilTestOnlyDSS;         // stencil test only
+    ComPtr<ID3D11DepthStencilState>   groundDrawDSS;              // depth test on + write on / stencil write on (0x01)
+    ComPtr<ID3D11DepthStencilState>   groundTestDSS;              // depth test / stencil test (0x01)
+    ComPtr<ID3D11DepthStencilState>   lightingVolumeDrawDSS;      // depth test only / stencil write on (0x02)
+    ComPtr<ID3D11DepthStencilState>   lightingVolumeTestDSS;      // stencil test only (0x02)
     ComPtr<ID3D11DepthStencilState>   disableDSS;                 // all disable
 
     // RS
@@ -118,6 +125,7 @@ public:
     ComPtr<ID3D11VertexShader> VS_FullScreen;
     ComPtr<ID3D11VertexShader> VS_LightVolume;
     ComPtr<ID3D11VertexShader> VS_Effect;
+    ComPtr<ID3D11VertexShader> VS_Decal;
 
     // Pixel Shader
     ComPtr<ID3D11PixelShader> PS_ShadowDepth;
@@ -125,10 +133,12 @@ public:
     ComPtr<ID3D11PixelShader> PS_DeferredLighting;
     ComPtr<ID3D11PixelShader> PS_Effect;
     ComPtr<ID3D11PixelShader> PS_Skybox;
+    ComPtr<ID3D11PixelShader> PS_ForwardTransparent;
     ComPtr<ID3D11PixelShader> PS_BloomPrefilter;
     ComPtr<ID3D11PixelShader> PS_BloomDownsampleBlur;
     ComPtr<ID3D11PixelShader> PS_BloomUpsampleCombine;
     ComPtr<ID3D11PixelShader> PS_PostProcess;
+    ComPtr<ID3D11PixelShader> PS_Decal;
 
     // CB buffer
     ComPtr<ID3D11Buffer> frameCB;
@@ -140,6 +150,7 @@ public:
     ComPtr<ID3D11Buffer> postProcessCB;
     ComPtr<ID3D11Buffer> bloomCB;
     ComPtr<ID3D11Buffer> effectCB;
+    ComPtr<ID3D11Buffer> decalCB;
 
     // CB Data
     FrameCB         frameCBData;
@@ -151,7 +162,24 @@ public:
     PostProcessCB   postProcessCBData;
     BloomCB         bloomCBData;
     EffectCB        effectCBData;
+    DecalCB         decalCBData;
 
+    // Debug Picking 
+#if _DEBUG
+    ComPtr<ID3D11ShaderResourceView>    pickingSRV;
+    ComPtr<ID3D11RenderTargetView>      pickingRTV;
+    ComPtr<ID3D11Texture2D>             pickingTex;         // ID 기록 텍스처
+    ComPtr<ID3D11Buffer>                pickingCB;          // ID 획득용 상수버퍼
+    ComPtr<ID3D11PixelShader>           PS_Picking;
+    ComPtr<ID3D11Texture2D>             pickingDepthTex;
+    ComPtr<ID3D11DepthStencilView>      pickingDSV;
+
+    // NOTE 따로 볼려고 함수 분리
+    void CreatePickingGBufferTex(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight);
+    void CreatePickingCB(const ComPtr<ID3D11Device>& dev);
+    void CreatePickingPS(const ComPtr<ID3D11Device>& dev);
+    void CreatePickingDSV(const ComPtr<ID3D11Device>& dev, int screenWidth, int screenHeight);
+#endif
 
 public:
     // Util funcs

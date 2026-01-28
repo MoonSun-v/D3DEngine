@@ -3,6 +3,7 @@
 #include "../Object/Component.h"
 #include "Datas/Mesh.h"
 #include "../Manager/FBXResourceManager.h"
+#include "AnimationController.h"
 
 class FBXData : public Component
 {
@@ -10,6 +11,7 @@ class FBXData : public Component
 public:
     void OnInitialize() override;
     void OnStart() override;
+    void OnDestory() override;
 
     std::vector<Mesh>& GetMesh();
     std::shared_ptr<FBXResourceAsset> GetFBXInfo();

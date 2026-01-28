@@ -10,7 +10,7 @@
 
 
      ** Geometry Renderer의 Renderable 객체 **
-     Model
+     Model(Opaque)
 
      
      ** G-buffer **
@@ -27,6 +27,10 @@ class GeometryPass : public IRenderPass
 private:
     // g-buffer clear color
     float clearColor[4] = { 0,0,0,1 };
+
+#if _DEBUG
+    void ExecutePickingPass(ComPtr<ID3D11DeviceContext>& context, RenderQueue& queue, Camera* cam);
+#endif
 
 public:
     void Init() {};
