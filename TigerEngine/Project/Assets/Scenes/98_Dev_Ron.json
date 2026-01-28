@@ -364,8 +364,8 @@
               "ChannelGroup": "SFX",
               "ClipId": "SFX_TestLoop1",
               "Loop": true,
-              "MaxDistance": 2000.0,
-              "MinDistance": 50.0,
+              "MaxDistance": 800.0,
+              "MinDistance": 100.0,
               "Pitch": 1.0,
               "Volume": 2.0
             },

@@ -1,6 +1,7 @@
 #include "AudioSourceComponent.h"
 
 #include "..\\Manager\\AudioManager.h"
+#include "..\\Util\\JsonHelper.h"
 #include "..\\..\\Externals\\AudioModule_FMOD\\include\\AudioClip.h"
 
 RTTR_REGISTRATION
@@ -37,81 +38,12 @@ void AudioSourceComponent::OnDestory()
 
 nlohmann::json AudioSourceComponent::Serialize()
 {
-    nlohmann::json datas;
-
-    rttr::type t = rttr::type::get(*this);
-    datas["type"] = t.get_name().to_string();
-    datas["properties"] = nlohmann::json::object();
-
-    for (auto& prop : t.get_properties())
-    {
-        std::string propName = prop.get_name().to_string();
-        rttr::variant value = prop.get_value(*this);
-        if (value.is_type<std::string>() && (propName == "ClipId" || propName == "ChannelGroup"))
-        {
-            datas["properties"][propName] = value.get_value<std::string>();
-        }
-        else if (value.is_type<float>())
-        {
-            datas["properties"][propName] = value.get_value<float>();
-        }
-        else if (value.is_type<bool>() && propName == "Loop")
-        {
-            datas["properties"][propName] = value.get_value<bool>();
-        }
-    }
-
-    return datas;
+    return JsonHelper::MakeSaveData(this);
 }
 
 void AudioSourceComponent::Deserialize(nlohmann::json data)
 {
-    if (!data.contains("properties"))
-    {
-        return;
-    }
-
-    const auto& propData = data["properties"];
-
-    if (propData.contains("ClipId"))
-    {
-        m_ClipId = propData["ClipId"].get<std::string>();
-    }
-    if (propData.contains("Volume"))
-    {
-        m_Volume = propData["Volume"].get<float>();
-    }
-    if (propData.contains("Loop"))
-    {
-        m_Loop = propData["Loop"].get<bool>();
-    }
-    if (propData.contains("Pitch"))
-    {
-        m_Pitch = propData["Pitch"].get<float>();
-    }
-    if (propData.contains("ChannelGroup"))
-    {
-        m_ChannelGroup = propData["ChannelGroup"].get<std::string>();
-    }
-    if (propData.contains("MinDistance"))
-    {
-        m_MinDistance = propData["MinDistance"].get<float>();
-    }
-    if (propData.contains("MaxDistance"))
-    {
-        m_MaxDistance = propData["MaxDistance"].get<float>();
-    }
-
-    if (!m_ClipId.empty())
-    {
-        SetClipId(m_ClipId);
-    }
-
-    SetVolume(m_Volume);
-    m_Source.SetLoop(m_Loop);
-    m_Source.SetPitch(m_Pitch);
-    SetChannelGroup(m_ChannelGroup);
-    m_Source.Set3DMinMaxDistance(m_MinDistance, m_MaxDistance);
+    JsonHelper::SetDataFromJson(this, data);
 }
 
 void AudioSourceComponent::Init(AudioSystem* system)
