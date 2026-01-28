@@ -26,30 +26,9 @@ RTTR_REGISTRATION
         //.property("isTrigger", &CharacterControllerComponent::m_IsTrigger);
 }
 
-//nlohmann::json Vec3ToJson(const Vector3& v)
-//{
-//    return nlohmann::json{
-//        {"x", v.x},
-//        {"y", v.y},
-//        {"z", v.z}
-//    };
-//}
-//
-//Vector3 JsonToVec3(const nlohmann::json& j, const Vector3& fallback)
-//{
-//    if (!j.is_object()) return fallback;
-//
-//    Vector3 v = fallback;
-//    if (j.contains("x")) v.x = j["x"].get<float>();
-//    if (j.contains("y")) v.y = j["y"].get<float>();
-//    if (j.contains("z")) v.z = j["z"].get<float>();
-//    return v;
-//}
-
 nlohmann::json CharacterControllerComponent::Serialize()
 {
     return JsonHelper::MakeSaveData(this);
-
 }
 
 void CharacterControllerComponent::Deserialize(nlohmann::json data)

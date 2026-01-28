@@ -5,6 +5,7 @@
 
 #include "../Util/CollisionLayer.h"
 #include "../Object/Component.h"
+#include "../Base/Datas/EnumData.hpp"
 
 using namespace DirectX::SimpleMath;
 using namespace physx;
