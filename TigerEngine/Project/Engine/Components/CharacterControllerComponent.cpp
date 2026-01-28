@@ -12,18 +12,29 @@
 
 RTTR_REGISTRATION
 {
+    rttr::registration::enumeration<CollisionLayer>("CollisionLayer")
+        (
+            rttr::value("Default", CollisionLayer::Default),
+            rttr::value("Player", CollisionLayer::Player),
+            rttr::value("Enemy", CollisionLayer::Enemy),
+            rttr::value("World", CollisionLayer::World),
+            rttr::value("Trigger", CollisionLayer::Trigger),
+            rttr::value("Projectile", CollisionLayer::Projectile),
+            rttr::value("Ball", CollisionLayer::Ball),
+            rttr::value("IgnoreTest", CollisionLayer::IgnoreTest)
+            );
+
     rttr::registration::class_<CharacterControllerComponent>("CharacterControllerComponent")
-        .constructor<>();
+        .constructor<>()
+        .property("radius", &CharacterControllerComponent::m_Radius)
+        .property("height", &CharacterControllerComponent::m_Height)
+        .property("offset", &CharacterControllerComponent::m_Offset)
 
-        //.property("offset", &CharacterControllerComponent::m_Offset)
-        //.property("radius", &CharacterControllerComponent::m_Radius)
-        //.property("height", &CharacterControllerComponent::m_Height)
+        .property("jumpSpeed", &CharacterControllerComponent::m_JumpSpeed)
+        .property("moveSpeed", &CharacterControllerComponent::m_MoveSpeed)
 
-        //.property("jumpSpeed", &CharacterControllerComponent::m_JumpSpeed)
-        //.property("moveSpeed", &CharacterControllerComponent::m_MoveSpeed)
-
-        //.property("layer", &CharacterControllerComponent::m_Layer)
-        //.property("isTrigger", &CharacterControllerComponent::m_IsTrigger);
+        .property("layer", &CharacterControllerComponent::m_Layer)
+        .property("isTrigger", &CharacterControllerComponent::m_IsTrigger);
 }
 
 nlohmann::json CharacterControllerComponent::Serialize()

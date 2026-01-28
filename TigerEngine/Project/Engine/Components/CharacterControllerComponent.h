@@ -58,7 +58,7 @@ public:
     float m_JumpSpeed = 5.5f;
     float m_MoveSpeed = 2.0f;
 
-    CollisionLayer m_Layer;
+    CollisionLayer m_Layer = CollisionLayer::Default;
     CollisionMask  m_Mask;
     bool m_IsTrigger;
 
