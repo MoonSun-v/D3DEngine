@@ -443,5 +443,25 @@ void EngineApp::RegisterAllComponents()
     ComponentFactory::Instance().Register<CharacterControllerComponent>("CharacterControllerComponent");
     ComponentFactory::Instance().Register<PhysicsComponent>("PhysicsComponent");
     ComponentFactory::Instance().Register<AnimationController>("AnimationController");
+
+    Woo_Registeration();
+    Moon_Registeration();
+    Ron_Registeration();
+    Ho_Registeration();
 }
 
+void EngineApp::Woo_Registeration()
+{
+}
+
+void EngineApp::Moon_Registeration()
+{
+}
+
+void EngineApp::Ron_Registeration()
+{
+}
+
+void EngineApp::Ho_Registeration()
+{
+}
