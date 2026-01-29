@@ -45,12 +45,12 @@ void FreeCamera::OnUpdate(float delta)
     // qe
     if (Input::GetKey(DirectX::Keyboard::Keys::Q))
     {
-        Matrix world = owner->GetTransform()->GetWorldTransform();
+        Matrix world = owner->GetTransform()->GetWorldMatrix();
         SetInputVec(world.Up());
     }
     else if (Input::GetKey(DirectX::Keyboard::Keys::E))
     {
-        Matrix world = owner->GetTransform()->GetWorldTransform();
+        Matrix world = owner->GetTransform()->GetWorldMatrix();
         SetInputVec(-world.Up());
     }
 
@@ -59,12 +59,15 @@ void FreeCamera::OnUpdate(float delta)
     {
         float dx = float(Input::GetMouseX()) * rotSpeed;
         float dy = float(Input::GetMouseY()) * rotSpeed;
+
+        cout << dx << ", " << dy << "\n";
+
         AddPitch(dy);
         AddYaw(dx);
     }
 
     auto& transform = *owner->GetTransform();
-    auto& position = transform.GetPosition();
+    auto& position = transform.GetLocalPosition();
     auto& rotation = transform.GetEuler();
     if (inputVec.Length() > 0.0f)
     {
@@ -84,6 +87,8 @@ void FreeCamera::AddPitch(float valueRad)
     if (rot.x > XM_PIDIV2)  rot.x = XM_PIDIV2;  
     if (rot.x < -XM_PIDIV2) rot.x = -XM_PIDIV2;
     owner->GetTransform()->SetEuler(rot);
+    cout << "pitch : " << owner->GetTransform()->GetEuler().x << owner->GetTransform()->GetEuler().y <<
+        owner->GetTransform()->GetEuler().z;
 }
 
 void FreeCamera::AddYaw(float valueRad)
@@ -93,6 +98,8 @@ void FreeCamera::AddYaw(float valueRad)
     if (rot.y > XM_PI)  rot.y -= XM_2PI;
     if (rot.y < -XM_PI) rot.y += XM_2PI;
     owner->GetTransform()->SetEuler(rot);
+    cout << "yaw : " << owner->GetTransform()->GetEuler().x << owner->GetTransform()->GetEuler().y <<
+        owner->GetTransform()->GetEuler().z;
 }
 
 void FreeCamera::SetInputVec(const Vector3& inputVec)
@@ -103,12 +110,12 @@ void FreeCamera::SetInputVec(const Vector3& inputVec)
 
 Vector3 FreeCamera::GetForward()
 {
-    Matrix world = owner->GetTransform()->GetWorldTransform();
+    Matrix world = owner->GetTransform()->GetWorldMatrix();
     return -world.Forward();
 }
 
 Vector3 FreeCamera::GetRight()
 {
-    Matrix world = owner->GetTransform()->GetWorldTransform();
+    Matrix world = owner->GetTransform()->GetWorldMatrix();
     return world.Right();
 }
