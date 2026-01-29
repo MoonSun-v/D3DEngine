@@ -60,8 +60,6 @@ void FreeCamera::OnUpdate(float delta)
         float dx = float(Input::GetMouseX()) * rotSpeed;
         float dy = float(Input::GetMouseY()) * rotSpeed;
 
-        cout << dx << ", " << dy << "\n";
-
         AddPitch(dy);
         AddYaw(dx);
     }
@@ -87,8 +85,6 @@ void FreeCamera::AddPitch(float valueRad)
     if (rot.x > XM_PIDIV2)  rot.x = XM_PIDIV2;  
     if (rot.x < -XM_PIDIV2) rot.x = -XM_PIDIV2;
     owner->GetTransform()->SetEuler(rot);
-    cout << "pitch : " << owner->GetTransform()->GetEuler().x << owner->GetTransform()->GetEuler().y <<
-        owner->GetTransform()->GetEuler().z;
 }
 
 void FreeCamera::AddYaw(float valueRad)
@@ -98,8 +94,6 @@ void FreeCamera::AddYaw(float valueRad)
     if (rot.y > XM_PI)  rot.y -= XM_2PI;
     if (rot.y < -XM_PI) rot.y += XM_2PI;
     owner->GetTransform()->SetEuler(rot);
-    cout << "yaw : " << owner->GetTransform()->GetEuler().x << owner->GetTransform()->GetEuler().y <<
-        owner->GetTransform()->GetEuler().z;
 }
 
 void FreeCamera::SetInputVec(const Vector3& inputVec)
