@@ -512,9 +512,6 @@ void Editor::RenderCameraFrustum()
             cam->GetProjection()
         );
 
-        Matrix frustumWorld = cam->GetView().Transpose();
-        frustum.Transform(frustum, frustumWorld);
-        
         Matrix camWorld = cam->GetOwner()->GetTransform()->GetWorldTransform();
         frustum.Transform(frustum, camWorld);
 
